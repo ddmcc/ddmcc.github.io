@@ -1,0 +1,33 @@
+task :default => :new
+
+require 'fileutils'
+
+desc "创建新 post"
+task :new do
+    puts "请输入文件名："
+    @filename = STDIN.gets.chomp
+    puts "请输入title："
+    @name = STDIN.gets.chomp
+    puts "请输入categories,以空格分隔："
+    @categories = STDIN.gets.chomp
+    puts "请输入tags："
+    @tag = STDIN.gets.chomp
+    @date = Time.now.strftime("%F")
+    @post_name = "_posts/#{@date}-#{@filename}.md"
+    if File.exist?(@post_name)
+            abort("文件名已经存在！创建失败")
+    end
+    FileUtils.touch(@post_name)
+    open(@post_name, 'a') do |file|
+            file.puts "---"
+            file.puts "layout: post"
+            file.puts "title: #{@name}"
+            file.puts "subtitle: #{@subtitle}"
+            file.puts "author: ddmcc"
+            file.puts "date: #{Time.now}"
+            file.puts "categories: #{@categories}"
+            file.puts "tag: #{@tag}"
+            file.puts "---"
+    end
+    exec "vi #{@post_name}"
+end
