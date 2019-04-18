@@ -16,7 +16,7 @@ permalink: /:year/:month/:day/:title/
 # other links
 github_username:  ddmcc
 email: 308119975@qq.com
-weibo_username: ddmcc66
+weibo_username: 
 
 linkedIn_username: 
 
@@ -60,5 +60,3 @@ excerpt_separator: "\n\n\n\n"
 # paginate
 plugins: [jekyll-paginate]
 paginate: 6
-
-theme: jekyll-theme-slate
