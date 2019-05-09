@@ -17,6 +17,8 @@ author: ddmcc
 - 解压下载包 `tar -zxvf jdk-8u152-linux-x64.tar.gz`
 
 
+
+
 ## 配置环境变量
 
 ```java
