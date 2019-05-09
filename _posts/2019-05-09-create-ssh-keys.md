@@ -19,10 +19,10 @@ $ ls -al ~/.ssh
 
 
 通常名称为以下这几种：
--- id_dsa.pub
--- id_ecdsa.pub
--- id_ed25519.pub
--- id_rsa.pub
+- id_dsa.pub
+- id_ecdsa.pub
+- id_ed25519.pub
+- id_rsa.pub
 
 如不存在则生成新的key，已存在key则直接复制到github账号上
 
@@ -76,26 +76,26 @@ root@ddmcc:~#
 
 ## 复制key到github上
 
-- 在个人账号-Settings
+### 在个人账号-Settings
 
 ![](https://help.github.com/assets/images/help/settings/userbar-account-settings.png)
 
 
-- SSH and GPG keys
+### SSH and GPG keys
 
 ![](https://help.github.com/assets/images/help/settings/settings-sidebar-ssh-keys.png)
 
 
-- New SSH key
+### New SSH key
 
 ![](https://help.github.com/assets/images/help/settings/ssh-add-ssh-key.png)
 
 
-- Paste your key into the "Key" field
+### Paste your key into the "Key" field
 
 ![](https://help.github.com/assets/images/help/settings/ssh-key-paste.png)
 
 
-- Add SSH key
+### Add SSH key
 
 ![](https://help.github.com/assets/images/help/settings/ssh-add-key.png)
