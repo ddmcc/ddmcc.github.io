@@ -12,20 +12,42 @@ author: ddmcc
 
 
 ## 工作流程
-  提交代码到github触发webhooks通知镜像容器服务->镜像容器服务拉取代码根据写好的Dockerfile构建镜像->
-镜像构建完成触发通知jenkins,jenkins插件Generic Webhook Trigger收到通知->拉取镜像部署
+ - 提交代码到github触发webhooks通知镜像容器服务
+ - 镜像容器服务拉取代码根据写好的Dockerfile构建镜像
+ - 镜像构建完成触发通知jenkins,jenkins插件Generic Webhook Trigger收到通知
+ - 拉取镜像部署
  
-
 
 
 
 ## 准备工作
 
 ### github仓库
+- 新建代码仓库
+![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32aijkcn6j30zf09574w.jpg)
+
 
 ### 安装jenkins
 - [安装jenkins](https://ddmcc.space/2019/05/15/installing-jenkins-in-ubantu/)
-- jenkins安装 **Generic Webhook Trigger** 插件
+- 系统管理->插件管理->安装 **Generic Webhook Trigger** 插件
+- 新建任务,直接到构建触发器如果安装了 **Generic Webhook Trigger** 插件就可以看到选项,勾选它。
+填写token,此处填写的token为镜像服务配置链接中 `invoke?itoken={}` 括号的值。
+
+
+![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32amsd7u5j30wu0o5go2.jpg)
+
+
+构建中添加构建步骤,选执行shell。拉取镜像时,如果新建的镜像时puclic则不需要登录,private则需要先登录.写好后应用,保存。
+
+
+![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32av1u6tsj30uj0a5t92.jpg)
+
+
+点击用户名->设置->API token->填写生成.此处填写的token为镜像服务配置链接中 `http://账户名:{}@jenkins地址` 括号的值
+
+
+![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32awrjvt9j30wc06tt8x.jpg)
+
 
 
 ### 容器镜像服务
@@ -47,6 +69,7 @@ author: ddmcc
 
 格式为: **http://账户名:加密API TOKEN@jenkins地址/generic-webhook-trigger/invoke?token=jenkins任务配置的token**
 
+## 工作
 
-### 
+git提交代码或直接github上修改代码触发。
 
