@@ -24,12 +24,12 @@ author: ddmcc
 ### github仓库
 
 ### 安装jenkins
-- ![安装jenkins](https://ddmcc.space/2019/05/15/installing-jenkins-in-ubantu/)
-- jenkins安装Generic Webhook Trigger插件
+- [安装jenkins](https://ddmcc.space/2019/05/15/installing-jenkins-in-ubantu/)
+- jenkins安装 **Generic Webhook Trigger** 插件
 
 
 ### 容器镜像服务
-- ![容器镜像服务](https://cr.console.aliyun.com)上新建镜像仓库
+- [容器镜像服务](https://cr.console.aliyun.com)上新建镜像仓库
 - 绑定github账号,代码源设置github仓库,勾选`代码变更自动构建镜像`
 - 新建构建规则,选定版本变更构建或分支代码构建,设置Dockerfile路径,版本
 
@@ -45,7 +45,7 @@ author: ddmcc
 ![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32a6hsk86j30jt0dimxo.jpg)
 
 
-格式为: http://账户名:加密API TOKEN@jenkins地址/generic-webhook-trigger/invoke?token=jenkins任务配置的token
+格式为: **http://账户名:加密API TOKEN@jenkins地址/generic-webhook-trigger/invoke?token=jenkins任务配置的token**
 
 
 ### 
