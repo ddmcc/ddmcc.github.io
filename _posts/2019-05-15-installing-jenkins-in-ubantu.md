@@ -16,6 +16,7 @@ author: ddmcc
 
 原来把jenkins安装docker容器里，太不方便了，还有权限的问题。
 
+
 - `wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -`
 - `sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'`
 - `apt-get update`
@@ -48,12 +49,14 @@ root@ddmcc:~# apt-get install jenkins
 ```
 
 
-然后就等待下载完成后自动安装后，打开 `http://ip:8080/`  进入jenkins。密码在 `/var/lib/jenkins/secrets/initialAdminPassword` ，登陆后安装插件。
+然后就等待下载完成后自动安装后，打开 `http://ip:8080/`  进入jenkins。密码在`/var/lib/jenkins/secrets/initialAdminPassword` ，登陆后安装插件。
+
 
 ## 遇到的问题
 
 
 安装后启动，显示启动失败了。
+
 
 
 ```java
@@ -139,10 +142,13 @@ lines 1962-1995/1995 (END)
 ```
 
 
+
 发现是Java环境的问题，提示没找到,输入 `echo $PATH` 查看环境变量。建立软连接 
 
 `ln -s /opt/Java/jdk1.8.0_152/bin/java /usr/bin/java` ,重启jenkins,然后输入 
+
 `systemctl status jenkins.service` jenkins已正常启动。
+
 
 
 ```java
