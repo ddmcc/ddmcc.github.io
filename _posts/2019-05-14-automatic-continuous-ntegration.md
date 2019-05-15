@@ -38,6 +38,13 @@ author: ddmcc
 
 
 
+新增header token参数
+
+
+![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32c1q3xl3j30zp0i1407.jpg)
+
+
+
 构建中添加构建步骤,选执行shell。拉取镜像时,如果新建的镜像时puclic则不需要登录,private则需要先登录.写好后应用,保存。
 
 
