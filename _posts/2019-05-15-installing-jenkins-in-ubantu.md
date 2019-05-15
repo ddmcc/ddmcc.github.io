@@ -16,10 +16,10 @@ author: ddmcc
 
 原来把jenkins安装docker容器里，太不方便了，还有权限的问题。
 
-- wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
-- sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
-- apt-get update
-- apt-get install jenkins
+- `wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -`
+- `sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'`
+- `apt-get update`
+- `apt-get install jenkins`
 
 
 
@@ -48,9 +48,10 @@ root@ddmcc:~# apt-get install jenkins
 ```
 
 
-然后就等待下载完成后自动安装后，打开http://ip:8080/ 进入jenkins。密码在/var/lib/jenkins/secrets/initialAdminPassword，登陆后安装插件。
+然后就等待下载完成后自动安装后，打开 `http://ip:8080/`  进入jenkins。密码在 `/var/lib/jenkins/secrets/initialAdminPassword` ，登陆后安装插件。
 
 ## 遇到的问题
+
 
 安装后启动，显示启动失败了。
 
@@ -69,7 +70,7 @@ After this operation, 77.7 MB of additional disk space will be used.
 Do you want to continue? [Y/n] y
 Get:1 http://pkg.jenkins.io/debian-stable binary/ jenkins 2.164.3 [76.7 MB]                               
 Get:2 http://us.archive.ubuntu.com/ubuntu xenial/universe amd64 daemon amd64 0.6.4-1 [98.2 kB]
-Fetched 76.8 MB in 1min 54s (672 kB/s)                                                                                                                                                                               
+Fetched 76.8 MB in 1min 54s (672 kB/s)
 Selecting previously unselected package daemon.
 (Reading database ... 60101 files and directories currently installed.)
 Preparing to unpack .../daemon_0.6.4-1_amd64.deb ...
@@ -93,7 +94,9 @@ Errors were encountered while processing:
 E: Sub-process /usr/bin/dpkg returned an error code (1)
 ```
 
+
 发现启动失败了，根据提示输入 `journalctl -xe`
+
 
 
 ```java
@@ -136,8 +139,9 @@ lines 1962-1995/1995 (END)
 ```
 
 
-发现是Java环境的问题，提示没找到,输入 `echo $PATH` 查看环境变量。
-建立软连接 `ln -s /opt/Java/jdk1.8.0_152/bin/java /usr/bin/java` ,重启jenkins,然后输入 
+发现是Java环境的问题，提示没找到,输入 `echo $PATH` 查看环境变量。建立软连接 
+
+`ln -s /opt/Java/jdk1.8.0_152/bin/java /usr/bin/java` ,重启jenkins,然后输入 
 `systemctl status jenkins.service` jenkins已正常启动。
 
 
