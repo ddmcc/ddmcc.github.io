@@ -37,13 +37,15 @@ author: ddmcc
 ![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32amsd7u5j30wu0o5go2.jpg)
 
 
+
 构建中添加构建步骤,选执行shell。拉取镜像时,如果新建的镜像时puclic则不需要登录,private则需要先登录.写好后应用,保存。
 
 
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32av1u6tsj30uj0a5t92.jpg)
+
+![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32b6r80rzj30ww0fejrz.jpg)
 
 
-点击用户名->设置->API token->填写生成.此处填写的token为镜像服务配置链接中 `http://账户名:{}@jenkins地址` 括号的值
+- 生成API token,点击用户名->设置->API token->填写生成.此处填写的token为镜像服务配置链接中 `http://账户名:{}@jenkins地址` 括号的值
 
 
 ![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32awrjvt9j30wc06tt8x.jpg)
