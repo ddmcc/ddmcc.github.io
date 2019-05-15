@@ -16,7 +16,6 @@ author: ddmcc
 
 原来把jenkins安装docker容器里，太不方便了，还有权限的问题。
 
-
 - wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
 - sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
 - apt-get update
@@ -31,19 +30,19 @@ OK
 root@ddmcc:~# sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
 root@ddmcc:~# apt-get update
 Hit:1 https://mirrors.aliyun.com/docker-ce/linux/ubuntu xenial InRelease
-Hit:2 http://security.ubuntu.com/ubuntu xenial-security InRelease                                                                                         
-Ign:3 http://pkg.jenkins.io/debian-stable binary/ InRelease             
+Hit:2 http://security.ubuntu.com/ubuntu xenial-security InRelease
+Ign:3 http://pkg.jenkins.io/debian-stable binary/ InRelease
 Get:4 http://pkg.jenkins.io/debian-stable binary/ Release [2,042 B]
 Get:5 http://pkg.jenkins.io/debian-stable binary/ Release.gpg [181 B]
 Get:6 http://pkg.jenkins.io/debian-stable binary/ Packages [14.9 kB]
 Hit:7 http://us.archive.ubuntu.com/ubuntu xenial InRelease
 Get:8 http://us.archive.ubuntu.com/ubuntu xenial-updates InRelease [109 kB]
 Get:9 http://us.archive.ubuntu.com/ubuntu xenial-backports InRelease [107 kB]
-Get:10 http://us.archive.ubuntu.com/ubuntu xenial-updates/main amd64 Packages [956 kB]                                                                                                                               
-Get:11 http://us.archive.ubuntu.com/ubuntu xenial-updates/main i386 Packages [823 kB]                                                                                                                                
-Get:12 http://us.archive.ubuntu.com/ubuntu xenial-updates/universe amd64 Packages [748 kB]                                                                                                                           
-Get:13 http://us.archive.ubuntu.com/ubuntu xenial-updates/universe i386 Packages [684 kB]                                                                                                                            
-Fetched 3,444 kB in 42s (80.7 kB/s)                                                                                                                                                                                  
+Get:10 http://us.archive.ubuntu.com/ubuntu xenial-updates/main amd64 Packages [956 kB]
+Get:11 http://us.archive.ubuntu.com/ubuntu xenial-updates/main i386 Packages [823 kB]
+Get:12 http://us.archive.ubuntu.com/ubuntu xenial-updates/universe amd64 Packages [748 kB]
+Get:13 http://us.archive.ubuntu.com/ubuntu xenial-updates/universe i386 Packages [684 kB]
+Fetched 3,444 kB in 42s (80.7 kB/s)
 Reading package lists... Done
 root@ddmcc:~# apt-get install jenkins
 ```
