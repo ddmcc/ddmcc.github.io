@@ -10,6 +10,9 @@ author: ddmcc
 * content
 {:toc}
 
+
+
+
 ## Hibernate 利用模板的save方法插入实体，返回的Serializable id主键为0
 
 
