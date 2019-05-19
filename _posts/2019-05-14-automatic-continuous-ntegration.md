@@ -11,13 +11,13 @@ author: ddmcc
 {:toc}
 
 
+
+
 ## 工作流程
  - 提交代码到github触发webhooks通知镜像容器服务
  - 镜像容器服务拉取代码根据写好的Dockerfile构建镜像
  - 镜像构建完成触发通知jenkins,jenkins插件Generic Webhook Trigger收到通知
  - 拉取镜像部署
- 
-
 
 
 ## 准备工作
