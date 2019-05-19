@@ -11,6 +11,9 @@ author: ddmcc
 {:toc}
 
 
+
+
+
 ## TCP是什么？
 
 TCP（Transmission Control Protocol 传输控制协议）是一种面向连接的、可靠的、基于字节流的传输层通信协议。
@@ -20,9 +23,6 @@ TCP（Transmission Control Protocol 传输控制协议）是一种面向连接�
 
 
 ![](http://ww1.sinaimg.cn/large/0060GLrDgy1g36z1m5u51j30cv06cdg1.jpg)
-
-
-
 
 
 ### TCP使用三次握手建立一个连接：
