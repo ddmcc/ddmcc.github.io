@@ -10,6 +10,9 @@ author: ddmcc
 * content
 {:toc}
 
+
+
+
 ## 远程访数据库
 
 ```js
@@ -23,8 +26,6 @@ author: ddmcc
 ```
 
 这样就可以远程访问数据库了
-
-
 
 
 ## 更改密码验证
