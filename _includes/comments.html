@@ -44,3 +44,15 @@
 </script>
 <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
 {% endif %}
+
+{% if site.change_yan %}
+<!--PC版-->
+<div id="SOHUCS" sid="{{ site.url }}{{ page.url }}"></div>
+<script charset="utf-8" type="text/javascript" src="https://changyan.sohu.com/upload/changyan.js" ></script>
+<script type="text/javascript">
+window.changyan.api.config({
+appid: "{{site.appid}}",
+conf: "{{site.conf}}"
+});
+</script>
+{% endif %}

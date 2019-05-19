@@ -25,11 +25,10 @@ dribbble_username:
 description_footer: welcome to ddmcc's blog
 
 # comments
-# two ways to comment, only choose one, and use your own short name
-# 两种评论插件，选一个就好了，使用自己的 short_name
+change_yan:
+  appid: cyueYN9lt
+  conf: prod_f91c5f85012ce0c5a4c9b50031d5cb90
 
-#duoshuo_shortname: #ddmcc
-disqus_shortname: gaohaoyang
 
 
 # statistic analysis 统计代码
