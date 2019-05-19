@@ -11,12 +11,12 @@ author: ddmcc
 {:toc}
 
 
+
+
 ## 准备工作
 - 下载jdk包  jdk-8u152-linux-x64.tar.gz
 - 将下载包放到ubantu上 （本文放在/opt/java中）
 - 解压下载包 `tar -zxvf jdk-8u152-linux-x64.tar.gz`
-
-
 
 
 ## 配置环境变量
