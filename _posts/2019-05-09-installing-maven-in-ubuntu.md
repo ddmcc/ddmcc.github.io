@@ -11,12 +11,12 @@ author: ddmcc
 {:toc}
 
 
+
+
 ## 准备工作
 - 下载maven包  apache-maven-3.5.3-bin.tar.gz
 - 将下载包放到ubantu上 （本文放在/opt/maven中）
 - 解压下载包 `tar -zxvf apache-maven-3.5.3-bin.tar.gz`
-
-
 
 
 ## 配置环境变量
