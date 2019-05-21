@@ -21,9 +21,7 @@ author: ddmcc
 
 Creator是一个类(接口),有一个工厂方法 `factoryMethod()` ,由子类去实现。
 
-ConcreteCreator实现了 `factoryMethod()` 以实际制造出一种或多种产品。如ConcreteProduct。所有的产品实现公同的接口Product,这样
-
-生产出的产品就可以引用这个接口,而不是真正的实现类。
+ConcreteCreator实现了 `factoryMethod()` 以实际制造出一种或多种产品。如ConcreteProduct。所有的产品实现公同的接口Product,这样生产出的产品就可以引用这个接口,而不是真正的实现类。
 
 
 ## 如何设计
