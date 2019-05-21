@@ -28,7 +28,7 @@ author: ddmcc
 
 
 ### 安装jenkins
-- [安装jenkins](https://ddmcc.space/2019/05/15/installing-jenkins-in-ubantu/)
+- [安装jenkins](https://ddmcc.space/2019/05/15/installing-jenkins-in-ubuntu/)
 - 系统管理->插件管理->安装 **Generic Webhook Trigger** 插件
 - 新建任务,直接到构建触发器如果安装了 **Generic Webhook Trigger** 插件就可以看到选项,勾选它。
 填写token,此处填写的token为镜像服务配置链接中 `invoke?itoken={}` 括号的值。
