@@ -22,7 +22,7 @@ TCP（Transmission Control Protocol 传输控制协议）是一种面向连接�
 ## 三次握手
 
 
-![](https://ww1.sinaimg.cn/large/0060GLrDgy1g36z1m5u51j30cv06cdg1.jpg)
+![](https://ws1.sinaimg.cn/large/0060GLrDgy1g399tzjq39j30cv06cdg1.jpg)
 
 
 ### TCP使用三次握手建立一个连接：
@@ -46,7 +46,7 @@ TCP（Transmission Control Protocol 传输控制协议）是一种面向连接�
 ## 四次挥手
 
 
-![](https://ww1.sinaimg.cn/large/0060GLrDgy1g36z6kqra0j30cu0533yn.jpg)
+![](https://ws1.sinaimg.cn/large/0060GLrDgy1g399thuxozj30cu05374v.jpg)
 
 
 ### TCP使用四次挥手关闭一个连接：
@@ -76,7 +76,7 @@ TCP（Transmission Control Protocol 传输控制协议）是一种面向连接�
 - **CLOSED:** 表示连接中断。
 
 
-![](https://ww1.sinaimg.cn/large/0060GLrDgy1g36zcbbr02j30ob0r40ut.jpg)
+![](https://ws1.sinaimg.cn/large/0060GLrDgy1g399sn7k36j30ob0r40ut.jpg)
 
 
 
