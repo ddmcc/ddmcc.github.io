@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "集合"
+title:  "collection"
 date:   2019-05-26 21:29:52
 categories: 面试
 tags: 集合 面试
