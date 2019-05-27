@@ -17,10 +17,10 @@ author: ddmcc
 
 - concurrentHashMap在JDK1.5出现的，为了解决HashMap线程不安全问题和Hashtable使用synchronized导致并发性能低问题。
 
-- 在1.7中使用分段锁来提升map的并发性能。在 `ConcurrentHashMap` 有一个 **$\color{red}{Segment}$** 数组，
+- 在1.7中使用分段锁来提升map的并发性能。在 `ConcurrentHashMap` 有一个 **Segment** 数组，
 (**Segment<K,V>** 是ConcurrentHashMap内部类)，将HashMap分成多个段(默认分成16个Segment，通过hash来定位Segment的位置),将锁的颗粒度降低至一个段(即一个Segment数组)。
 
-- **$\color{red}{Segment}$** 继承了 **$\color{red}{ReentrantLock}$** 表示Segment是一个可重入锁,
+- **Segment** 继承了 **ReentrantLock** 表示Segment是一个可重入锁,
 ConcurrentHashMap通过可重入锁来实现分段锁机制。
 
 - 在Segment类中有一个volatile HashEntry<K,V>[] table桶数组(HashEntry也是ConcurrentHashMap的一个内部类,用作储存键值数据的节点代表一个桶),而每个桶又是一个单向链表。
@@ -55,7 +55,7 @@ ConcurrentHashMap通过可重入锁来实现分段锁机制。
 
 ## JDK1.8的ConcurrentHashMap
 
-> 1.8中主要有两点不同
+### 1.8中主要有两点不同
 
 - 抛弃了分段锁,利用数组+链表+红黑树来实现,对数组的每个元素来加锁,将锁的颗粒度降至每个节点(即每个桶)。ConcurrentHashMap中有一个volatile Node<K,V>[] table数组,Node<K,V>是ConcurrentHashMap的一个内部类,继承Map.Entry<K,V>。
 
@@ -65,7 +65,7 @@ ConcurrentHashMap通过可重入锁来实现分段锁机制。
 
 - 当删除红黑树时,如果数量<=6,则会转回单向链表。
 
-结构如图:
+### 结构:
 
 ![](https://ws3.sinaimg.cn/large/005BYqpggy1g3g7bx3j8sj30cl0bqdg2.jpg)
 
