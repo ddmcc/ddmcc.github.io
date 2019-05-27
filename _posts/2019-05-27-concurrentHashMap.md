@@ -18,17 +18,16 @@ author: ddmcc
 - concurrentHashMap在JDK1.5出现的，为了解决HashMap线程不安全问题和Hashtable使用synchronized导致并发性能低问题。
 
 - 在1.7中使用分段锁来提升map的并发性能。在 `ConcurrentHashMap` 有一个 **Segment** 数组，
-(**Segment<K,V>** 是ConcurrentHashMap内部类)，将HashMap分成多个段(默认分成16个Segment，通过hash来定位Segment的位置),将锁的颗粒度降低至一个段(即一个Segment数组)。
+(**Segment<K,V> 是ConcurrentHashMap内部类**)，将HashMap分成多个段(**默认分成16个Segment，通过hash来定位Segment的位置**),将锁的颗粒度降低至一个段(即一个Segment数组)。
 
-- **Segment** 继承了 **ReentrantLock** 表示Segment是一个可重入锁,
-ConcurrentHashMap通过可重入锁来实现分段锁机制。
+- **Segment** 继承了 **ReentrantLock** 表示Segment是一个可重入锁,ConcurrentHashMap通过可重入锁来实现分段锁机制。
 
 - 在Segment类中有一个volatile HashEntry<K,V>[] table桶数组(HashEntry也是ConcurrentHashMap的一个内部类,用作储存键值数据的节点代表一个桶),而每个桶又是一个单向链表。
 
 
 结构如图:
 
-![](https://ws3.sinaimg.cn/large/005BYqpggy1g3g6375ewdj30x00ig3zq.jpg)
+![](http://ws3.sinaimg.cn/large/005BYqpggy1g3g6375ewdj30x00ig3zq.jpg)
 
 
    源码如下:
@@ -67,7 +66,7 @@ ConcurrentHashMap通过可重入锁来实现分段锁机制。
 
 ### 结构:
 
-![](https://ws3.sinaimg.cn/large/005BYqpggy1g3g7bx3j8sj30cl0bqdg2.jpg)
+![](http://ws3.sinaimg.cn/large/005BYqpggy1g3g7bx3j8sj30cl0bqdg2.jpg)
 
 
 ### 链表转为红黑树
@@ -236,7 +235,7 @@ tabAt()方式是通过Unsafe类的getObjectVolatile方法来获取值,volatile�
 
 
 
-#### size方法
+### size方法
 
 有size()和mappingCount()两个方法能获取元素的个数。在添加和删除元素时，会通过CAS操作更新ConcurrentHashMap的baseCount属性值来统计元素个数。但是CAS操作可能会失败，因此，ConcurrentHashMap又定义了一个CounterCell数组来记录CAS操作失败时的元素个数
 
