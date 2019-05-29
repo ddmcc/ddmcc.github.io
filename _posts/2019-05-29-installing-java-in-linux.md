@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "linux 7.3中安装Java"
+title:  "阿里云服务器中安装Java"
 date:   2019-05-29 23:13:06
 categories: linux
 tags: linux Java
