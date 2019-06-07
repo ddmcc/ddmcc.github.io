@@ -38,7 +38,7 @@ author: ddmcc
 
 没有的话先安装 `Github Plugin` 插件
 
-![](https://ws3.sinaimg.cn/large/005BYqpggy1g3sy0odorcj313l0iwdgv.jpg)
+![](http://ws3.sinaimg.cn/large/005BYqpggy1g3sy0odorcj313l0iwdgv.jpg)
 
 Secret 就是刚刚生成的token
 
@@ -46,23 +46,33 @@ Secret 就是刚刚生成的token
 
 ### 新建任务
 
-#### 新建任务 -> 构建一个Maven项目
+#### 构建一个Maven项目
 
-![](https://ws3.sinaimg.cn/large/005BYqpggy1g3syng57bmj31590n2n0h.jpg)
+新建任务 -> 构建一个Maven项目
 
-#### github项目 -> 填入项目地址
+![](http://ws3.sinaimg.cn/large/005BYqpggy1g3syng57bmj31590n2n0h.jpg)
 
-![](https://ws3.sinaimg.cn/large/005BYqpggy1g3sypscda8j310c0mjdha.jpg)
+#### 填入项目地址
 
-#### Source Code Management -> Git -> 填入项目地址
+github项目 -> 填入项目地址
 
-![](https://ws3.sinaimg.cn/large/005BYqpggy1g3sysm87dtj317v0oxq4p.jpg)
+![](http://ws3.sinaimg.cn/large/005BYqpggy1g3sypscda8j310c0mjdha.jpg)
 
-#### Build Triggers -> 勾选 GitHub hook trigger for GITScm polling
+#### Git -> 填入项目地址
 
-#### Post Steps -> Execute shell -> 填入脚本
+Source Code Management -> Git -> 填入项目地址
 
-![](https://ws3.sinaimg.cn/large/005BYqpggy1g3syzuhlozj31070nmq4c.jpg)
+![](http://ws3.sinaimg.cn/large/005BYqpggy1g3sysm87dtj317v0oxq4p.jpg)
+
+#### 勾选触发器
+
+Build Triggers -> 勾选 GitHub hook trigger for GITScm polling
+
+#### 编写脚本
+
+Post Steps -> Execute shell -> 填入脚本
+
+![](http://ws3.sinaimg.cn/large/005BYqpggy1g3syzuhlozj31070nmq4c.jpg)
 
 start.sh:
 
@@ -105,6 +115,7 @@ start.sh:
         ;;   
     esac	
     exit 0
+
 ## 工作
 
 git提交代码或直接github上修改代码触发。
