@@ -24,6 +24,10 @@ author: ddmcc
 - 新建代码仓库
 ![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32aijkcn6j30zf09574w.jpg)
 
+### 添加webhook
+
+![](https://ws3.sinaimg.cn/large/005BYqpggy1g3szpyp6pfj312m0p5jtv.jpg)
+
 
 ### 创建github access tokens
 
