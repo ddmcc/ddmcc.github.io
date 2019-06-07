@@ -26,7 +26,7 @@ author: ddmcc
 
 ### 添加webhook
 
-![](https://ws3.sinaimg.cn/large/005BYqpggy1g3szpyp6pfj312m0p5jtv.jpg)
+![](http://ws3.sinaimg.cn/large/005BYqpggy1g3szpyp6pfj312m0p5jtv.jpg)
 
 
 ### 创建github access tokens
