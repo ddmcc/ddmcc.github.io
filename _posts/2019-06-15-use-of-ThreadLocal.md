@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "ThreadLocal的使用与理解"
+title:  "ThreadLocal的使用与源码"
 date:   2019-06-15 20:24:01
 categories: 并发编程
 tags: ThreadLocal
@@ -112,5 +112,7 @@ public class Test {
 发现两个线程已经互不影响了，即使线程a设置了自己线程名，b线程输出的还是b线程名。
 
 
-## 理解
+## 源码
+
+待续。。。
 
