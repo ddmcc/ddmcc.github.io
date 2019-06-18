@@ -125,7 +125,7 @@ public class Test {
     public T get() {
         // 获取当前线程
         Thread t = Thread.currentThread();
-	// 获取当前线程的ThreadLocalMap
+        // 获取当前线程的ThreadLocalMap
         ThreadLocalMap map = getMap(t);
         if (map != null) {
 	    // 通过ThreadLocal key获取Entry节点，并返回值
@@ -136,7 +136,7 @@ public class Test {
                 return result;
             }
         }
-	// 初始化值
+        // 初始化值
         return setInitialValue();
     }
 
@@ -144,15 +144,15 @@ public class Test {
 ### set方法
 
     public void set(T value) {
-	// 获取当前线程
+        // 获取当前线程
         Thread t = Thread.currentThread();
-	// 获取当前线程的ThreadLocalMap
+        // 获取当前线程的ThreadLocalMap
         ThreadLocalMap map = getMap(t);
         if (map != null)
-	    // 插入Entry key为ThreadLocal，value为value
+            // 插入Entry key为ThreadLocal，value为value
             map.set(this, value);
         else
-	    // 新建一个ThreadLocalMap 并把第一个Entry插入
+            // 新建一个ThreadLocalMap 并把第一个Entry插入
             createMap(t, value);
     }
 
@@ -207,23 +207,18 @@ ThreadLocalMap是ThreadLocal的一个静态内部类，内部又有一个Entry�
 
 
 Entry继承自WeakReference并调用WeakReference构造函数，所以Entry的key是一个弱引用，即ThreadLocal是弱引用。
-
 所以当外部没有引用到ThreadLocal时，那么系统GC时，经过可达性分析，GC Roots与ThreadLocal之间引用不可达，
-
 ThreadLocal就将被回收。这样就出现了Entry中null key的情况，则无法访问到这些null key的值。如果这时线程结束，或者
-
-段开值的强引用链(Thread ref -> Current Thread -> ThreadLocalMap -> Entry -> value)，将Entry.value = null，则Entry能顺利被回收。
-
+段开值的强引用链(**Thread ref -> Current Thread -> ThreadLocalMap -> Entry -> value**)，将Entry.value = null，则Entry能顺利被回收。
 否则就会出现内存泄漏的情况。
 
 但是，在我们现实开发中通常会用线程池来维护线程，即线程工作完后会放回到线程池中，所以就有可能出现内存泄漏的情况。
-
 在源码中，作者也对这个问题进行了进理。见下
 
 
 #### set操作
 
-   private void set(ThreadLocal<?> key, Object value) {
+    private void set(ThreadLocal<?> key, Object value) {
 
         // We don't use a fast path as with get() because it is at
         // least as common to use set() to create new entries as
@@ -264,7 +259,6 @@ ThreadLocal就将被回收。这样就出现了Entry中null key的情况，则�
 ThreadLocalMap并不是像HashMap那样当hash冲突时，用分离链表法来解决。它是用开放定址法，继续获取下一位置判断，直到该位置没有Entry节点。
 
 在检测插入的时候，如果key相同，即相同ThreadLocal，则替换原来的值。如果key为空即脏Entry(Stale Entry)则调用 **replaceStaleEntry** 去处理。
-
 tab[i] == null 则此位置为空，插入新的Entry，插入后会调用cleanSomeSlots去清除Stale Entry并判断扩容。
 
 ##### cleanSomeSlots
@@ -474,8 +468,9 @@ tab[i] == null 则此位置为空，插入新的Entry，插入后会调用cleanS
         }
 
 
+>针对前后有无null key的entry分为四种情况
 
-###### 向前向后都有null key
+###### 向前向后都有
 
 ![](http://ws3.sinaimg.cn/large/005BYqpggy1g45s7mq58jj30kh08cq30.jpg)
 
@@ -510,7 +505,7 @@ slotToExpunge初始状态和staleSlot相同，当前向环形搜索遇到脏entr
 
 #### get操作
 
-private T setInitialValue() {
+    private T setInitialValue() {
         T value = initialValue();
         Thread t = Thread.currentThread();
         ThreadLocalMap map = getMap(t);
@@ -532,7 +527,6 @@ private T setInitialValue() {
 -> `返回value值`
 
 如果value值为空或者ThreadLocalMap为空，则调用initialValue获取初始值，initialValue可以重写来返回一个默认的值，再把
-
 ThreadLocal和null值存到ThreadLocalMap中。
 
 
@@ -559,3 +553,7 @@ ThreadLocal和null值存到ThreadLocalMap中。
 删除则是搜索相同key的entry并调用expungeStaleEntry清除。
 
 **所以源码中通过expungeStaleEntry，cleanSomeSlots,replaceStaleEntry这几个方法来清理null key的enrty**
+
+## 弱引用导致内存泄漏问题
+
+待续。。。
