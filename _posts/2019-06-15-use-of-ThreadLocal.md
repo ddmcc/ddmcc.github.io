@@ -159,17 +159,6 @@ public class Test {
 
 ### remove
 
-    /**
-     * Removes the current thread's value for this thread-local
-     * variable.  If this thread-local variable is subsequently
-     * {@linkplain #get read} by the current thread, its value will be
-     * reinitialized by invoking its {@link #initialValue} method,
-     * unless its value is {@linkplain #set set} by the current thread
-     * in the interim.  This may result in multiple invocations of the
-     * {@code initialValue} method in the current thread.
-     *
-     * @since 1.5
-     */
     public void remove() {
          // 获取当前线程ThreadLocalMap
          ThreadLocalMap m = getMap(Thread.currentThread());
@@ -198,7 +187,7 @@ ThreadLocalMap是ThreadLocal的一个静态内部类，内部又有一个Entry�
         }
 
 
-	// 长度必须是2的幂次方
+         // 长度必须是2的幂次方
         /**
          * The table, resized as necessary.
          * table.length MUST always be a power of two.
@@ -263,30 +252,6 @@ tab[i] == null 则此位置为空，插入新的Entry，插入后会调用cleanS
 
 ##### cleanSomeSlots
 
-    /**
-      * Heuristically scan some cells looking for stale entries.
-      * This is invoked when either a new element is added, or
-      * another stale one has been expunged. It performs a
-      * logarithmic number of scans, as a balance between no
-      * scanning (fast but retains garbage) and a number of scans
-      * proportional to number of elements, that would find all
-      * garbage but would cause some insertions to take O(n) time.
-      *
-      * @param i a position known NOT to hold a stale entry. The
-      * scan starts at the element after i.
-      *
-      * @param n scan control: {@code log2(n)} cells are scanned,
-      * unless a stale entry is found, in which case
-      * {@code log2(table.length)-1} additional cells are scanned.
-      * When called from insertions, this parameter is the number
-      * of elements, but when from replaceStaleEntry, it is the
-      * table length. (Note: all this could be changed to be either
-      * more or less aggressive by weighting n instead of just
-      * using straight log n. But this version is simple, fast, and
-      * seems to work well.)
-      *
-      * @return true if any stale entries have been removed.
-      */
     private boolean cleanSomeSlots(int i, int n) {
         boolean removed = false;
         Entry[] tab = table;
@@ -317,18 +282,6 @@ tab[i] == null 则此位置为空，插入新的Entry，插入后会调用cleanS
        
 ##### expungeStaleEntry
 	
-	
-       /**
-         * Expunge a stale entry by rehashing any possibly colliding entries
-         * lying between staleSlot and the next null slot.  This also expunges
-         * any other stale entries encountered before the trailing null.  See
-         * Knuth, Section 6.4
-         *
-         * @param staleSlot index of slot known to have null key
-         * @return the index of the next null slot after staleSlot
-         * (all between staleSlot and this slot will have been checked
-         * for expunging).
-         */
         private int expungeStaleEntry(int staleSlot) {
             Entry[] tab = table;
             int len = tab.length;
@@ -386,21 +339,6 @@ tab[i] == null 则此位置为空，插入新的Entry，插入后会调用cleanS
 
 ##### replaceStaleEntry
 
-       /**
-         * Replace a stale entry encountered during a set operation
-         * with an entry for the specified key.  The value passed in
-         * the value parameter is stored in the entry, whether or not
-         * an entry already exists for the specified key.
-         *
-         * As a side effect, this method expunges all stale entries in the
-         * "run" containing the stale entry.  (A run is a sequence of entries
-         * between two null slots.)
-         *
-         * @param  key the key
-         * @param  value the value to be associated with key
-         * @param  staleSlot index of the first stale entry encountered while
-         *         searching for key.
-         */
         private void replaceStaleEntry(ThreadLocal<?> key, Object value,
                                        int staleSlot) {
             Entry[] tab = table;
@@ -468,7 +406,11 @@ tab[i] == null 则此位置为空，插入新的Entry，插入后会调用cleanS
         }
 
 
+
+
 >针对前后有无null key的entry分为四种情况
+
+
 
 ###### 向前向后都有
 
