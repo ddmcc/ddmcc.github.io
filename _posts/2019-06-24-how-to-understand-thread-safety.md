@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "如何理解线程是否安全"
+title:  "如何理解线程安全"
 date:   2019-06-24 23:33:17
 categories: 并发编程
 tags: Thread volatile synchronized
