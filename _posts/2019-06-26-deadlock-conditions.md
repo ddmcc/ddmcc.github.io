@@ -88,10 +88,10 @@ author: ddmcc
 死锁状态的充分条件是：资源分配图是不可完全简化的。
 
 死锁：
-![](https://img-blog.csdn.net/2018072312123883?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hbmlhY3h4/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+![](http://img-blog.csdn.net/2018072312123883?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hbmlhY3h4/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
 
 无死锁：
-![](https://img-blog.csdn.net/20180723121304451?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hbmlhY3h4/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+![](http://img-blog.csdn.net/20180723121304451?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hbmlhY3h4/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
 
 
 ## 解除死锁
