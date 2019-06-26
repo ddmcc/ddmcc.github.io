@@ -39,8 +39,7 @@ author: ddmcc
 ### 破坏互斥
 不好意思，破坏不了。。
 
-**互斥条件不能被破坏，否则会造成结果的不可再现性** 即 
-![原子性问题](https://ddmcc.space/2019/06/24/how-to-understand-thread-safety/#%E5%8E%9F%E5%AD%90%E6%80%A7%E9%97%AE%E9%A2%98)
+**互斥条件不能被破坏，否则会造成结果的不可再现性** 即 [原子性问题](https://ddmcc.space/2019/06/24/how-to-understand-thread-safety/#%E5%8E%9F%E5%AD%90%E6%80%A7%E9%97%AE%E9%A2%98)
 
 ### 破坏不可剥夺
 - 如果占有某些资源的一个线程进行进一步资源请求被拒绝，则该线程必须释放它最初占有的资源。
