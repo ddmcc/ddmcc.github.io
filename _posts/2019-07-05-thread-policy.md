@@ -13,10 +13,10 @@ author: ddmcc
 
 ## 线程池四种拒绝策略
 
-在线程池配置文件中配置RejectedExecutionHandler属性，为线程池指定拒绝策略。也可以自定义拒绝策略，实现RejectedExecutionHandler的rejectedExecution方法。
+在线程池配置文件中配置RejectedExecutionHandler属性，可以为线程池指定拒绝策略。
 
-在ThreadPoolExecutor类中，有四个内部类为JDK自带的四种拒绝策略。CallerRunsPolicy，AbortPolicy，DiscardPolicy，DiscardOldestPolicy
-
+在ThreadPoolExecutor类中，有四个内部类为JDK自带的四种拒绝策略。CallerRunsPolicy，AbortPolicy，DiscardPolicy，DiscardOldestPolicy。
+也可以自定义拒绝策略，实现RejectedExecutionHandler的rejectedExecution方法。
 
 
 
