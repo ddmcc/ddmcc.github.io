@@ -111,10 +111,231 @@ author: ddmcc
 
 
 >这里有个疑问就是：在设计模式书上说，没有volatile会使'双重检查加锁'失效。（原话是JDK1.4或更早的volatile实现会失效）
-我们知道volatile是保证了可见性，synchronized关键字不是已经保证了可见性了吗？
+我们知道volatile是保证了可见性与禁止重排序，synchronized关键字不是已经保证了可见性和禁止重排序了吗？
+
+答案：
+synchronized并不能禁止指令重排序，编译器指令可能会重排序。假设new Instance()分为开辟内存地址，初始化对象，对引用变量进行赋值。指令重排序后可能顺序变成了
+1,3,2。即另一线程拿到的可能是一个还没有完全初始化完成的实例。
 
 
 #### 注册表式
-待续...
+
+Spring IOC就是用这种方式来管理单例bean的，虽然源码要复杂的多，但是设计思想还是差不多的！
+
+	public class SingletonPattenTest {
+
+		private SingletonPattenTest(){}
+
+		private volatile static Map<Class<?>, Object> map = new HashMap<>();
+
+		public static Object getInstance(Class<?> clazz) throws IllegalAccessException, InstantiationException {
+			Object obj = map.get(clazz);
+			if (obj == null) {
+				synchronized (SingletonPattenTest.class) {
+					if (obj == null) {
+						obj = clazz.newInstance();
+						map.put(clazz, obj);
+					}
+				}
+			}
+			return obj;
+		}
+	}
+
+
+Spring源码
+
+```java
+protected <T> T doGetBean(
+			final String name, final Class<T> requiredType, final Object[] args, boolean typeCheckOnly)
+			throws BeansException {
+
+		final String beanName = transformedBeanName(name);
+		Object bean;
+
+		// Eagerly check singleton cache for manually registered singletons.
+		Object sharedInstance = getSingleton(beanName);
+		if (sharedInstance != null && args == null) {
+			if (logger.isDebugEnabled()) {
+				if (isSingletonCurrentlyInCreation(beanName)) {
+					logger.debug("Returning eagerly cached instance of singleton bean '" + beanName +
+							"' that is not fully initialized yet - a consequence of a circular reference");
+				}
+				else {
+					logger.debug("Returning cached instance of singleton bean '" + beanName + "'");
+				}
+			}
+			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
+		}
+
+		else {
+			// Fail if we're already creating this bean instance:
+			// We're assumably within a circular reference.
+			if (isPrototypeCurrentlyInCreation(beanName)) {
+				throw new BeanCurrentlyInCreationException(beanName);
+			}
+
+			// Check if bean definition exists in this factory.
+			BeanFactory parentBeanFactory = getParentBeanFactory();
+			if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
+				// Not found -> check parent.
+				String nameToLookup = originalBeanName(name);
+				if (args != null) {
+					// Delegation to parent with explicit args.
+					return (T) parentBeanFactory.getBean(nameToLookup, args);
+				}
+				else {
+					// No args -> delegate to standard getBean method.
+					return parentBeanFactory.getBean(nameToLookup, requiredType);
+				}
+			}
+
+			if (!typeCheckOnly) {
+				markBeanAsCreated(beanName);
+			}
+
+			try {
+				final RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
+				checkMergedBeanDefinition(mbd, beanName, args);
+
+				// Guarantee initialization of beans that the current bean depends on.
+				String[] dependsOn = mbd.getDependsOn();
+				if (dependsOn != null) {
+					for (String dependsOnBean : dependsOn) {
+						if (isDependent(beanName, dependsOnBean)) {
+							throw new BeanCreationException(mbd.getResourceDescription(), beanName,
+									"Circular depends-on relationship between '" + beanName + "' and '" + dependsOnBean + "'");
+						}
+						registerDependentBean(dependsOnBean, beanName);
+						getBean(dependsOnBean);
+					}
+				}
+
+				// Create bean instance.
+				if (mbd.isSingleton()) {
+					sharedInstance = getSingleton(beanName, new ObjectFactory<Object>() {
+						@Override
+						public Object getObject() throws BeansException {
+							try {
+								return createBean(beanName, mbd, args);
+							}
+							catch (BeansException ex) {
+								// Explicitly remove instance from singleton cache: It might have been put there
+								// eagerly by the creation process, to allow for circular reference resolution.
+								// Also remove any beans that received a temporary reference to the bean.
+								destroySingleton(beanName);
+								throw ex;
+							}
+						}
+					});
+					bean = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);
+				}
+
+				else if (mbd.isPrototype()) {
+					// It's a prototype -> create a new instance.
+					Object prototypeInstance = null;
+					try {
+						beforePrototypeCreation(beanName);
+						prototypeInstance = createBean(beanName, mbd, args);
+					}
+					finally {
+						afterPrototypeCreation(beanName);
+					}
+					bean = getObjectForBeanInstance(prototypeInstance, name, beanName, mbd);
+				}
+
+				else {
+					String scopeName = mbd.getScope();
+					final Scope scope = this.scopes.get(scopeName);
+					if (scope == null) {
+						throw new IllegalStateException("No Scope registered for scope '" + scopeName + "'");
+					}
+					try {
+						Object scopedInstance = scope.get(beanName, new ObjectFactory<Object>() {
+							@Override
+							public Object getObject() throws BeansException {
+								beforePrototypeCreation(beanName);
+								try {
+									return createBean(beanName, mbd, args);
+								}
+								finally {
+									afterPrototypeCreation(beanName);
+								}
+							}
+						});
+						bean = getObjectForBeanInstance(scopedInstance, name, beanName, mbd);
+					}
+					catch (IllegalStateException ex) {
+						throw new BeanCreationException(beanName,
+								"Scope '" + scopeName + "' is not active for the current thread; " +
+								"consider defining a scoped proxy for this bean if you intend to refer to it from a singleton",
+								ex);
+					}
+				}
+			}
+			catch (BeansException ex) {
+				cleanupAfterBeanCreationFailure(beanName);
+				throw ex;
+			}
+		}
+
+		// Check if required type matches the type of the actual bean instance.
+		if (requiredType != null && bean != null && !requiredType.isAssignableFrom(bean.getClass())) {
+			try {
+				return getTypeConverter().convertIfNecessary(bean, requiredType);
+			}
+			catch (TypeMismatchException ex) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("Failed to convert bean '" + name + "' to required type [" +
+							ClassUtils.getQualifiedName(requiredType) + "]", ex);
+				}
+				throw new BeanNotOfRequiredTypeException(name, requiredType, bean.getClass());
+			}
+		}
+		return (T) bean;
+	}
+```
+
 
 #### 枚举式
+
+	public enum SingletonPattenTest {
+		INSTANCE;
+	}
+	
+在通过 **SingletonPattenTest.INSTANCE** 就可以获得对象了
+
+好处：
+- 避免反射攻击的问题。 在普通的单例模式中，私有化构造函数并不能阻止创建唯一的实例，可以通过反射 **.setAccessible** 来创建实例。而枚举类并不允许通过反射来创建实例。
+
+- 避免序列化问题问题。 任何一个readObject方法，不管是显式的还是默认的，它都会返回一个新建的实例，这个新建的实例不同于该类初始化时创建的实例。要解决的话可以重写方法readResolve，
+- 它会在readObject之后被调用，并替换readObject返回的实例。但需要注意的是，如果单例实例中存在非transient对象引用，就会有被攻击的危险。可以在readResolve之前，对非transient对象引用域
+进行操作。
+而枚举序列化的时候仅仅是将枚举对象的name属性输出到结果中，反序列化的时候则是通过java.lang.Enum的valueOf方法来根据名字查找枚举对象。
+同时，编译器是不允许任何对这种序列化机制的定制的，因此禁用了writeObject、readObject、readObjectNoData、writeReplace和readResolve等方法
+
+- 避免线程安全问题。枚举类所有属性都会被声明称static类型，它是在类加载的时候初始化的，而类的加载和初始化过程都是线程安全的。所以，创建一个enum类型是线程安全的。
+
+
+#### 静态内部类
+
+	public class SingletonPattenTest{
+		
+	    private SingletonPattenTest(){}
+	 
+	    private static class SingletonHoler{
+			
+			private static SingletonPattenTest instance = new SingletonPattenTest();
+		}
+	 
+		public static SingletonPattenTest getInstance(){
+			return SingleTonHoler.instance;
+		}
+	}
+	
+优点是：外部类加载时并不需要立即加载内部类，内部类不被加载则不去初始化instance，故而不占内存。即当SingletonPattenTest第一次被加载时，
+并不需要去加载SingleTonHoler，只有当getInstance()方法第一次被调用时，才会加载SingleTonHoler类并初始化instance，这种方法不仅能确保线程安全，也能保证单例的唯一性，同时也延迟了单例的实例化。
+
+缺点：
+- 需要两个类去做到这一点，虽然不会创建静态内部类的对象，但是其 Class 对象还是会被创建，而且是属于永久带的对象。
+- 创建的单例，一旦在后期被销毁，不能重新创建。
