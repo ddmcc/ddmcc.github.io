@@ -10,7 +10,7 @@ author: ddmcc
 * content
 {:toc}
 
-最近公司公众号要用到定位服务，需要后台提供签名接口，记录一下。
+公众号要用到定位服务，需要后台提供签名接口，记录一下。
 
 签名是由jsapi_ticket+随机字符串+时间戳+页面请求url拼接后通过SHA-1加密生成的。参数必须全部小写，url是调用定位服务的页面的url。
 
@@ -20,6 +20,7 @@ author: ddmcc
 
 String string1 = "jsapi_ticket=" + ticket + "&noncestr=" + nonceStr + "&timestamp=" + timestamp + "&url=" + url;
 
+## 获取token
 
 1,jsapi_ticket是由参数access_token获取的，而access_token又是由appid和secret获取的。所以先要去获取access_token。
 
@@ -51,6 +52,8 @@ String string1 = "jsapi_ticket=" + ticket + "&noncestr=" + nonceStr + "&timestam
 	// 微信公众号TICKET 默认保存7200秒
     private volatile String ticket = "";
 
+
+## 获取jsapi_ticket
 
 2，获取jsapi_ticket，jsapi_ticket和token一样也是7200秒，就是两小时
 
@@ -86,8 +89,8 @@ String string1 = "jsapi_ticket=" + ticket + "&noncestr=" + nonceStr + "&timestam
         return ticket;
     }
 	
-	
-3，获取签名
+
+## 生成签名
 
 	// 获取签名需要传入url，动态的获取url以便其他地方也能用。
     public Map<String, String> getParams(String url) {
@@ -184,7 +187,7 @@ String string1 = "jsapi_ticket=" + ticket + "&noncestr=" + nonceStr + "&timestam
         return jsonObject;
     }
 	
-	
+## 定时刷新	
 4，因为有效期是两小时，所以还要设置个定时器去刷新token和ticket。设置为每小时刷新一次。
 
 	@Scheduled(cron = "0 0 0/1 * * ?")
@@ -195,7 +198,7 @@ String string1 = "jsapi_ticket=" + ticket + "&noncestr=" + nonceStr + "&timestam
 	
 	
 	
-遇到的问题：
+## 遇到的问题
 	
 - 在获取token时，接口返回无效的ip。 需要在微信公众号上添加白名单。
 
