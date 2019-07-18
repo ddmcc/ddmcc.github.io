@@ -164,21 +164,21 @@ Spring IOC就是用这种方式来管理单例bean的，虽然源码要复杂的
 
 #### 静态内部类
 
-	public class SingletonPattenTest{
-		
-	    private SingletonPattenTest(){}
-	 
-	    private static class SingletonHoler{
-			
+	public class SingletonPattenTest {
+
+		private SingletonPattenTest(){}
+
+		private static class SingletonHolder {
 			private static SingletonPattenTest instance = new SingletonPattenTest();
 		}
-	 
+
 		public static SingletonPattenTest getInstance(){
-			return SingleTonHoler.instance;
+			return SingletonHolder.instance;
 		}
 	}
 	
-优点是：外部类加载时并不需要立即加载内部类，内部类不被加载则不去初始化instance，故而不占内存。即当SingletonPattenTest第一次被加载时，
+优点：
+外部类加载时并不需要立即加载内部类，内部类不被加载则不去初始化instance，故而不占内存。即当SingletonPattenTest第一次被加载时，
 并不需要去加载SingleTonHoler，只有当getInstance()方法第一次被调用时，才会加载SingleTonHoler类并初始化instance，这种方法不仅能确保线程安全，也能保证单例的唯一性，同时也延迟了单例的实例化。
 
 缺点：
