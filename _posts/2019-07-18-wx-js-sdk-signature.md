@@ -20,7 +20,7 @@ author: ddmcc
 
 ## 获取token
 
-1,jsapi_ticket是由参数access_token获取的，而access_token又是由appid和secret获取的。所以先要去获取access_token。
+jsapi_ticket是由参数access_token获取的，而access_token又是由appid和secret获取的。所以先要去获取access_token。
 
     /**
      *
@@ -33,7 +33,8 @@ author: ddmcc
         Object appSecret = DictionaryCache.systemConfig.get("h5.app.secret");//(应用密钥)
         String url ="https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid="+appId+"&secret="+appSecret+"";
         JSONObject backData = doGet(url);
-        if (backData == null || backData.getInteger("errcode") != null || (accessToken = backData.getString("access_token")) == null) {
+        if (backData == null || backData.getInteger("errcode") != null || 
+				(accessToken = backData.getString("access_token")) == null) {
             logger.info(String.format("获取access_token失败 response -> %s   ", backData));
             return null;
         }
@@ -53,7 +54,7 @@ author: ddmcc
 
 ## 获取jsapi_ticket
 
-2，获取jsapi_ticket，jsapi_ticket和token一样也是7200秒，就是两小时
+获取jsapi_ticket，jsapi_ticket和token一样也是7200秒，就是两小时
 
     /**
      *
@@ -80,7 +81,8 @@ author: ddmcc
         }
         String url = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token="+accessToken+"&type=jsapi";
         JSONObject backData = doGet(url);
-        if (backData == null || backData.getInteger("errcode") != 0 || (ticket = backData.getString("ticket")) == null) {
+        if (backData == null || backData.getInteger("errcode") != 0 || 
+				(ticket = backData.getString("ticket")) == null) {
             logger.info(String.format("获取jsApiTicket失败 response -> %s   ", backData));
             return null;
         }
@@ -205,11 +207,17 @@ author: ddmcc
 
 根据微信的提示
 >2.invalid signature签名错误。建议按如下顺序检查：
+
 1.确认签名算法正确，可用http://mp.weixin.qq.com/debug/cgi-bin/sandbox?t=jsapisign 页面工具进行校验。
+
 2.确认config中nonceStr（js中驼峰标准大写S）, timestamp与用以签名中的对应noncestr, timestamp一致。
+
 3.确认url是页面完整的url(请在当前页面alert(location.href.split('#')[0])确认)，包括'http(s)://'部分，以及'？'后面的GET参数部分,但不包括'#'hash后面的部分。
+
 4.确认 config 中的 appid 与用来获取 jsapi_ticket 的 appid 一致。
+
 5.确保一定缓存access_token和jsapi_ticket。
+
 6.确保你获取用来签名的url是动态获取的，动态页面可参见实例代码中php的实现方式。如果是html的静态页面在前端通过ajax将url传到后台签名，前端需要用js获取当前页面除去'#'hash部分的链接（可用location.href.split('#')[0]获取,而且需要encodeURIComponent），因为页面一旦分享，微信客户端会在你的链接末尾加入其它参数，如果不是动态获取当前链接，将导致分享后的页面签名失败。
 
 前端没有对url进行转码，加上encodeURIComponent后就可以了。
