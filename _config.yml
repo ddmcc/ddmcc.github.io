@@ -40,7 +40,7 @@ baidu_tongji_id: d0a79a27037afccbe63395ae24727ed6
 # google_analytics_id: UA-72449510-4
 
 # Build settings
-markdown: kramdown
+markdown: github-flavored-markdown
 
 highlighter: rouge
 
