@@ -22,6 +22,7 @@ author: ddmcc
 
 jsapi_ticket是由参数access_token获取的，而access_token又是由appid和secret获取的。所以先要去获取access_token。
 
+
     /**
      *
      * 获取accessToken
