@@ -22,7 +22,8 @@ author: ddmcc
 
 jsapi_ticket是由参数access_token获取的，而access_token又是由appid和secret获取的。所以先要去获取access_token。
 
-    /**
+```Java
+/**
      *
      * 获取accessToken
      *
@@ -40,6 +41,7 @@ jsapi_ticket是由参数access_token获取的，而access_token又是由appid和
         }
         return accessToken;
     }
+```
 	
 	
 因为access_token是有有效期的，现在默认是7200s，所以需要全局缓存，以便后面的请求使用。而且每天这个接口有调用次数限制。好像是2000次？
