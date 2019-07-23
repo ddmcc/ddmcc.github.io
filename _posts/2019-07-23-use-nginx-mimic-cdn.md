@@ -65,7 +65,9 @@ author: ddmcc
 
 
 
-**3,在nginx目录下创建`/wwwroot/cdn`目录,再在目录下创建`/2019/07/23`目录,将文件`2019-07-23-use-nginx-mimic-cdn.md`上传到该目录**
+**3,在nginx目录下创建`/wwwroot/cdn`目录,再在目录下创建`/2019/07/23`目录,将文件**
+
+**`2019-07-23-use-nginx-mimic-cdn.md`上传到该目录**
 ![](https://i.loli.net/2019/07/23/5d3727a310c5283443.png)
 
 
