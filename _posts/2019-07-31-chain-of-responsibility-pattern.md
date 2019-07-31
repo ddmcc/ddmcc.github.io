@@ -3,7 +3,7 @@ layout: post
 title:  "设计模式之责任链模式"
 date:   2019-07-31 20:37:49
 categories: 设计模式
-tags: 责任链模式
+tags: 设计模式 责任链模式
 author: ddmcc
 ---
 
