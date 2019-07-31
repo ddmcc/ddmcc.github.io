@@ -17,7 +17,7 @@ type: page
 
 * GitHub：[ddmcc](https://github.com/ddmcc)
 * email：308119975@qq.com
-* Weibo: [他们叫俺john](https://weibo.com/ddmcc66)
+* Weibo: 
 
 ## 关于本站
 
