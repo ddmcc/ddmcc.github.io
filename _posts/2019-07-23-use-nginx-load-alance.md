@@ -70,7 +70,7 @@ author: ddmcc
 
 
 输入`192.168.132.129:9090` 查看端口是否已追加
-![](https://i.loli.net/2019/07/23/5d37182cd7a4086825.png)
+![](https://i.loli.net/2019/08/03/W4cC5RfrGwIOd8o.png)
 
 tomcat2重复tomcat1的操作,追加端口9091
 
