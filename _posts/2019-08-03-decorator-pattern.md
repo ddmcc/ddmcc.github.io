@@ -30,7 +30,7 @@ author: ddmcc
 - 创建一个新的类来继承这个类，扩展的功能由新的类来实现
 
 对于第一种方式，我是拒绝的。首先它违背了 **开闭原则**，一个类对扩展是开放的，对修改是关闭的（注：对修改是关闭的不是说不让修改，而是在
-不会在影响现有功能代码的情况下修改。）。所以它可能会对原有的代码产生影响，并且会让类里的代码变得更加臃肿。
+不会在影响现有功能代码的情况下修改），所以它可能会对原有的代码产生影响，并且会让类里的代码变得更加臃肿。
 
 对于用继承的方法，它解决了开闭原则问题。但是继承它是在编译的时候就已经决定好的，也就是这个类的行为与属性不能动态的修改。但是对于
 装饰者模式，它利用组合的方式来扩展。在我们编写代码时可以动态的更改我们想要组合的对象，即动态更改我们相要扩展的功能。
@@ -57,7 +57,7 @@ author: ddmcc
 
 这要怎么理解呢？？
 
-![](https://i.loli.net/2019/08/04/xkbwdrsalT4CyUF.jpg)
+↓ ↓ ↓ ↓ ↓  接着往下看
 
 ## 使用场景
 
@@ -141,15 +141,15 @@ public class Wardrobe extends Furniture {
 
 原料装饰与品牌装饰：
 
-Decorator
-  |
-  |--- MaterialDecorator  // 原料装饰
-  |      |--- SolidWoodFurniture  // 实木家具
-  |	 |--- MahoganyFurniture  // 红木家具
-  |
-  |--- TrademarkDecorator  // 品牌装饰
-         |--- IKEAFurniture  // 宜家
-	 |--- QYFurniture  // 全友
+	Decorator
+	  |
+	  |--- MaterialDecorator  // 原料装饰
+	  |      |--- SolidWoodFurniture  // 实木家具
+	  |	 |--- MahoganyFurniture  // 红木家具
+	  |
+	  |--- TrademarkDecorator  // 品牌装饰
+		 |--- IKEAFurniture  // 宜家
+		 |--- QYFurniture  // 全友
 	
 
 
