@@ -61,7 +61,9 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container')
 </script>
 <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
-{% elseif site.change_yan %}
+{% endif %}
+
+{% if site.change_yan %}
 <!--PC和WAP自适应版-->
 <div id="SOHUCS" sid="{{ site.url }}{{ page.url }}" ></div> 
 <script type="text/javascript"> 
