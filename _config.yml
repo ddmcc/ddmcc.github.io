@@ -29,7 +29,14 @@ change_yan:
   appid: cyueYN9lt
   conf: prod_f91c5f85012ce0c5a4c9b50031d5cb90
 
-
+gitalk:
+  clientID: 0573f613ee08ad6d2dea
+  clientSecret: be87f2c7fe41a07018a1e6e4a46f06d939bde1f5
+  repo: ddmcc.github.io
+  owner: ddmcc
+  admin: ['ddmcc']
+  id: location.pathname
+  distractionFreeMode: false
 
 # statistic analysis 统计代码
 # 百度统计 id，将统计代码替换为自己的百度统计id，即
