@@ -6462,8 +6462,6 @@ var GitalkComponent = function (_Component) {
     key: 'createIssue',
     value: function createIssue() {
       var _this7 = this;
-		console.log(this.options)
-			console.log(this.options.titlePref)
       var _options3 = this.options,
           owner = _options3.owner,
           repo = _options3.repo,
@@ -6471,8 +6469,8 @@ var GitalkComponent = function (_Component) {
           body = _options3.body,
           id = _options3.id,
           labels = _options3.labels,
-          url = _options3.url;
-		  titlePref = _options3.titlePref
+          url = _options3.url,
+		  titlePref = _options3.titlePref;
       return _util.axiosGithub.post('/repos/' + owner + '/' + repo + '/issues', {
         title: titlePref + title,
         labels: labels.join(','),
