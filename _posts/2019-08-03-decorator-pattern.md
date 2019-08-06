@@ -365,13 +365,3 @@ public static void main(String[] args) {
 
 + 利用装饰者模式可以比利用继承来创建更少的类，但在使用时会有更多的小对象。特别是在复杂的时候，一层装饰一层，不易排查错误。
 + 如果设计了很多的装饰者，产生大量的小类，会对使用者产生困扰。如Java I/O流
-
-```flow
-st=>start: 开始
-op=>operation: My Operation
-cond=>condition: Yes or No?
-e=>end
-st->op->cond
-cond(yes)->e
-cond(no)->op
-&```
