@@ -35,7 +35,7 @@ gitalk:
   repo: ddmcc.github.io
   owner: ddmcc
   admin: ['ddmcc']
-  id: location.pathname
+  id: location.href
   distractionFreeMode: false
 
 # statistic analysis 统计代码
