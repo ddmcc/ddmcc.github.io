@@ -50,7 +50,7 @@
 <!-- <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script> -->
 <script src="/js/gitalk.js"></script>
 <script>
-var pref = '{{ page.url }}'.replace('\//g','-');
+var pref = '{{ page.url }}'.replace(/\//g,"-");
 var gitalk = new Gitalk({
   clientID: '{{ site.gitalk.clientID }}',
   clientSecret: '{{ site.gitalk.clientSecret }}',
