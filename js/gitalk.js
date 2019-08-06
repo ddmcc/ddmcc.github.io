@@ -6462,7 +6462,8 @@ var GitalkComponent = function (_Component) {
     key: 'createIssue',
     value: function createIssue() {
       var _this7 = this;
-
+		console.log(this.options)
+			console.log(this.options.titlePref)
       var _options3 = this.options,
           owner = _options3.owner,
           repo = _options3.repo,
