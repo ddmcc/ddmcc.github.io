@@ -75,8 +75,32 @@ Adaptee：没有，快滚！
 
 它们两的区别就是对象适配器使用了**组合**的方式，而类适配器使用了**继承**的方式（因为不支持多继承，所以实现Target）。这两种实现的所产生的差异就是
 使用组合的对象适配器更有弹性，它不仅适配了该适配者，适配者的子类也适配了。而类适配者的好处是因为使用的是继承，所以可以不需要重新实现整个被适配者（这边的
-意思是如果有不需要适配的接口，即接口方法名，参数什么的都和Target里的一致，则不需要重写）。当然也可以重写父类的方法。
+意思是如果有不需要适配的接口，即接口方法名，参数什么的都和Target里的一致，则不需要重写，如下代码）。当然也可以重写父类的方法。
 
+
+```java
+public class Main {
+
+    public static void main(String[] args) {
+        Adapter adapter = new Adapter();
+        adapter.operation();
+    }
+    
+    interface Target {
+        void operation();
+    }
+
+    static class Adaptee {
+        public void operation(){
+            System.out.println(111);
+        }
+    }
+
+    static class Adapter extends Adaptee implements Target {
+
+    }
+}
+```
 
 
 ## 来个栗子
