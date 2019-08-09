@@ -322,3 +322,9 @@ private <T> Iterator<T> getIterator(int type) {
 
 ## 适配器模式与装饰者模式
 
+
+
+## 总结
+
+## 优点和缺点
+
