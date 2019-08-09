@@ -105,5 +105,227 @@ public class Main {
 
 ## 来个栗子
 
+现在大部分手机产商都不送耳机了，而且也取消了3.5mm的耳机孔，改成充电器孔和耳机孔一起。。假如你买了一个新手机是无耳机孔，但是你的耳机是3.5mm接口的。这时就出现了手机与耳机无法适配的情况。
 
-······························································································
+
+![](https://i.loli.net/2019/08/09/pu6obZqAhEKVQdS.png)
+
+---
+这时候就需要用转接器了！而适配器就相当于做了转接器的工作。类图如下
+---
+
+![](https://i.loli.net/2019/08/09/546zVHfjwdhUNSn.png)
+
+---
+代码如下：
+
+
+```java
+public interface Phone {
+
+    void earPhonePlug();
+
+}
+
+
+public class Samsung implements Phone {
+
+    @Override
+    public void earPhonePlug() {
+        System.out.println("三星手机Type-C接口");
+    }
+}
+
+public interface EarPhoneAdapter {
+
+    void earPhonePlugThreeMM();
+
+    void earPhonePlugTypeC();
+
+}
+
+
+public class SamsungAdapter implements EarPhoneAdapter {
+
+    private Phone phone;
+
+    public SamsungAdapter(Phone phone) {
+        this.phone = phone;
+    }
+
+    @Override
+    public void earPhonePlugThreeMM() {
+        System.out.println("3.5mm接口");
+        earPhonePlugTypeC();
+    }
+
+    @Override
+    public void earPhonePlugTypeC() {
+        System.out.println("Type-C接口");
+        phone.earPhonePlug();
+    }
+}
+```
+
+运行，即耳机插入适配器
+
+```java
+public static void main(String[] args) {
+    Phone phone = new Samsung();
+    EarPhoneAdapter earPhoneAdapter = new SamsungAdapter(phone);
+    earPhoneAdapter.earPhonePlugThreeMM();
+	// 输出
+	3.5mm接口
+    Type-C接口
+    三星手机Type-C接口
+}
+```
+
+如果有个华为的手机，也是Type-C接口的，这时并不需要修改适配器代码，就能够直接复用。**这就是组合的威力**
+
+```java
+public class HuaWei implements Phone {
+    @Override
+    public void earPhonePlug() {
+        System.out.println("华为Type-C接口");
+    }
+}
+
+
+public static void main(String[] args) {
+    Phone phone = new HuaWei();
+    EarPhoneAdapter earPhoneAdapter = new SamsungAdapter(phone);
+    earPhoneAdapter.earPhonePlugThreeMM();
+}
+```
+
+---
+如果用类适配器的实现方式的话，代码如下：
+
+
+主要是适配器的变化，由组合的方式变成继承
+
+```java
+public class SamsungAdapter extends Samsung implements EarPhoneAdapter {
+
+    @Override
+    public void earPhonePlugThreeMM() {
+        System.out.println("3.5mm接口");
+        earPhonePlugTypeC();
+    }
+
+    @Override
+    public void earPhonePlugTypeC() {
+        System.out.println("Type-C接口");
+        super.earPhonePlug();
+    }
+}
+```
+
+运行
+
+```java
+public static void main(String[] args) {
+    EarPhoneAdapter earPhoneAdapter = new SamsungAdapter();
+    earPhoneAdapter.earPhonePlugThreeMM();
+	// 输出
+	3.5mm接口
+    Type-C接口
+    三星手机Type-C接口
+}
+```
+
+这样你会发现这个三星的耳机适配器和三星手机已经绑死了，因为继承了三星手机。如果我这时想给华为手机用，就用不了了。就不得不再买一个华为的适配器。
+
+
+## 实际一点的栗子
+
+早期HashTable的遍历是用Enumeration接口的，后来出了迭代器Iterator，现在想让HashTable也用上迭代器怎么做呢？？
+
+>public interface Enumeration<E> {
+>
+>    boolean hasMoreElements();
+>
+>   E nextElement();
+>}
+
+
+>public interface Iterator<E> {
+>  
+>    boolean hasNext();
+>
+>    E next();
+>   
+>    default void remove() {
+>        throw new UnsupportedOperationException("remove");
+>    }
+>
+>    default void forEachRemaining(Consumer<? super E> action) {
+>        Objects.requireNonNull(action);
+>        while (hasNext())
+>            action.accept(next());
+>    }
+>}
+
+
+在HashTable有一个Enumerator<T> 类实现了Enumeration<E>和Iterator<E>接口，并对两个接口进行了实现。**实际上是只实现了Enumeration接口(也实现了remove方法)，Iterator的接口则直接调用对应的方法！**
+
+```java
+private class Enumerator<T> implements Enumeration<T>, Iterator<T> {
+        /**
+         * Indicates whether this Enumerator is serving as an Iterator
+         * or an Enumeration.  (true -> Iterator).
+         */
+        boolean iterator;
+
+        Enumerator(int type, boolean iterator) {
+            this.type = type;
+            this.iterator = iterator;
+        }
+
+        public boolean hasMoreElements() {
+            Entry<?,?> e = entry;
+            int i = index;
+            Entry<?,?>[] t = table;
+            /* Use locals for faster loop iteration */
+            while (e == null && i > 0) {
+                e = t[--i];
+            }
+            entry = e;
+            index = i;
+            return e != null;
+        }
+
+        // Iterator methods
+        public boolean hasNext() {
+            return hasMoreElements();
+        }
+
+        // 省略了其它方法...
+    }
+```
+
+
+Enumerator就相当于一个适配器，能够适配两种方式的遍历！通过判断属性iterator来判断是哪种迭代器。iterator属性由构造函数传入，下面代码为新建Enumerator
+
+```java
+private <T> Enumeration<T> getEnumeration(int type) {
+     if (count == 0) {
+         return Collections.emptyEnumeration();
+     } else {
+         return new Enumerator<>(type, false);
+     }
+}
+
+private <T> Iterator<T> getIterator(int type) {
+    if (count == 0) {
+        return Collections.emptyIterator();
+    } else {
+        return new Enumerator<>(type, true);
+    }
+}
+```
+
+
+## 适配器模式与装饰者模式
+
