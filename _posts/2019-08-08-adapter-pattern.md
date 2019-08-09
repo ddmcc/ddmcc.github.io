@@ -242,16 +242,15 @@ public static void main(String[] args) {
 
 早期HashTable的遍历是用Enumeration接口的，后来出了迭代器Iterator，现在想让HashTable也用上迭代器怎么做呢？？
 
->public interface Enumeration<E> {
->
+Enumeration<E> 接口：
+
 >    boolean hasMoreElements();
->
+
 >   E nextElement();
->}
 
 
->public interface Iterator<E> {
->  
+Iterator<E> 接口：
+
 >    boolean hasNext();
 >
 >    E next();
@@ -259,13 +258,7 @@ public static void main(String[] args) {
 >    default void remove() {
 >        throw new UnsupportedOperationException("remove");
 >    }
->
->    default void forEachRemaining(Consumer<? super E> action) {
->        Objects.requireNonNull(action);
->        while (hasNext())
->            action.accept(next());
->    }
->}
+
 
 
 在HashTable有一个Enumerator<T> 类实现了Enumeration<E>和Iterator<E>接口，并对两个接口进行了实现。**实际上是只实现了Enumeration接口(也实现了remove方法)，Iterator的接口则直接调用对应的方法！**
