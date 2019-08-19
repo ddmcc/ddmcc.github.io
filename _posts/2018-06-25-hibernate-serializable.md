@@ -3,7 +3,7 @@ layout: post
 title:  "Hibernate save插入数据返回主键为0"
 date:   2018-06-25 23:06:03
 categories: Hibernate 
-tags: Hibernate Serializable
+tags: Hibernate
 author: ddmcc
 ---
 
