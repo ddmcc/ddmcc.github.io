@@ -1,9 +1,9 @@
 ---
 layout: post
-title:  "React组件生命周期"
-date:   2019-09-02 15:32:55
+title:  "React生命周期"
+date:   2019-09-02 23:25:18
 categories: 前端
-tags:  React
+tags:  react
 author: ddmcc
 ---
 
