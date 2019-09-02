@@ -14,9 +14,13 @@ author: ddmcc
  　　React组件的一生主要分为四个阶段分别为初始化（`Initialization`），挂载（`Mounting`），更新（`Updation`），卸载（`Unmounting`），
  下面介绍挂载和更新的一些方法。
  
+ 
+ 
+ 
  　　 **下面画横线的表示不能那么做**
  
- ## 16.3之前
+ 
+## 16.3之前
  
  ![](https://i.loli.net/2019/09/02/KLbZQvPx6dOEwh2.png)
  
@@ -116,7 +120,7 @@ author: ddmcc
 >- componentWillUpdate
 >- render
 
- 　　**所以如果在`componentWillMount`和`componentWillUpdate`做一些后台数据的获取或者定时器的初始化等的工作，将不再适合**，因为这些方法有可能会被执行多次。官方为了不让大家在上面的方法中继续做不正确的事情，
+ 　　**所以如果在`componentWillMount`和`componentWillUpdate`做一些后台数据的获取或者定时器的初始化等的工作，将不再适合，因为这些方法有可能会被执行多次**。官方为了不让大家在上面的方法中继续做不正确的事情，
  干脆把这几个方法给废弃了，并推出了新的方法`getDerivedStateFromProps`，如果之前在废弃的方法中的实现比较纯，那么直接移到新的方法中即可。它是一个静态方法，不能使用this，结果只由输入去改变，**返回的结果直接传给setState**。
  **如果是要去后台获取数据或者初始化的工作则可以移到`componentWillMount`和`componentWillUpdate`方法中**。这两个方法不会有被执行多次的可能。
  
@@ -126,9 +130,9 @@ author: ddmcc
  ---
  图来源于[http://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/](http://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)
  
- #### 挂载阶段
+#### 挂载阶段
  
- #### 更新阶段
+#### 更新阶段
  
  
  
