@@ -129,10 +129,93 @@ author: ddmcc
  
 #### 挂载阶段
  
+- getDerivedStateFromProps
+ 
+   `static getDerivedStateFromProps(nextProps, prevState)` 这是一个静态的方法，会传入新的props和原来的状态值。在调用 render 方法之前调用，它应返回一个对象来更新 state，如果返回 null 则不会更新内容。
+   官方文档也说了这个方法适用于state的值在任何时候都取决于props，如果要做 **有副作用的操作则应使用DidMounting，DidUpdate或在prop更改时“重置”某些state则可以考虑使用受控的组件** 
+   
+   如图此方法也可能会被暂停，中断或重新开始，因为处于`Render 阶段`
+   
+- render
+ 
+    方法也可能会被暂停，中断或重新开始
+    
+- componentDidMount
+    
+    同上
+ 
 #### 更新阶段
+
+- **1,调用setState更新状态触发**
+
+    - shouldComponentUpdate
+        
+        调用`setState`触发的渲染并不会调用getDerivedStateFromProps，而是直接到了`shouldComponentUpdate`。**需要注意的是shouldComponentUpdate也有执行多次的可能**
+     
+    - render
+    
+        同挂载阶段，也可能多次执行
+
+    - getSnapshotBeforeUpdate(prevProps, prevState)
+     
+        这也是在V16.3中新加入的方法，只有在更新阶段，`render`方法和真正DOM被改变之间执行，如图这时可以读取dom，此方法不会被中止或重新开始。**方法返回的值会在`componentDidUpdate`方法的第三个参数传入**
+     
+     >componentDidUpdate(prevProps, prevState, snapshot)
+     
+    - componentDidUpdate
+    
+       同上
+     
  
+- **2,父组件传入新的props**
+
+    - getDerivedStateFromProps
+    
+        在更新阶段的`setState`方法而触发的重新渲染会被调用，解释如上。**需要注意的是，此方法也在“纯净不包含副作用”阶段，所以可能会被执行多次。
+        
+    - shouldComponentUpdate 
+    
+        同上
+        
+    - render
+    
+        同上
+        
+    - componentDidUpdate
+    
+        同上
+        
+- **3,调用forceUpdate**
+
+    此过程和16.3之前一样会直接到render方法
+    
+    
+## ^16.4
+
+ 　　在16.3中新加入的`getDerivedStateFromProps`方法只有在挂载和由`setState`引起的Updating才会被执行，这可能会给开发人员带来困扰，父组件传入新的props和forceUpdate并不会Updating。
  
+ 　　**在16.4中，React官方改正了这一点，无论是挂在阶段或是任何动作引起的Updating都会触发`getDerivedStateFromProps`**。
  
+ 　　所以16.4的生命周期方法如下图：
  
     
+![](https://i.loli.net/2019/09/03/vUF4JQlijD5yCoT.png)
+
+---
+ 　　解释：略
       
+
+## 总结
+
+ 　　用静态函数getDerivedStateFromProps来取代被deprecate的几个生命周期函数，就是强制开发者在render之前只做无副作用的操作，而且能做的操作局限在根据props和state决定新的state，因为在render阶段生命周期方法可能会被执行多次。**废弃的方法会在17版本中删除**
+ 
+ 
+## 参考
+
+[https://zh-hans.reactjs.org/docs/react-component.html](https://zh-hans.reactjs.org/docs/react-component.html)
+
+[React v16.3之后的组件生命周期函数](https://zhuanlan.zhihu.com/p/38030418)
+
+[React Fiber是什么](https://zhuanlan.zhihu.com/p/26027085)
+
+[http://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/](http://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)
