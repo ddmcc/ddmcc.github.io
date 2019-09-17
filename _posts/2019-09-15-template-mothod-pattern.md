@@ -155,12 +155,68 @@ public class Main {
 
 
 ## jdk中的🌰
+ 　　 `ArrayList` 继承了抽象类 `AbstractList` ，有许多方法在AbstractList中已经有默认的实现了。如：
+ 
+ `indexOf`,`equals`等等等，还有的是抽象方法等着子类去实现的，如：`get`
+ 
+    public abstract E get(int index);
+    
+在`AbstractList`内部有Iterator的私有实现类，这是AbstractList提供的默认迭代器，也是继承者们默认拥有的迭代器（如果没有自己实现`iterator()`,`listIterator()`等方法）。在迭代器方法`next()`, `remove()`中，调用了`get()`，`remove()`方法。
+可以看到这两个方法在 AbstractList 内部并没有真正的实现，而是直接抛出异常！意思就是必须你自己去实现，不实现就用不了了！所以迭代器中方法也可以看做是模板方法，其中一部分等待子类去实现。
 
+    // AbstractList提供的迭代器中方法
+    public E next() {
+        checkForComodification();
+        try {
+            int i = cursor;
+            
+            // 调用抽象方法get
+            E next = get(i);
+            lastRet = i;
+            cursor = i + 1;
+            return next;
+        } catch (IndexOutOfBoundsException e) {
+            checkForComodification();
+            throw new NoSuchElementException();
+        }
+    } 
+    
+    
+    // AbstractList提供的迭代器中方法
+    public void remove() {
+        if (lastRet < 0)
+            throw new IllegalStateException();
+            checkForComodification();
+
+        try {
+            // 调用AbstractList的remove方法
+            AbstractList.this.remove(lastRet);
+            if (lastRet < cursor)
+                cursor--;
+            lastRet = -1;
+            expectedModCount = modCount;
+        } catch (IndexOutOfBoundsException e) {
+            throw new ConcurrentModificationException();
+        }
+    }
+    
+    
+    // AbstractList中被调用的remove，默认实现直接抛异常
+    public E remove(int index) {
+        throw new UnsupportedOperationException();
+    }
+    
+---
+ 　　在上面例子中，就可以看到模板方法在jdk中的使用。父类实现公共的方法（`indexOf`,`equals`），让子类实现某些步骤即实现某些方法（`get`），或是父类提供一些默认的实现（迭代器）。
+ 或许还可以把`remove()`等默认抛异常的看成是“钩子函数”！
 
 ## 总结
 
-
-## 优缺点
+- 模板方法定义了算法的步骤，并把这些步骤延迟到子类
+- 模板方法中可以定义具体方法，抽象方法，钩子。抽象方法由子类实现，钩子是一种方法，在抽象类中不做事，或者只做默认的事。
+- 为了子类修改模板方法，可以将模板方法申明为final
 
 
 ## 钩子函数
+
+ 　　通俗一点讲，可以看成是在执行到某一个步骤时调用的方法，比如 [React组件生命周期的钩子函数](https://ddmcc.space/2019/09/02/react-component-lifecycle-methods/)，当执行到的时候就会调用钩子，来询问是否要做些什么
