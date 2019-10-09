@@ -208,23 +208,13 @@ public class ArrayListIterator<T> implements Iterator<T> {
   　　这样A校就不在需要提供获取列表的接口，而提供一个返回迭代器的接口：
   
   
- >   public class ListSchool {
- >  
- >       private ArrayList<Student> list = Lists.newArrayList();
- >   
- >       public ListSchool addStudent(String name, int age, String sex, String address) {
- >           list.add(new Student(name, age, sex, address));
- >           return this;
- >       }
- >   
- >       ~~public ArrayList<Student> getStudentList() {~~
- >           ~~return this.list;~~
- >       ~~}~~
- >    
- >       public Iterator<Student> getIterator() {
- >          return new ArrayListIterator<>(this.list);
- >       }
- >  }
+  > ~~public ArrayList<Student> getStudentList() {~~
+  >     ~~return this.list;~~
+  > ~~}~~
+  >    
+  > public Iterator<Student> getIterator() {
+  >     return new ArrayListIterator<>(this.list);
+  > }
 
 
   　　再利用迭代器进行遍历操作
