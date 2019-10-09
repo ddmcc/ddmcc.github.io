@@ -73,8 +73,8 @@ public class ListSchool {
  * B校返回Array
  *
  * @author ddmcc
- */
-/**
+ *
+ *
  * B校返回Array
  *
  * @author ddmcc
@@ -92,7 +92,7 @@ public class ArraySchool {
     }
 
     public ArraySchool addStudent(String name, int age, String sex, String address) {
-        if (students.length < MAX_LENGTH) {
+        if (position < MAX_LENGTH) {
             students[position] = new Student(name, age, sex, address);
             position += 1;
         }
@@ -143,4 +143,262 @@ public class EducationBureau {
 }
 ```
 
- 　　从上面的代码可以看出由于两个学校返回的类型不一致，所以写了两遍的循环代码，而且
+ 　　从上面的代码可以看出由于两个学校返回的类型不一致，所以写了两遍的循环代码。其实不单单是遍历，如有其它对两个列表进行操作，也必须进行不同的实现。
+ 而且教育局还知道了两个学校存储对象的方式，这也不是学校想要的。后期还有学校加入，返回的又是不同的数据类型，还得再针对实现。。。如果我们让学校自己提供遍历的方法或遍历的工具呢？
+ 这样我们就不需要去考虑数据结构的问题了。但是这样又有新的问题，没有统一的标准，可能A校提供的方法叫`printList` ,B校提供的确叫`printArray`。
+ 
+  　　封装代码变化部分是我们代码设计的一个原则。针对上面的问题，也就是封装对象的遍历。现在由我们来提供遍历的工具（Iterator迭代器），由各自学校来实现这个迭代器，教育局在拿着迭代器自己去遍历，
+  这样也就可以解决了不同学校返回不同列表的问题，这样做也封装了遍历，教育局现在并不知道学校是如何维护对象的，也不知道迭代器是如何实现的。
+  
+  
+```java
+/**
+ * 自定义迭代器接口
+ *
+ * @author ddmcc
+ */
+public interface Iterator<T> {
+
+    boolean hasNext();
+
+    T next();
+
+}
+```
+
+  　　上面是教育局提供的接口，由学校去实现。就像Java提供的JDBC接口，mysql，oracle去实现一样。。。下面是A校提供的迭代器：
+  
+  
+```java
+/**
+ * A提供的列表迭代器
+ * 
+ * @author ddmcc
+ */
+public class ArrayListIterator<T> implements Iterator<T> {
+
+    /**
+     * 下一个返回元素索引
+     */
+    private int cursor = 0;
+
+    /**
+     * 列表数据
+     */
+    private ArrayList<T> list;
+
+    public ArrayListIterator(ArrayList<T> list) {
+        this.list = list;
+    }
+
+    @Override
+    public boolean hasNext() {
+        return cursor < list.size();
+    }
+
+    @Override
+    public T next() {
+        T t = list.get(cursor);
+        cursor += 1;
+        return t;
+    }
+}
+```
+
+  　　这样A校就不在需要提供获取列表的接口，而提供一个返回迭代器的接口：
+  
+  
+>>>   public class ListSchool {
+>>>  
+>>>       private ArrayList<Student> list = Lists.newArrayList();
+>>>   
+>>>       public ListSchool addStudent(String name, int age, String sex, String address) {
+>>>           list.add(new Student(name, age, sex, address));
+>>>           return this;
+>>>       }
+>>>   
+>>>       ~~public ArrayList<Student> getStudentList() {~~
+>>>           ~~return this.list;~~
+>>>       ~~}~~
+>>>    
+>>>       public Iterator<Student> getIterator() {
+>>>          return new ArrayListIterator<>(this.list);
+>>>       }
+>>>  }
+
+
+  　　再利用迭代器进行遍历操作
+
+```java
+public void printStudent() {
+    ListSchool listSchool = new ListSchool();
+    listSchool.addStudent("大锤", 22, "男", "上海")
+            .addStudent("二狗", 23, "男", "北京")
+            .addStudent("菜花", 22, "女", "东北");
+        
+    Iterator<Student> iterator = listSchool.getIterator();
+    while (iterator.hasNext()) {
+        Student student = iterator.next();
+        System.out.println(student.toString());
+    }
+}
+```
+
+  　　会发现现在教育局并不知道A校是怎么存储学生对象的，也不知道迭代器是怎么实现遍历的。。。让各个对象更专注在自己所应该专注的地方上。
+  
+  　　下面为B校代码：
+  
+```java
+/**
+ *   迭代器
+ * 
+ * @author ddmcc
+ */
+public class ArrayIterator<T> implements Iterator<T> {
+
+    private int position = 0;
+    private T[] items;
+
+    public ArrayIterator(T[] items) {
+        this.items = items;
+    }
+
+    @Override
+    public boolean hasNext() {
+        return position < items.length && items[position] != null;
+    }
+
+    @Override
+    public T next() {
+        T t = items[position];
+        position += 1;
+        return t;
+    }
+}
+
+
+/**
+ * B校返回Array
+ *
+ * @author ddmcc
+ */
+public class ArraySchool {
+
+    private Student[] students;
+
+    private static final int MAX_LENGTH = 100;
+
+    private int position = 0;
+
+    public ArraySchool() {
+        students = new Student[MAX_LENGTH];
+    }
+
+    public ArraySchool addStudent(String name, int age, String sex, String address) {
+        if (position < MAX_LENGTH) {
+            students[position] = new Student(name, age, sex, address);
+            position += 1;
+        }
+        return this;
+    }
+
+    // 注意这个方法名
+    public Iterator<Student> iterator() {
+        return new ArrayIterator(students);
+    }
+
+}
+
+
+/**
+ * 教育局
+ *
+ * @author ddmcc
+ */
+public class EducationBureau {
+
+
+    public void printStudent() {
+        ArraySchool arraySchool = new ArraySchool();
+        arraySchool.addStudent("铁蛋", 24, "男", "厦门")
+                .addStudent("铁锤", 23, "男", "上海");
+
+        Iterator<Student> iterator = arraySchool.iterator();
+        while (iterator.hasNext()) {
+            Student student = iterator.next();
+            System.out.println(student.toString());
+        }
+    }
+}
+```
+
+  　　从上面的代码会发现其实还存在一些问题，比如两个学校因为没有一个标准，所以提供的迭代器的方法并不一致。用户同时依赖了具体的类ListSchool和ArraySchool。
+所以还可以创建一个学校接口，提供一个获取迭代器的方法，用户也就可以多态编程了。
+
+```java
+/**
+ * @author ddmcc
+ */
+public interface School {
+
+    Iterator iterator();
+
+    School addStudent(String name, int age, String sex, String address);
+
+}
+
+
+/**
+ * A校返回ArrayList
+ *
+ * @author ddmcc
+ */
+public class ListSchool implements School{
+
+    private ArrayList<Student> list = Lists.newArrayList();
+
+    @Override
+    public School addStudent(String name, int age, String sex, String address) {
+        list.add(new Student(name, age, sex, address));
+        return this;
+    }
+
+    @Override
+    public Iterator iterator() {
+        return new ArrayListIterator<>(this.list);
+    }
+}
+
+
+/**
+ * 教育局
+ *
+ * @author ddmcc
+ */
+public class EducationBureau {
+    
+    public void printStudent() {
+        School arraySchool = new ArraySchool();
+        arraySchool.addStudent("铁蛋", 24, "男", "厦门")
+                .addStudent("铁锤", 23, "男", "上海");
+
+        Iterator<Student> iterator = arraySchool.iterator();
+        while (iterator.hasNext()) {
+            Student student = iterator.next();
+            System.out.println(student.toString());
+        }
+    }
+}
+```
+
+##　上面代码的类图
+
+
+## JDK中的迭代器
+
+
+## 总结
+
+- 创建一个迭代器接口用于封装聚合对象的遍历，由聚合对象提供具体的遍历方式
+- 将用户与具体的聚合对象解耦，无须关注其内部实现。
+- 便于后期扩展，其实更改聚合对象，也无须更改处理对象的逻辑部分。只需提供不同的迭代器即可。
