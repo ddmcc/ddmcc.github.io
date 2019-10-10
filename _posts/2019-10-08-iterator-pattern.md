@@ -382,10 +382,142 @@ public class EducationBureau {
 ```
 
 ## 上面代码的类图
-
+![](https://i.loli.net/2019/10/10/CtIKuwp8jXyAvQ2.png)
 
 ## JDK中的迭代器
 
+  　　JDK中也有迭代器`Iterator`接口，位于`java.util`包下，该接口有方法：`hasNext()`,`next()`,`remove()`,`forEachRemaining()`。在集合顶层接口`Collection`中有一个方法`Iterator<E> iterator()` ，用来返回一个迭代器，
+所以Collection下的所有子类都支持迭代器遍历。而且在`AbstractList`也提供了默认的迭代器。
+
+```java
+public Iterator<E> iterator() {
+     return new Itr();
+}
+  
+  private class Itr implements Iterator<E> {
+           
+           int cursor = 0;
+   
+           int lastRet = -1;
+   
+           int expectedModCount = modCount;
+   
+           public boolean hasNext() {
+               return cursor != size();
+           }
+   
+           public E next() {
+               checkForComodification();
+               try {
+                   int i = cursor;
+                   E next = get(i);
+                   lastRet = i;
+                   cursor = i + 1;
+                   return next;
+               } catch (IndexOutOfBoundsException e) {
+                   checkForComodification();
+                   throw new NoSuchElementException();
+               }
+           }
+   
+           public void remove() {
+               if (lastRet < 0)
+                   throw new IllegalStateException();
+               checkForComodification();
+   
+               try {
+                   AbstractList.this.remove(lastRet);
+                   if (lastRet < cursor)
+                       cursor--;
+                   lastRet = -1;
+                   expectedModCount = modCount;
+               } catch (IndexOutOfBoundsException e) {
+                   throw new ConcurrentModificationException();
+               }
+           }
+   
+           final void checkForComodification() {
+               if (modCount != expectedModCount)
+                   throw new ConcurrentModificationException();
+           }
+       }
+```
+  
+  　　而且提供了向前遍历的迭代器，通过方法`listIterator()`来获得。当然子类也可以覆盖它的方法自己去实现迭代器。就比如`ArrayList`它就覆盖了`iterator()`，并且自己实现一个优化版本的迭代器。
+
+
+ArrayList内部实现的迭代器 ：
+
+```java
+/**
+     * An optimized version of AbstractList.Itr
+     */
+    private class Itr implements Iterator<E> {
+        int cursor;       // index of next element to return
+        int lastRet = -1; // index of last element returned; -1 if no such
+        int expectedModCount = modCount;
+
+        // prevent creating a synthetic constructor
+        Itr() {}
+
+        public boolean hasNext() {
+            return cursor != size;
+        }
+
+        @SuppressWarnings("unchecked")
+        public E next() {
+            checkForComodification();
+            int i = cursor;
+            if (i >= size)
+                throw new NoSuchElementException();
+            Object[] elementData = ArrayList.this.elementData;
+            if (i >= elementData.length)
+                throw new ConcurrentModificationException();
+            cursor = i + 1;
+            return (E) elementData[lastRet = i];
+        }
+
+        public void remove() {
+            if (lastRet < 0)
+                throw new IllegalStateException();
+            checkForComodification();
+
+            try {
+                ArrayList.this.remove(lastRet);
+                cursor = lastRet;
+                lastRet = -1;
+                expectedModCount = modCount;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        @Override
+        public void forEachRemaining(Consumer<? super E> action) {
+            Objects.requireNonNull(action);
+            final int size = ArrayList.this.size;
+            int i = cursor;
+            if (i < size) {
+                final Object[] es = elementData;
+                if (i >= es.length)
+                    throw new ConcurrentModificationException();
+                for (; i < size && modCount == expectedModCount; i++)
+                    action.accept(elementAt(es, i));
+                // update once at end to reduce heap write traffic
+                cursor = i;
+                lastRet = i - 1;
+                checkForComodification();
+            }
+        }
+
+        final void checkForComodification() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+        }
+    }
+```
+
+  　　除了集合家族有迭代器，散列表中也有迭代器，不过因为数据结构的，它有键迭代器，值迭代器，以及元素迭代器。
 
 ## 总结
 
