@@ -213,7 +213,7 @@ public class DrinkMachine {
 
 - 最后将贩卖机的动作委托到状态类
 
-### 状态类图
+### 封装的状态类图
 ![](https://i.loli.net/2019/11/04/WPZofAc6IpliEnU.png)
 
 
@@ -221,7 +221,8 @@ public class DrinkMachine {
 ---
  　　我们已经知道每个状态下什么行为应该做什么，上面代码已经实现过了，现在只是把它们分散在各自类中。
  
-**状态接口**
+**定义状态接口**
+
  ```java
  
  
@@ -263,7 +264,8 @@ public interface State {
 }
 ```
 
-**待售状态类**
+**实现待售状态类**
+
 ```java
 /**
  * 待售状态
@@ -312,11 +314,104 @@ public class NoCoinState implements State {
 }
 ```
 
+
+**新的贩卖机**
+
+
+```java
+/**
+ * @author ddmcc
+ */
+@Data
+public class DrinkMachine {
+
+
+    /**
+     * 状态常量都由状态对象代替了
+     */
+    private State noCoinState;
+
+    private State hasCoinState;
+
+    private State soldOutState;
+
+    private State soldState;
+
+    private State chooseDrinkState;
+
+    private int count = 0;
+
+
+    /**
+     * 记录当前状态
+     */
+    private State currentState;
+
+
+    public DrinkMachine(int count) {
+        noCoinState = new NoCoinState(this);
+        hasCoinState = new HasCoinState(this);
+        soldOutState = new SoldOutState(this);
+        soldState = new SoldState(this);
+        chooseDrinkState = new ChooseDrinkState(this);
+        if (count > 0) {
+            currentState = noCoinState;
+        } else {
+            currentState = soldOutState;
+        }
+    }
+
+
+    /**
+     * 选择饮料
+     */
+    public void chooseDrink() {
+        // 动作都委托给当前的状态对象了
+        currentState.chooseDrink();
+    }
+
+
+    /**
+     * 投币操作
+     */
+    public void insertCoin() {
+        currentState.insertCoin();
+    }
+
+
+    /**
+     * 退币操作
+     */
+    public void ejectCoin() {
+        currentState.ejectCoin();
+    }
+
+
+    /**
+     * 退出饮料操作
+     */
+    public void returnDrink() {
+        currentState.returnDrink();
+    }
+
+
+    /**
+     * 退出饮料
+     */
+    public void dispense() {
+        currentState.dispense();
+    }
+
+}
+```
+
+
+---
  　　上面只实现了一个状态的伪代码，其它状态类也差不多，也就是把一开始的代码“局部化”。上面版本中针对第一版本进行了以下优化：
  
 - 将每个状态的行为封装进各自的类中
 
-- 删除id语句，方便日后维护
+- 删除if语句，方便日后维护
 
 - 让每一个状态“对修改关闭”，让贩卖机对“扩展开放”，因为可以加入新的状态，而我们也把所有的状态都放在贩卖机中了。对修改关闭怎么理解呢？其实之前已经说过了，修改关闭不是说
 不让修改，而是修改不应该对其它带来影响。而为什么要把所有状态放到贩卖机呢？首先贩卖机总是在这些状态中游走，其次可以降低状态类间的依赖。（如果把状态变化放到贩卖机中，则可以让状态类
@@ -325,12 +420,14 @@ public class NoCoinState implements State {
 
 ## 定义
 
- 　　允许对象在内部状态改变时改变它的行为，对象看起来好像改变了它的类。
+ 　　**允许对象在内部状态改变时改变它的行为，对象看起来好像改变了它的类。**
 
 - 允许对象在内部状态改变时改变它的行为
+
 因为我们将状态封装成不同的类，并将动作委托到当前状态中，当状态改变时，行为也就变了
 
 - 对象看起来好像改变了它的类
+
 对于客户端而言，并不知道内部如何实现，看起来就好像一个新的实例。其实是通过引用不同状态来造成的假象
 
 ## 类图
