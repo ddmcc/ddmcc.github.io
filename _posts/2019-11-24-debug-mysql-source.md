@@ -59,7 +59,8 @@ Undo log来实现的，read view来判断数据行是否可读，undo log用来�
 打开build目录，双击根目录的 **ALL_BUILD.vcxproj** ，就会在VS2013中打开，之后将/sql/mysqld.cc中的test_lc_time_sz()函数，将其中的DBUG_ASSERT(0)改为DBUG_ASSERT(1)后
 按 **F7** 进行生成方案。
 
-##　开始调试
+
+## 开始调试
 
 在启动之前先准备 `my.ini` 配置文件，放在C:/Windows或构建目录下，后进入构建目录下的/sql/Debug
 
@@ -74,7 +75,7 @@ Undo log来实现的，read view来判断数据行是否可读，undo log用来�
 
 - flush privileges;
 
-启动mysql调试也可以在VS2013中进行，但是会提示下载字符。。。
+注：启动mysql调试也可以在VS2013中进行，但是会提示下载字符。。。
 
 
 然后就可以到/client/Debug 打开cmd，输入 `mysql -u root -p` 输入密码123456连接
