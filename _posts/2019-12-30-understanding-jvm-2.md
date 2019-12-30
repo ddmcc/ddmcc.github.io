@@ -10,7 +10,8 @@ author: ddmcc
 * content
 {:toc}
 
-
+ 
+ ## 运行时数据区
 
 上一篇已经介绍了 [jvm运行时数据区](https://ddmcc.space/2019/08/19/understanding-jvm-1/) ，下面将学习垃圾收集器和内存分配与回收策略
 
