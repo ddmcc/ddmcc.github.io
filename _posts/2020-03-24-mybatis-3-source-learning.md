@@ -17,10 +17,10 @@ MyBatis 的核心是 SqlSessionFactory 实例。SqlSessionFactory 的实例可�
 
 
 
-构建 SqlSessionFactory 实例的方法有两种，`一是从 XML 中构建 SqlSessionFactory，二是可以通过Java 代码的方式来构建`。
+**所以构建 SqlSessionFactory 实例的方法有两种，`一是从 XML 中构建 SqlSessionFactory，二是可以通过Java 代码的方式来构建`**
 
 
-### 构建SqlSessionFactory
+## 构建SqlSessionFactory
 
 
 下面是Mybatis配置文件（这里只是Mybatis的配置，没有与Spring结合）
@@ -71,7 +71,7 @@ MyBatis 的核心是 SqlSessionFactory 实例。SqlSessionFactory 的实例可�
 
 // TODO SqlSessionFactory DefaultSqlSessionFactory SqlSessionManager 类图
     
-##### SqlSessionFactoryBuilder#build
+#### SqlSessionFactoryBuilder#build
     
 ```java
 
@@ -103,7 +103,7 @@ MyBatis 的核心是 SqlSessionFactory 实例。SqlSessionFactory 的实例可�
 如果执行不止一次parse()方法那么两次解析出来的配置就会窜在一起了？？？）
 
 
-##### XMLConfigBuilder#parse
+#### XMLConfigBuilder#parse
 
 ```java
     public Configuration parse() {
@@ -149,16 +149,16 @@ MyBatis 的核心是 SqlSessionFactory 实例。SqlSessionFactory 的实例可�
 
 
 
-### 其它
+## 其它
 
-##### SQL注入
+#### SQL注入
 
 - 仅在字符串中发生
 - 仅在不使用准备好的语句时发生
 - 仅在用户输入时发生
 
 
-##### ${}与#{}
+#### ${}与#{}
 
 - ${}
 
@@ -183,7 +183,7 @@ SELECT * FROM USER WHERE USER_NAME = 111 OR 1 = 1
 
 
 
-##### Mybatis的参数映射问题
+#### Mybatis的参数映射问题
 
 args0,args1...
 param1,param2...
