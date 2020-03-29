@@ -16,7 +16,7 @@ MyBatis 的核心是 SqlSessionFactory 实例。SqlSessionFactory 的实例可�
 构建 SqlSessionFactory 实例的方法有两种，`一是从 XML 中构建 SqlSessionFactory，二是可以通过Java 代码的方式来构建`。
 
 
-下面就通过XML的方式一步一步来构建SqlSessionFactory
+
 
 ### 构建SqlSessionFactory
 
