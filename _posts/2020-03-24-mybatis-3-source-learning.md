@@ -28,7 +28,7 @@ MyBatis有几个核心的类如：`SqlSessionFactoryBuilder`，`SqlSessionFactor
 在构建 `SqlSessionFactory` 之前先要配置 `Configuration` 实例，Mybatis所有的配置都在这个类里面，在运行时可以通过 **SqlSessionFactory#getConfiguration()** 来获得并检查配置。
 
 
->>> 以下删除了很多配置
+> 以下删除了很多配置
 
 ```java
 
@@ -123,9 +123,9 @@ public class Configuration {
             </transactionManager>
             <dataSource type="UNPOOLED">
                 <property name="driver" value="com.mysql.cj.jdbc.Driver" />
-                <property name="url" value="jdbc:mysql://47.107.135.196:3306/user?characterEncoding=utf-8" />
-                <property name="username" value="job" />
-                <property name="password" value="123456"/>
+                <property name="url" value="" />
+                <property name="username" value="" />
+                <property name="password" value=""/>
             </dataSource>
         </environment>
     </environments>
@@ -261,16 +261,19 @@ SqlSessionFactory factory = builder.build(configuration);
 ### 对象的作用域
 
 - SqlSessionFactoryBuilder (**局部方法**)
-，一旦创建了 SqlSessionFactory，就不再需要它了。 因此 SqlSessionFactoryBuilder 实例的最佳作用域是方法作用域（也就是局部方法变量）。 可以重用 SqlSessionFactoryBuilder 来创建多个 SqlSessionFactory 实例，但最好还是不要一直保留着它，以便释放所有的 XML 资源文件
+
+一旦创建了 SqlSessionFactory，就不再需要它了。 因此 SqlSessionFactoryBuilder 实例的最佳作用域是方法作用域（也就是局部方法变量）。 可以重用 SqlSessionFactoryBuilder 来创建多个 SqlSessionFactory 实例，但最好还是不要一直保留着它，以便释放所有的 XML 资源文件
 
 - SqlSessionFactory (**全局，整个应用**)
+
 SqlSessionFactory 一旦被创建就应该在应用的运行期间一直存在,因此 SqlSessionFactory 的最佳作用域是应用作用域。 有很多方法可以做到，最简单的就是使用单例模式或者静态单例模式。
 
 - SqlSession (**一次请求，局部方法或者说一个线程**)
+
 每个线程都应该有它自己的 SqlSession 实例。SqlSession 的实例不是线程安全的，因此是不能被共享的，所以它的最佳的作用域是请求或方法作用域。 绝对不能将 SqlSession 实例的引用放在一个类的静态域，甚至一个类的实例变量也不行。 也绝不能将 SqlSession 实例的引用放在任何类型的托管作用域中，比如 Servlet 框架中的 HttpSession。
 每次收到 HTTP 请求，就可以打开一个 SqlSession，返回一个响应后，就关闭它。 这个关闭操作很重要，为了确保每次都能执行关闭操作，你应该把这个关闭操作放到 finally 块中。 下面的示例就是一个确保 SqlSession 关闭的标准模式：
 
->>>try (SqlSession session = sqlSessionFactory.openSession()) {
+>try (SqlSession session = sqlSessionFactory.openSession()) {
      // 你的应用逻辑代码
    }
 
@@ -283,14 +286,14 @@ SqlSessionFactory 一旦被创建就应该在应用的运行期间一直存在,�
 ---
 ## 其它
 
-#### SQL注入
+#### **SQL注入**
 
 - 仅在字符串中发生
 - 仅在不使用准备好的语句时发生
 - 仅在用户输入时发生
 
 
-#### ${}与#{}
+#### **${}与#{}**
 
 - ${}
 
@@ -315,7 +318,7 @@ SELECT * FROM USER WHERE USER_NAME = 111 OR 1 = 1
 
 
 
-#### Mybatis的参数映射问题
+#### **Mybatis的参数映射问题**
 
 args0,args1...
 param1,param2...
