@@ -281,6 +281,65 @@ SqlSessionFactory 一旦被创建就应该在应用的运行期间一直存在,�
 ---
 ### 解析mappers
 
+解析 `mapper` 的入口方法是 mapperElement ，取得 mappers 节点下的子节点循环添加。子节点有 `package` 和 `mapper` 
+
+
+```text
+    private void mapperElement(XNode parent) throws Exception {
+        if (parent != null) {
+            for (XNode child : parent.getChildren()) {
+                // package节点
+                
+                if ("package".equals(child.getName())) {
+                    String mapperPackage = child.getStringAttribute("name");
+                    // 加载包名下的接口
+                    configuration.addMappers(mapperPackage);
+                } else {
+                    
+                    // mapper 节点有 resource，url，class 三个属性，只能选择其一，否则抛异常
+                    String resource = child.getStringAttribute("resource");
+                    String url = child.getStringAttribute("url");
+                    String mapperClass = child.getStringAttribute("class");
+                    
+                    // resource xml文件
+                    if (resource != null && url == null && mapperClass == null) {
+                        ErrorContext.instance().resource(resource);
+                        InputStream inputStream = Resources.getResourceAsStream(resource);
+                        XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource, configuration.getSqlFragments());
+                        mapperParser.parse();
+                        
+                    // url 网络xml文件
+                    } else if (resource == null && url != null && mapperClass == null) {
+                        ErrorContext.instance().resource(url);
+                        InputStream inputStream = Resources.getUrlAsStream(url);
+                        XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, url, configuration.getSqlFragments());
+                        mapperParser.parse();
+                        
+                    // class
+                    } else if (resource == null && url == null && mapperClass != null) {
+                        Class<?> mapperInterface = Resources.classForName(mapperClass);
+                        configuration.addMapper(mapperInterface);
+                    } else {
+                        throw new BuilderException("A mapper element may only specify a url, resource or class, but not more than one.");
+                    }
+                }
+            }
+        }
+    }
+```
+
+##### **加载 package**
+
+添加 mapper 接口的操作都是在 configuration 对象的 `mapperRegistry` 对象属性里进行的，解析出来的接口也都是以 key,value 形式存在一个HashMap中
+
+
+- 会先判断扫出该包下所有超类为 `Object.class` 的class，存在Set列表
+
+- Set列表过滤出所有接口
+
+- 以 key 为该接口类型， value 为该接口的 `MapperProxyFactory` 
+
+- 
 
 
 ---
