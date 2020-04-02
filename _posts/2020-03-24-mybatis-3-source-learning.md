@@ -333,14 +333,101 @@ SqlSessionFactory 一旦被创建就应该在应用的运行期间一直存在,�
 添加 mapper 接口的操作都是在 configuration 对象的 `mapperRegistry` 对象属性里进行的，解析出来的接口也都是以 key,value 形式存在一个HashMap中
 
 
-- 会先判断扫出该包下所有超类为 `Object.class` 的class，存在Set列表
+- 会先判断扫出该包下所有超类为 `Object.class` 的class，存入Set列表中
 
 - Set列表过滤出所有接口
 
-- 以 key 为该接口类型， value 为该接口的 `MapperProxyFactory` 
+- 以 key 为该接口类型， value 为该接口的 `MapperProxyFactory` 代理工厂  TODO
 
-- 
+- 加载解析该接口的xml文件
 
+---
+```java
+    public <T> void addMapper(Class<T> type) {
+        // 是否接口
+        if (type.isInterface()) {
+            // 接口已注册
+            if (hasMapper(type)) {
+                throw new BindingException("Type " + type + " is already known to the MapperRegistry.");
+            }
+            boolean loadCompleted = false;
+            try {
+                // 以 key 为该接口类型， value 为该接口的 `MapperProxyFactory` 代理工厂
+                knownMappers.put(type, new MapperProxyFactory<>(type));
+                // It's important that the type is added before the parser is run
+                // otherwise the binding may automatically be attempted by the
+                // mapper parser. If the type is already known, it won't try.
+                MapperAnnotationBuilder parser = new MapperAnnotationBuilder(config, type);
+                
+                // 解析整个xml文件,
+                parser.parse();
+                loadCompleted = true;
+            } finally {
+                if (!loadCompleted) {
+                    knownMappers.remove(type);
+                }
+            }
+        }
+    }
+    
+  
+    
+    public void parse() {
+        String resource = type.toString();
+        // 改接口的xml文件是否已经加载
+        if (!configuration.isResourceLoaded(resource)) {
+            // 搜索解析xml文件
+            loadXmlResource();
+            configuration.addLoadedResource(resource);
+            assistant.setCurrentNamespace(type.getName());
+            // CacheNamespace注解
+            parseCache();
+            // CacheNamespaceRef
+            parseCacheRef();
+            // mapper接口的方法
+            Method[] methods = type.getMethods();
+            for (Method method : methods) {
+                try {
+                    // issue #237
+                    if (!method.isBridge()) {
+                        // 解析语句成MappedStatement 对象，存到configuration中id为namespace + . + 方法名
+                        parseStatement(method);
+                    }
+                } catch (IncompleteElementException e) {
+                    configuration.addIncompleteMethod(new MethodResolver(this, method));
+                }
+            }
+        }
+        // 解析失败的方法重试一遍
+        parsePendingMethods();
+    }
+    
+    
+    private void loadXmlResource() {
+        // Spring may not know the real resource name so we check a flag
+        // to prevent loading again a resource twice
+        // this flag is set at XMLMapperBuilder#bindMapperForNamespace
+        if (!configuration.isResourceLoaded("namespace:" + type.getName())) {
+            String xmlResource = type.getName().replace('.', '/') + ".xml";
+            // #1347
+            InputStream inputStream = type.getResourceAsStream("/" + xmlResource);
+            if (inputStream == null) {
+                // Search XML mapper that is not in the module but in the classpath.
+                try {
+                    // classpath找一遍
+                    inputStream = Resources.getResourceAsStream(type.getClassLoader(), xmlResource);
+                } catch (IOException e2) {
+                    // ignore, resource is not required
+                }
+            }
+            if (inputStream != null) {
+                XMLMapperBuilder xmlParser = new XMLMapperBuilder(inputStream, assistant.getConfiguration(), xmlResource, configuration.getSqlFragments(), type.getName());
+                // 解析xml sql
+                xmlParser.parse();
+            }
+        }
+    }
+```
 
 ---
 ## 其它
