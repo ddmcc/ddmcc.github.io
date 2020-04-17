@@ -27,7 +27,7 @@ author: ddmcc
 
 ### 解决
 
-配置的值用加引号 `""`
+配置的值用加引号 `""`即可，原因是值被当成了数字类型
 
 ```yml
 the-one:
@@ -36,3 +36,4 @@ the-one:
 ```
 
 
+[https://github.com/spring-projects/spring-boot/issues/9389](https://github.com/spring-projects/spring-boot/issues/9389)
