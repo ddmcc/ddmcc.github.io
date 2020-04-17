@@ -36,4 +36,4 @@ the-one:
 ```
 
 
-[https://github.com/spring-projects/spring-boot/issues/9389](https://github.com/spring-projects/spring-boot/issues/9389)
+<https://github.com/spring-projects/spring-boot/issues/9389>
