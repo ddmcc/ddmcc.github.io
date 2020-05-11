@@ -1,0 +1,70 @@
+---
+layout: post
+title:  "mybatis-3 一级缓存"
+date:   2020-05-11 21:32:57
+categories: mybatis-3
+tags:  cache 一级缓存 mybatis
+author: ddmcc
+---
+
+* content
+{:toc}
+
+
+### mybatis 一级缓存
+
+mybatis有一级，二级缓存机制，**一级缓存是默认开启的本地缓存，且不可关闭** 本文主要介绍一级缓存。通过本文你将了解：
+
+- 什么是一级缓存？使用一级缓存的好处
+
+- 一级缓存是如何设计的？
+
+- 一级缓存的生命周期
+
+- Cache接口的设计以及CacheKey的定义
+
+- 使用一级缓存值得注意的点
+
+
+
+### 什么是一级缓存？使用一级缓存的好处
+
+说到 `一级缓存` 那就不得不小说 `SqlSession` 对象。顾名思义，`session` 代表与数据库的会话。每当我们使用MyBatis执行sql时，`MyBatis` 会创建出一个 `SqlSession` 对象表示一次数据库会话。
+
+在一次会话中，我们有可能会很多的语句，或反复地执行完全相同的语句。对于反复执行相同的语句且返回的结果是相同的话就没必要每次都去查询数据库了，这么做不但效率低且浪费资源。
+
+为了解决这一问题，减少资源的浪费，MyBatis会在表示会话的 `SqlSession` 对象中建立一个简单的缓存，将每次查询到的结果结果缓存起来，当下次查询的时候，如果判断先前有个完全一样的查询，会直接从缓存中直接将结果取出，返回给用户，不需要再进行一次数据库查询了。
+
+这个缓存是一个本地缓存(local cache)，存储在 `SqlSession` 对象中。对于每一次查询，都会尝试根据查询的条件去本地缓存中查找是否在缓存中，如果在缓存中，就直接从缓存中取出，然后返回给用户；否则，从数据库读取数据，将查询结果存入缓存并返回给用户
+
+**对于会话（Session）级别的数据缓存，我们称之为一级缓存**
+
+
+### 一级缓存是如何设计的？
+
+
+简单示意图：
+
+![Q_7NCCE33X1G_036BWUCPIK.png](https://i.loli.net/2020/05/11/4rkunxAsyJFV3Ql.png)
+
+---
+
+当创建新的 `SqlSession`时，Mybatis也会为这个 `SqlSession` 创建一个 `Executor` 执行器，它是实际执行数据库操作的对象。一级缓存就维护在 `Executor` 对象中。而对缓存和缓存相关的操作，Mybatis将它封装在 `Cache`接口中。所以`SqlSession`,`Executor`,`Cache`三者的关系类图如下：
+
+
+![_4G0_~TZ783JE__7TJOMVL6.png](https://i.loli.net/2020/05/11/CSteAFPKop1jGbR.png)
+
+---
+
+如上述的类图所示，`Executor` 接口的实现类 `BaseExecutor` 中拥有一个 `Cache` 接口的实现类 `PerpetualCache` ，它将使用 `PerpetualCache` 对象维护缓存。
+
+
+综上，`SqlSession`，`Executor`,`Cache` 三个对象之间的关系图如下：
+
+![_A_1_WZ25QBF`VQTV5F_4GY.png](https://i.loli.net/2020/05/11/72FB5MD1aebp9fo.png)
+
+
+---
+
+
+我们现在知道 **一级缓存就是 `PerpetualCache` 对象维护的** ，那么 `PerpetualCache` 如何实现的也就是 `一级缓存` 的原理了
