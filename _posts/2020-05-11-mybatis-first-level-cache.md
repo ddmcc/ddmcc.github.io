@@ -15,21 +15,19 @@ author: ddmcc
 
 mybatis有一级，二级缓存机制，**一级缓存是默认开启的本地缓存，且不可关闭** 本文主要介绍一级缓存。通过本文你将了解：
 
+
+
+
 - 什么是一级缓存？使用一级缓存的好处
-
 - 一级缓存是如何设计的？
-
 - Cache接口的设计以及CacheKey的定义
-
 - 一级缓存的生命周期
-
 - 使用一级缓存值得注意的点
-
 
 
 ## 什么是一级缓存？使用一级缓存的好处
 
-说到 `一级缓存` 那就不得不说 `SqlSession` 对象。顾名思义，`session` 代表与数据库的会话。每当我们使用MyBatis执行sql时，`MyBatis` 会创建出一个 `SqlSession` 对象表示一次数据库会话。
+ 　　说到 `一级缓存` 那就不得不说 `SqlSession` 对象。顾名思义，`session` 代表与数据库的会话。每当我们使用MyBatis执行sql时，`MyBatis` 会创建出一个 `SqlSession` 对象表示一次数据库会话。
 
 在一次会话中，我们有可能会很多的语句，或反复地执行完全相同的语句。对于反复执行相同的语句且返回的结果是相同的话就没必要每次都去查询数据库了，这么做不但效率低且浪费资源。
 
@@ -51,7 +49,11 @@ mybatis有一级，二级缓存机制，**一级缓存是默认开启的本地�
 
 ---
 
-当创建新的 `SqlSession`时，Mybatis也会为这个 `SqlSession` 创建一个 `Executor` 执行器，它是实际执行数据库操作的对象。一级缓存就维护在 `Executor` 对象中。而对缓存和缓存相关的操作，Mybatis将它封装在 `Cache`接口中。所以`SqlSession`,`Executor`,`Cache`三者的关系类图如下：
+
+
+ 　　当创建新的 `SqlSession`时，Mybatis也会为这个 `SqlSession` 创建一个 `Executor` 执行器，它是实际执行数据库操作的对象。一级缓存就维护在 `Executor` 对象中。而对缓存和缓存相关的操作，Mybatis将它封装在 `Cache`接口中。
+ 
+ 所以`SqlSession`,`Executor`,`Cache`三者的关系类图如下：
 
 
 
@@ -59,7 +61,7 @@ mybatis有一级，二级缓存机制，**一级缓存是默认开启的本地�
 
 ---
 
-如上述的类图所示，`Executor` 接口的实现类 `BaseExecutor` 中拥有一个 `Cache` 接口的实现类 `PerpetualCache` ，所以它将使用 `PerpetualCache` 对象维护缓存。
+ 　　如上述的类图所示，`Executor` 接口的实现类 `BaseExecutor` 中拥有一个 `Cache` 接口的实现类 `PerpetualCache` ，所以它将使用 `PerpetualCache` 对象维护缓存。
 
 
 综上，`SqlSession`，`Executor`,`Cache` 三个对象之间的关系图如下：
@@ -150,7 +152,7 @@ public class PerpetualCache implements Cache {
 
 ## Cache接口的设计以及CacheKey的定义
 
-`Cache` 接口有很多的实现，一级缓存只会涉及到这一个 `PerpetualCache` 子类。通过阅读 `PerpetualCache` 源码我们知道，缓存内部使用 `Map`
+ 　　`Cache` 接口有很多的实现，一级缓存只会涉及到这一个 `PerpetualCache` 子类。通过阅读 `PerpetualCache` 源码我们知道，缓存内部使用 `Map`
 来维护的，`key` 是本次查询的特征值， `value` 是本次查询的查询结果。 什么是 `本次查询特征值`？ 也就是能代表本次查询的，它不能单单是查询的sql，也不能是查询的参数，它应该是本次查询所有条件的集合！ 
 **所以如何确定本次查询的特征值就是一级缓存的重点**，也就是如何确定两次查询是否是一样的？
 
@@ -168,19 +170,20 @@ Mybatis认为，对于是两次查询是否是相同的，需要满足以下的�
 
 分别解释上述四个条件：
 
-1，对于Mybatis而言，你要执行哪个接口，哪条sql，必须传入对应的statementId
+1. 对于Mybatis而言，你要执行哪个接口，哪条sql，必须传入对应的statementId
 
-2，MyBatis自身提供的分页功能是通过RowBounds来实现的，它通过rowBounds.offset和rowBounds.limit来过滤查询出来的结果集，这种分页功能是基于查询结果的再过滤，而不是进行数据库的物理分页。
+2. MyBatis自身提供的分页功能是通过RowBounds来实现的，它通过rowBounds.offset和rowBounds.limit来过滤查询出来的结果集，这种分页功能是基于查询结果的再过滤，而不是进行数据库的物理分页。
 如果查询有传入分页条件，那么两次查询分页条件也必须一致，因为也会造成结果不一致。
 
-3，Mybatis底层还是调用的JDBC API去访问数据库。对于JDBC而言，两次查询的sql和参数都一致，那么结果也可以认为是一致的。
+3. Mybatis底层还是调用的JDBC API去访问数据库。对于JDBC而言，两次查询的sql和参数都一致，那么结果也可以认为是一致的。
 
-4，第四点就是保证参数要一致
+4. 第四点就是保证参数要一致
 
 
 
 >boundSql.getSql() 返回的是经过映射参数解析过的sql，比如#{}会解析成？，${}则已经把参数替换上。然后MyBatis拿着这个sql创建JDBC的PreparedStatement对象，对于这个PreparedStatement对象，
 还需要对它设置参数，调用setXXX()来完成设值，第4条，就是要求对设置JDBC的PreparedStatement的参数值也要完全一致。
+---
 
 
 综上所述，就是要满足 **调用JDBC API的时候，传入的SQL语句要完全相同，传递的参数值也要完全相同，如果有用RowBounds分页，那么分页参数也要一致**，`CacheKey` 也就由 **statementId  + RowBounds  + 传递给JDBC的SQL  + 传递给JDBC的参数值** 决定。
@@ -243,7 +246,7 @@ Mybatis认为，对于是两次查询是否是相同的，需要满足以下的�
 
 #### **CacheKey hashcode算法**
 
-一级缓存内部实现本质还是用 `Map<K,V>` 来实现的，而构建 `CacheKey` 目的也就是作为 `Map` 的key，所以构建 `CacheKey` 的过程也可以看成是
+ 　　一级缓存内部实现本质还是用 `Map<K,V>` 来实现的，而构建 `CacheKey` 目的也就是作为 `Map` 的key，所以构建 `CacheKey` 的过程也可以看成是
 构建 `hashcode` 的过程（map 的 key值取得是hashcode）
 
 
@@ -305,19 +308,19 @@ public void update(Object object) {
 
 ## 一级缓存的生命周期
 
-从上面内容我们知道一级缓存是维护在 SqlSession 对象里的 Executor 对象中，那么它的最大生命周期也就是 **PerpetualCache <= Executor <= SqlSession**，
+ 　　从上面内容我们知道一级缓存是维护在 SqlSession 对象里的 Executor 对象中，那么它的最大生命周期也就是 **PerpetualCache <= Executor <= SqlSession**，
 
 
-1，MyBatis在开启一个数据库会话时，会创建一个新的SqlSession对象；当会话结束时，SqlSession对象及其内部的Executor对象还有PerpetualCache对象也一并释放掉。
+1. MyBatis在开启一个数据库会话时，会创建一个新的SqlSession对象；当会话结束时，SqlSession对象及其内部的Executor对象还有PerpetualCache对象也一并释放掉。
 
 
-2，如果SqlSession调用了close()方法，会释放掉一级缓存PerpetualCache对象
+2. 如果SqlSession调用了close()方法，会释放掉一级缓存PerpetualCache对象
 
 
-3， 如果SqlSession调用了clearCache()，会清空PerpetualCache对象中的数据，但是该对象并未释放；
+3. 如果SqlSession调用了clearCache()，会清空PerpetualCache对象中的数据，但是该对象并未释放；
 
 
-4，SqlSession中执行了任何一个update操作(update()、delete()、insert()) ，都会清空PerpetualCache对象的数据，但是该对象并未释放掉；在查询操作中，如果该 `MappedStatement` 设置了强制刷新缓存 (flushCache=true)，那么在去查询缓存map之前，会
+4. SqlSession中执行了任何一个update操作(update()、delete()、insert()) ，都会清空PerpetualCache对象的数据，但是该对象并未释放掉；在查询操作中，如果该 `MappedStatement` 设置了强制刷新缓存 (flushCache=true)，那么在去查询缓存map之前，会
 先清空PerpetualCache对象的数据；Mybatis一级缓存默认的 `scope` 是 SESSION 级别的， **如果设置成 `STATEMENT` 级别** ，那么在每次查询之后都会去清除缓存数据（相当于关闭一级缓存）。
 
 
@@ -328,12 +331,12 @@ public void update(Object object) {
 ## 使用一级缓存值得注意的点
 
 
-- 一级缓存没有更新缓存和缓存过期的概念
+1. 一级缓存没有更新缓存和缓存过期的概念
 
 一级缓存没有更新缓存的概念，在查询中，只要命中缓存，那么直接返回缓存中的结果，不会再去数据库中查询。一级缓存也不会过期，如不清除缓存数据或缓存对象一直未被释放，那么它会一直存在。
 
 
-- 对于更新频繁的，并且需要高时效准确性的数据，使用 `SqlSession` 查询的时候，要控制好对象生存时间，生存时间越长，它其中缓存的数据有可能就越旧，
+2. 对于更新频繁的，并且需要高时效准确性的数据，使用 `SqlSession` 查询的时候，要控制好对象生存时间，生存时间越长，它其中缓存的数据有可能就越旧，
 从而造成和真实数据的误差；同时对于这种情况，可以手动地适时清空SqlSession中的缓存，或设置强制刷新缓存，或设置一级缓存为STATEMENT
 
 
