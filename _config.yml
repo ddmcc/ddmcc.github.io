@@ -30,8 +30,8 @@ description_footer: welcome to ddmcc's blog
 #  conf: prod_f91c5f85012ce0c5a4c9b50031d5cb90
 
 gitalk:
-  clientID: 0573f613ee08ad6d2dea
-  clientSecret: be87f2c7fe41a07018a1e6e4a46f06d939bde1f5
+  clientID: dae41ffb8c8e11287ad0
+  clientSecret: 2e2acba40e8060cbac419bae13b068ab92a539ab
   repo: ddmcc.github.io
   owner: ddmcc
   admin: ['ddmcc']
