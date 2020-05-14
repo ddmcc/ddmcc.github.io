@@ -73,82 +73,32 @@ mybatis有一级，二级缓存机制，**一级缓存是默认开启的本地�
 ---
 
 
-我们现在知道 **一级缓存就是 `PerpetualCache` 对象维护的** ，那么 `PerpetualCache` 如何实现的也就是 `一级缓存` 的原理了
+
+#### **工作流程**
+
+
+一级缓存执行的时序图，如下图所示。
+
+
+![Q1RG8~_TL3N_5BT8_I_6HGI.png](https://i.loli.net/2020/05/14/ITw1j3DJrtoablO.png)
+
+---
+
+
+我们已经知道 **一级缓存就是 `PerpetualCache` 对象维护的** ，那么 `PerpetualCache` 如何实现的也就是 `一级缓存` 的原理了
+
+
 
 
 #### **PerpetualCache 对象**
 
 
-一级缓存内部实现其实就是用 `Map` 来实现的，以 `Key,Value` 形式维护缓存，下面是 `PerpetualCache` 源码，
+一级缓存内部实现其实就是用 `HashMap` 来实现的，以 `Key,Value` 形式维护缓存，下面是 `PerpetualCache` 提供的一些接口，对一级缓存的操作实则是对HashMap的操作。
 
 
-```java
-public class PerpetualCache implements Cache {
 
-  private final String id;
+![LY~I_44L_YMVM6__DSE_BKQ.png](https://i.loli.net/2020/05/14/JLOEANZhduSFG6H.png)
 
-  private Map<Object, Object> cache = new HashMap<>();
-
-  public PerpetualCache(String id) {
-    this.id = id;
-  }
-
-  @Override
-  public String getId() {
-    return id;
-  }
-
-  @Override
-  public int getSize() {
-    return cache.size();
-  }
-
-  @Override
-  public void putObject(Object key, Object value) {
-    cache.put(key, value);
-  }
-
-  @Override
-  public Object getObject(Object key) {
-    return cache.get(key);
-  }
-
-  @Override
-  public Object removeObject(Object key) {
-    return cache.remove(key);
-  }
-
-  @Override
-  public void clear() {
-    cache.clear();
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (getId() == null) {
-      throw new CacheException("Cache instances require an ID.");
-    }
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof Cache)) {
-      return false;
-    }
-
-    Cache otherCache = (Cache) o;
-    return getId().equals(otherCache.getId());
-  }
-
-  @Override
-  public int hashCode() {
-    if (getId() == null) {
-      throw new CacheException("Cache instances require an ID.");
-    }
-    return getId().hashCode();
-  }
-
-}
-```
 
 ## Cache接口的设计以及CacheKey的定义
 
@@ -200,9 +150,7 @@ Mybatis认为，对于是两次查询是否是相同的，需要满足以下的�
 ```java
 @Override
   public CacheKey createCacheKey(MappedStatement ms, Object parameterObject, RowBounds rowBounds, BoundSql boundSql) {
-    if (closed) {
-      throw new ExecutorException("Executor was closed.");
-    }
+    ............
     CacheKey cacheKey = new CacheKey();
     // statementId 
     cacheKey.update(ms.getId());
