@@ -160,23 +160,12 @@ Mybatis认为，对于是两次查询是否是相同的，需要满足以下的�
     cacheKey.update(rowBounds.getLimit());
     // boundSql.getSql() SQL语句
     cacheKey.update(boundSql.getSql());
-    List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
-    TypeHandlerRegistry typeHandlerRegistry = ms.getConfiguration().getTypeHandlerRegistry();
-    // mimic DefaultParameterHandler logic
+    
     for (ParameterMapping parameterMapping : parameterMappings) {
       if (parameterMapping.getMode() != ParameterMode.OUT) {
         Object value;
         String propertyName = parameterMapping.getProperty();
-        if (boundSql.hasAdditionalParameter(propertyName)) {
-          value = boundSql.getAdditionalParameter(propertyName);
-        } else if (parameterObject == null) {
-          value = null;
-        } else if (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) {
-          value = parameterObject;
-        } else {
-          MetaObject metaObject = configuration.newMetaObject(parameterObject);
-          value = metaObject.getValue(propertyName);
-        }
+        .........
         // 每一个参数值
         cacheKey.update(value);
       }
