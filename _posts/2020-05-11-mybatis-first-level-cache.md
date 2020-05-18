@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "mybatis-3 一级缓存"
+title:  "mybatis3 一级缓存"
 date:   2020-05-11 21:32:57
-categories: mybatis-3
+categories: mybatis3
 tags:  cache 一级缓存 mybatis
 author: ddmcc
 ---
