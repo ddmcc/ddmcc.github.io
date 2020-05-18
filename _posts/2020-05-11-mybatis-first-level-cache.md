@@ -274,15 +274,10 @@ public void update(Object object) {
 从而造成和真实数据的误差；同时对于这种情况，可以手动地适时清空SqlSession中的缓存，或设置强制刷新缓存，或设置一级缓存为STATEMENT
 
 
-3. **一级缓存直接返回对象的唯一引用，如果直接修改将会影响缓存中的值**
-
-
-![M3836J5V9~1_8SSWHAG_8SV.png](https://i.loli.net/2020/05/18/3vVICDXeO6WkHyb.png)
+3. **一级缓存直接返回对象的唯一引用，如果直接修改将会影响缓存中的值** ![M3836J5V9~1_8SSWHAG_8SV.png](https://i.loli.net/2020/05/18/3vVICDXeO6WkHyb.png)
 
 
 4. **由于一级缓存的范围是 `SqlSession` 的，所以当有多个 `SqlSession` 同时进行读写操作，可以会读取到脏数据**
-
-
 ![_U5703__4I7__G_K_AVON_X.png](https://i.loli.net/2020/05/18/3cLbgQAeWjH4hUF.png)
 
 
