@@ -60,26 +60,54 @@ configuration.setCacheEnabled(booleanValueOf(props.getProperty("cacheEnabled"), 
 
 ![J07__8BG_QYPE_163E73464.png](https://i.loli.net/2020/05/21/GZHuXFeU68tOqcE.png)
 
-
-
-
-
-当开启二级缓存后，同一个 `namespace` 下的所有sql影响着同一个 `Cache` ，即同一个 `namespace`下的所有 `MappedStatement` 影响着同一个 `Cache` ，这个 Cache 被多个 `SqlSession` 共享，相当于一个全局变量。
-
 查询的工作流程为 **二级缓存 -> 一级缓存 -> 数据库**
+
+
+
+当开启二级缓存后，同一个 `namespace` 下的所有sql影响着同一个 `Cache` ，即同一个 `namespace`下的所有 `MappedStatement` 影响着同一个 `Cache` ，这个 Cache 被多个 `SqlSession` 共享，相当于一个全局变量
 
 
 
 ## 二级缓存的划分 
 
-上面说到 "同一个 namespace 下的所有sql影响着同一个Cache "，意思也就是每个 `mapper` 都有一个自己的 `Cache` 对象，也可以多个mapper共享一个 Cache 对象
+每个 `mapper` 都有一个自己的 `Cache` 对象，也可以多个mapper共享一个 Cache 对象
 
-1. 为mapper配置一个Cache对象： 在mapper.xml中配置 `<cache>` 节点
-2. 为多个mapper配置一个Cache对象： 配置 `<cache-ref` 节点
-
-
+1. 为mapper配置一个Cache对象： 在mapper.xml中配置 `<cache>` 节点或在接口添加 `@CacheNamespace` 注解
+2. 为多个mapper配置一个Cache对象： 配置 `<cache-ref>` 节点或在接口添加 `@CacheNamespaceRef` 注解
 
 
+
+通过 `<cache-ref>` 标签，定义 `namespace` 来指定要引用的缓存的命名空间类型。这句话有点绕，也就是
+
+```xml
+<mapper namespace="com.ddmcc.UserMapper">
+    <cache-ref namespace="com.ddmcc.AdminUserMapper" />
+</mapper>
+```
+
+
+
+这时就要求 `AdminUserMapper` 必须定义了 `<cache>` 节点。如果用注解的方式如下：
+
+
+
+```java
+@CacheNamespaceRef(AdminUserMapper.class)
+public interface UserMapper {
+   // ...
+}
+
+或者 
+    
+@CacheNamespaceRef(name = "AdminUserMapper")
+public interface UserMapper {
+   // ...
+}
+```
+
+
+
+通过以上配置，就可以让多个 `Mapper` 公用一个 `Cache` 
 
 
 
