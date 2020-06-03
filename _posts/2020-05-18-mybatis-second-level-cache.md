@@ -77,7 +77,7 @@ configuration.setCacheEnabled(booleanValueOf(props.getProperty("cacheEnabled"), 
 
 
 
-通过 `<cache-ref>` 标签，定义 `namespace` 来指定要引用的缓存的命名空间类型。这句话有点绕，也就是
+通过 `<cache-ref>` 标签，定义 `namespace` 来指定要引用的缓存的命名空间。这句话有点绕，也就是
 
 ```xml
 <mapper namespace="com.ddmcc.UserMapper">
@@ -92,13 +92,15 @@ configuration.setCacheEnabled(booleanValueOf(props.getProperty("cacheEnabled"), 
 
 
 ```java
+// 定义要引用的命名空间的类型
 @CacheNamespaceRef(AdminUserMapper.class)
 public interface UserMapper {
    // ...
 }
 
 或者 
-    
+
+// 定义要引用的命名空间的name
 @CacheNamespaceRef(name = "AdminUserMapper")
 public interface UserMapper {
    // ...
@@ -107,7 +109,7 @@ public interface UserMapper {
 
 
 
-通过以上配置，就可以让多个 `Mapper` 公用一个 `Cache` 
+**通过以上配置，就可以让多个 `Mapper` 公用一个 `Cache` **
 
 
 
