@@ -56,6 +56,30 @@ configuration.setCacheEnabled(booleanValueOf(props.getProperty("cacheEnabled"), 
 
 
 
+**MyBatis**自身提供了丰富的，并且功能强大的二级缓存的实现，它拥有一系列的**Cache**接口装饰者，可以满足各种对缓存操作和更新的策略。在 `CachingExecuter` 内部有一个用来管理二级缓存的 `TransactionalCacheManager` 对象，`TransactionalCacheManager` 内部只有一个成员变量，key 是 `mapper` 中定义的cache对象，value 是**暂时存缓存数据的对象**。
+
+
+
+`TransactionalCache` 装饰的对象就是定义的 `cache` 对象 ：
+
+```java
+// key 是 `mapper` 中定义的cache对象，value 是暂时存缓存数据的对象
+private final Map<Cache, TransactionalCache> transactionalCaches = new HashMap<>();
+
+// ...... 其它方法
+
+// 如果缓存对象不存在，就创建一个装饰着cache的TransactionalCache对象
+private TransactionalCache getTransactionalCache(Cache cache) {
+    return transactionalCaches.computeIfAbsent(cache, TransactionalCache::new);
+}
+```
+
+
+
+`TransactionalCache` 也是cache接口的装饰者之一，主要作用是保存SqlSession在事务中需要向某个二级缓存提交的缓存数据（因为事务过程中的数据可能会回滚，所以不能直接把数据就存入二级缓存，而是暂存在TransactionalCache中，在事务提交后再将过程中存放在其中的数据提交到二级缓存，如果事务回滚，则将数据清除掉）
+
+
+
 在查询一级缓存之前会先在 `CachingExecutor` 中查询二级缓存中是否有数据，具体查询工作流程如图：
 
 ![J07__8BG_QYPE_163E73464.png](https://i.loli.net/2020/05/21/GZHuXFeU68tOqcE.png)
@@ -92,6 +116,12 @@ configuration.setCacheEnabled(booleanValueOf(props.getProperty("cacheEnabled"), 
 
 
 ```java
+@CacheNamespace
+public interface UserMapper {
+    // ...   
+}
+
+
 // 定义要引用的命名空间的类型
 @CacheNamespaceRef(AdminUserMapper.class)
 public interface UserMapper {
@@ -115,11 +145,74 @@ public interface UserMapper {
 
 ## 使用二级缓存要具备的条件
 
+Mybatis二级缓存粒度很细，可以精确到每一条查询语句是否使用缓存
 
+
+
+在Mybatis配置中开启了缓存，并且在 `mapper` 中配置了 <cache> 节点，这并不意味着每一条查询语句都会使用到缓存，还需要指定 `select` 语句是否开启缓存 ， `useCache="true"` 声明这条语句开启缓存后，才会使用缓存。
+
+
+
+```xml
+ <select id="listUser" resultType="com.ddmcc.User" useCache="true">
+```
+
+
+
+要想使用二级缓存，那么需要满足以下三个条件：
+
+
+
+1. **开启二级缓存的总开关：全局配置变量参数  cacheEnabled=true （默认开启）**
+2. **为mapper配置了<cache>、<cacheRef> 节点或者mapper接口中配置了 @CacheNamespace、@CacheNamespaceRef注解**
+3. **该select语句节点开启了缓存useCache="true" （默认开启）**
+
+
+
+**对于我们平常使用来说，如果为一个mapper配置的<cache>节点，那么此mapper中的查询语句将会使用二级缓存**
 
 
 
 ## 二级缓存的生命周期
+
+#### 回顾一级缓存
+
+在 **一级缓存** 中，数据从数据库查询返回后，就会存入缓存中，SqlSession 执行 `commit`（提交），`close`（关闭），`rollback`（回滚），任何一个 `update` 操作或是 `clearLocalCache` 会清空一级缓存。
+
+
+
+#### 二级创建流程
+
+二级缓存则不同，上面说了在缓存创建的时候并不是直接put进缓存对象中，而是会先暂存在 `TransactionalCache` 对象中。
+
+`TransactionalCache` 类：
+
+```java
+public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
+      throws SQLException {
+    
+    // 获取缓存对象
+    Cache cache = ms.getCache();
+    if (cache != null) {
+      
+      // select节点是否开启刷新缓存
+      flushCacheIfRequired(ms);
+      if (ms.isUseCache() && resultHandler == null) {
+        ........
+        // tcm对象就是TransactionalCacheManager
+        List<E> list = (List<E>) tcm.getObject(cache, key);
+        if (list == null) {
+          list = delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
+          // 创建缓存
+          tcm.putObject(cache, key, list); // issue #578 and #116
+        }
+        return list;
+      }
+    }
+    // 调用被装饰者的query
+    return delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
+  }
+```
 
 
 

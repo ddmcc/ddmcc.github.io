@@ -52,7 +52,7 @@ mybatis有一级，二级缓存机制，**一级缓存是默认开启的本地�
 
 
 当创建新的 `SqlSession`时，Mybatis也会为这个 `SqlSession` 创建一个 `Executor` 执行器，它是实际执行数据库操作的对象。一级缓存就维护在 `Executor` 对象中。而对缓存和缓存相关的操作，Mybatis将它封装在 `Cache`接口中。
- 
+
  所以`SqlSession`,`Executor`,`Cache`三者的关系类图如下：
 
 
@@ -252,13 +252,11 @@ public void update(Object object) {
 
 
 2. 如果SqlSession调用了close()方法，会释放掉一级缓存PerpetualCache对象
-
-
-3. 如果SqlSession调用了clearCache()，会清空PerpetualCache对象中的数据，但是该对象并未释放；
-
-
-4. SqlSession中执行了任何一个update操作(update()、delete()、insert()) ，都会清空PerpetualCache对象的数据，但是该对象并未释放掉；在查询操作中，如果该 `MappedStatement` 设置了强制刷新缓存 (flushCache=true)，那么在去查询缓存map之前，会
-先清空PerpetualCache对象的数据；Mybatis一级缓存默认的 `scope` 是 SESSION 级别的， **如果设置成 `STATEMENT` 级别** ，那么在每次查询之后都会去清除缓存数据（相当于关闭一级缓存）。
+3. 如果SqlSession调用了rollback()方法，会清空PerpetualCache对象中的数据，但是该对象并未释放；
+4. 如果SqlSession调用了clearCache()，会清空PerpetualCache对象中的数据，但是该对象并未释放；
+5. 如果SqlSession调用了commit()，会清空PerpetualCache对象中的数据，但是该对象并未释放；
+6. SqlSession中执行了任何一个update操作(update()、delete()、insert()) ，都会清空PerpetualCache对象的数据，但是该对象并未释放掉；在查询操作中，如果该 `MappedStatement` 设置了强制刷新缓存 (flushCache=true)，那么在去查询缓存map之前，会
+   先清空PerpetualCache对象的数据；Mybatis一级缓存默认的 `scope` 是 SESSION 级别的， **如果设置成 `STATEMENT` 级别** ，那么在每次查询之后都会去清除缓存数据（相当于关闭一级缓存）。
 
 
 >在Spring中使用Mybatis，SqlSession的生命周期是线程级别的，SqlSessionUtils 类中会将获取的SqlSession绑定到当前上下文中（内部使用ThreadLocal），所以SqlSession中的一级缓存最大生命周期也就是当前线程
