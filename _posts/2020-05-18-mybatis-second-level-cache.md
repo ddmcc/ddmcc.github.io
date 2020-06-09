@@ -1,4 +1,5 @@
 ---
+
 layout: post
 title:  "mybatis3 二级缓存"
 date:   2020-05-18 23:27:43
@@ -94,9 +95,85 @@ private TransactionalCache getTransactionalCache(Cache cache) {
 
 
 
-// TODO 
-
 #### **TransactionalCache** 对象
+
+TransactionalCache有四个属性：
+
+```java
+// 被装饰对象
+private final Cache delegate;
+// 清除标记，在commit时会清空二级缓存
+private boolean clearOnCommit;
+// 需要在commit时存入二级缓存的临时数据
+private final Map<Object, Object> entriesToAddOnCommit;
+// 缓存未命中的数据，commit时，也会放入二级缓存（key,null）
+private final Set<Object> entriesMissedInCache;
+```
+
+
+
+##### **get**
+
+```java
+@Override
+public Object getObject(Object key) {
+    // issue #116
+    Object object = delegate.getObject(key);
+    if (object == null) {
+        
+        // 记录未命中的key
+        entriesMissedInCache.add(key);
+    }
+    // issue #146
+    if (clearOnCommit) {
+        return null;
+    } else {
+        return object;
+    }
+}
+```
+
+
+
+##### put
+
+```java
+@Override
+public void putObject(Object key, Object object) {
+    // 记录要存入二级缓存的key和值
+    entriesToAddOnCommit.put(key, object);
+}
+```
+
+
+
+##### commit
+
+```java
+public void commit() {
+    // 清空二级缓存，update或flushCache=true时会设为true
+    if (clearOnCommit) {
+        delegate.clear();
+    }
+    
+    // 将未命中和命中的数据写入缓存
+    flushPendingEntries();
+    // 重置值
+    reset();
+}
+
+
+private void flushPendingEntries() {
+    for (Map.Entry<Object, Object> entry : entriesToAddOnCommit.entrySet()) {
+        delegate.putObject(entry.getKey(), entry.getValue());
+    }
+    for (Object entry : entriesMissedInCache) {
+        if (!entriesToAddOnCommit.containsKey(entry)) {
+            delegate.putObject(entry, null);
+        }
+    }
+}
+```
 
 
 
@@ -208,7 +285,15 @@ Mybatis二级缓存粒度很细，可以精确到每一条查询语句是否使�
 
 ## 需要注意的点
 
-1. 同一事务执行多次相同查询或是多个session执行同一mapper下的同一查询语句并不会命中二级缓存，因为二级缓存在 sqlSession close或commit的时候才会写入
+
+
+#### **数据需要sqlSession关闭或提交才会将数据写入缓存**
+
+
+
+同一事务执行多次相同查询或是多个session执行同一mapper下的同一查询语句并不会命中二级缓存，因为二级缓存在 sqlSession close或commit的时候才会写入
+
+
 
 ![B_C93__7GNKM3UGF_93_@J3.png](https://i.loli.net/2020/06/08/2GDkdl7Mrisv9IH.png)
 
@@ -216,7 +301,158 @@ Mybatis二级缓存粒度很细，可以精确到每一条查询语句是否使�
 
 代码示例：
 
+```java
+    public static void main(String[] args) throws Exception{
+        SqlSessionFactory sqlSessionFactory;
+        try (Reader reader = Resources.getResourceAsReader("com/ddmcc/mybatis-config.xml")) {
+            sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);
+        }
+
+        // 开启sqlSession
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        UserMapper userMapper = sqlSession.getMapper(UserMapper.class);
+        System.out.println("第一次查询：" + userMapper.getUser("1").toString());
+		
+        System.out.println("第二次查询：" + sqlSession.getMapper(UserMapper.class).getUser("1"));
+
+        // sqlSession未close或commit
+        SqlSession sqlSession1 = sqlSessionFactory.openSession();
+        sqlSession1.getMapper(UserMapper.class).getUser("1");
+    }
+```
+
+
+
+运行结果分析：
+
+![X2ZKWYTLBCS_QKOCF29_8S9.png](https://i.loli.net/2020/06/09/Hl5vBQYS46DReao.png)
+
+
+
+让sqlSession1提交，数据写入二级缓存
+
+```java
+...........
+System.out.println("第一次查询：" + userMapper.getUser("1").toString());	
+System.out.println("第二次查询：" + sqlSession.getMapper(UserMapper.class).getUser("1"));
+sqlSession.commit();
+..........
+```
+
+
+
+运行结果，sqlSession2命中二级缓存：
+
+![V9UP__JWDVPO_SI~41_2FEC.png](https://i.loli.net/2020/06/09/LpChfZseaHP6QR2.png)
 
 
 
 
+
+#### **二级缓存的实体类需要实现序列化接口**
+
+**<cache>**  节点有一个 `readOnly` 属性，默认为false，这个属性决定缓存值是只读的还是读写的。当`readOnly = false` 时，Mybatis会用 `SerializedCache` 序列化缓存类来装饰 `cache` 对象，通过序列化和反序列化来保证通过缓存取出来的是一个新的对象。如果配置为只读缓存，MyBatis就会使用Map来存储缓存值（可读写缓存内部也是用PerpetualCache，在SerializedCache的put和get中进行了序列化化和反序列化），这种情况下，从缓存中获取的对象就是同一个实例。
+
+
+
+序列化缓存
+- 好处：先将对象序列化成2进制，再缓存，将对象压缩了，省内存。并且线程安全
+
+* 坏处：是速度慢了（因为对象需要进行序列化）
+
+
+
+Mybatis通过序列化得到对象的新实例，保证多线程安全（因为是从缓存中取数据，速度还是比从数据库获取要快）。具体说就是对象序列化后存储到缓存中，从缓存中取数据时是通过反序列化得到新的实例。
+
+
+
+CacheBuilder类初始化缓存对象源码片段：
+
+```java
+..........
+if (readWrite) {
+    cache = new SerializedCache(cache);
+}
+cache = new LoggingCache(cache);
+cache = new SynchronizedCache(cache);
+..........
+```
+
+
+
+SerializedCache类序列化反序列化源码片段：
+
+```java
+// put
+@Override
+public void putObject(Object key, Object object) {
+    if (object == null || object instanceof Serializable) {
+        
+      // 序列化
+      delegate.putObject(key, serialize((Serializable) object));
+    } else {
+      
+      // 未实现序列化接口抛出异常
+      throw new CacheException("SharedCache failed to make a copy of a non-serializable object: " + object);
+    }
+}
+
+// get
+@Override
+public Object getObject(Object key) {
+    Object object = delegate.getObject(key);
+    
+    // 反序列化
+    return object == null ? null : deserialize((byte[]) object);
+}
+
+
+
+private byte[] serialize(Serializable value) {
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+      oos.writeObject(value);
+      oos.flush();
+      return bos.toByteArray();
+    } catch (Exception e) {
+      throw new CacheException("Error serializing object.  Cause: " + e, e);
+    }
+}
+
+private Serializable deserialize(byte[] value) {
+    Serializable result;
+    try (ByteArrayInputStream bis = new ByteArrayInputStream(value);
+        ObjectInputStream ois = new CustomObjectInputStream(bis)) {
+      result = (Serializable) ois.readObject();
+    } catch (Exception e) {
+      throw new CacheException("Error deserializing object.  Cause: " + e, e);
+    }
+    return result;
+}
+```
+
+
+
+
+
+`readOnly` 默认为false的情况下：
+
+![R_2E_A__R_8@__OE~62_2_W.png](https://i.loli.net/2020/06/09/Q3OijZXKdFsfblJ.png)
+
+
+
+
+
+---
+
+
+
+将 `readOnly` 修改为 true，缓存取出对象为同一对象：
+
+```xml
+<cache readOnly="true"/>
+```
+
+
+
+![SILSAI2Z86CU3RUVFEW@696.png](https://i.loli.net/2020/06/09/fotxrU9BWRLviZj.png)
