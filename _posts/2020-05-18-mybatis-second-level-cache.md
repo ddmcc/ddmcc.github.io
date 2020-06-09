@@ -97,7 +97,7 @@ private TransactionalCache getTransactionalCache(Cache cache) {
 
 #### **TransactionalCache** 对象
 
-TransactionalCache有四个属性：
+有四个属性：
 
 ```java
 // 被装饰对象
@@ -226,7 +226,7 @@ public interface UserMapper {
 
 
 
-**通过以上配置，就可以让多个 `Mapper` 公用一个 `Cache` **
+**通过以上配置，就可以让多个 Mapper 公用一个 Cache**
 
 
 
@@ -251,12 +251,12 @@ Mybatis二级缓存粒度很细，可以精确到每一条查询语句是否使�
 
 
 1. **开启二级缓存的总开关：全局配置变量参数  cacheEnabled=true （默认开启）**
-2. **为mapper配置了<cache>、<cacheRef> 节点或者mapper接口中配置了 @CacheNamespace、@CacheNamespaceRef注解**
+2. **为mapper配置了cache、cacheRef节点或者mapper接口中配置了 @CacheNamespace、@CacheNamespaceRef注解**
 3. **该select语句节点开启了缓存useCache="true" （默认开启）**
 
 
 
-**对于我们平常使用来说，如果为一个mapper配置的<cache>节点，那么此mapper中的查询语句将会使用二级缓存**
+**对于我们平常使用来说，如果为一个mapper配置的cache节点，那么此mapper中的查询语句将会使用二级缓存**
 
 
 
@@ -272,7 +272,9 @@ Mybatis二级缓存粒度很细，可以精确到每一条查询语句是否使�
 
 二级缓存则不同，上面说了在缓存创建的时候并不是直接put进缓存对象中，而是会先暂存在 `TransactionalCache` 对象中。当 `sqlSession` 关闭或提交时，再把数据刷入缓存中，如果`rollback` 那么不会把数据刷入缓存中，**但也不会清空已有的二级缓存**。sqlSession 执行任何一个 update 操作时，在事务提交后，都会去清空二级缓存。sqlSession的 `clearCache` 只清除自己会话中的一级缓存，并不会清除二级缓存。
 
-但，并不是 `select` 语句就会存入二级缓存，`update` 就会清除二级缓存。主要有标签的两个参数决定：`useCache`和`flushCache`。select标签默认是 userCache=true 、flushCache=false，所以会将数据存入二级缓存。而 insert|update|delete 标签默认是 userCache=false、flushCache=true，**如果将flushCache改成false，那么也不会去清除缓存**
+
+
+但，并不是 `select` 语句就会存入二级缓存，`update` 就会清除二级缓存。主要有标签的两个参数决定：`useCache`和`flushCache`。select标签默认是 userCache=true 、flushCache=false，所以会将数据存入二级缓存。而 insert、update、delete 标签默认是 userCache=false、flushCache=true，**如果将flushCache改成false，那么也不会去清除缓存**
 
 总的来说：
 
@@ -351,7 +353,7 @@ sqlSession.commit();
 
 #### **二级缓存的实体类需要实现序列化接口**
 
-**<cache>**  节点有一个 `readOnly` 属性，默认为false，这个属性决定缓存值是只读的还是读写的。当`readOnly = false` 时，Mybatis会用 `SerializedCache` 序列化缓存类来装饰 `cache` 对象，通过序列化和反序列化来保证通过缓存取出来的是一个新的对象。如果配置为只读缓存，MyBatis就会使用Map来存储缓存值（可读写缓存内部也是用PerpetualCache，在SerializedCache的put和get中进行了序列化化和反序列化），这种情况下，从缓存中获取的对象就是同一个实例。
+**cache**  节点有一个 `readOnly` 属性，默认为false，这个属性决定缓存值是只读的还是读写的。当`readOnly = false` 时，Mybatis会用 `SerializedCache` 序列化缓存类来装饰 `cache` 对象，通过序列化和反序列化来保证通过缓存取出来的是一个新的对象。如果配置为只读缓存，MyBatis就会使用Map来存储缓存值（可读写缓存内部也是用PerpetualCache，在SerializedCache的put和get中进行了序列化化和反序列化），这种情况下，从缓存中获取的对象就是同一个实例。
 
 
 
@@ -435,7 +437,7 @@ private Serializable deserialize(byte[] value) {
 
 
 
-`readOnly` 默认为false的情况下：
+`readOnly` 默认为false的情况下，二级缓存取出的是一个新的对象：
 
 ![R_2E_A__R_8@__OE~62_2_W.png](https://i.loli.net/2020/06/09/Q3OijZXKdFsfblJ.png)
 
