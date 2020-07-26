@@ -37,7 +37,7 @@ public synchronized void test() {
 
 ```
 
-
+---
 
 静态方法没有 **this** 对象，如果是 **静态的同步方法，那么锁对象就是类对象**
 
@@ -58,7 +58,9 @@ public class T {
 
 
 
-#### **synchronized可重入**
+
+
+### **synchronized可重入**
 
 **可重入锁** 通俗来讲，当线程请求一个由其它线程持有的对象锁时，该线程会阻塞，而当线程请求由自己持有的对象锁时，如果该锁是重入锁，请求就会成功，否则阻塞。
 
@@ -127,7 +129,7 @@ doAnotherThing
 
 
 
-#### **synchronized原理**
+### **synchronized原理**
 
 
 
