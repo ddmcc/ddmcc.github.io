@@ -160,7 +160,7 @@ true
 
 ##### **在[Java语言规范规定](https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.1.7)**
 
-- 缓存的范围
+* 缓存的范围
 
 >如果一个变量p的值是：
 > 
@@ -173,16 +173,16 @@ true
 >将p包装成a和b两个对象时，可以直接使用a==b判断a和b的值是否相等。也就是这个范围中的值会使用缓存
 
 
-- 缓存的对象
+* 缓存的对象
 
 缓存行为不仅适用于Integer对象。针对所有的整数类型的类都有类似的缓存机制
 
-- - 有ByteCache用于缓存Byte对象 **有固定范围: -128 到 127**
-- - 有ShortCache用于缓存Short对象 **有固定范围: -128 到 127**
-- - 有LongCache用于缓存Long对象 **有固定范围: -128 到 127**
-- - 有CharacterCache用于缓存Character对象 **范围是 0 到 127**
+    - 有ByteCache用于缓存Byte对象 **有固定范围: -128 到 127**
+    - 有ShortCache用于缓存Short对象 **有固定范围: -128 到 127**
+    - 有LongCache用于缓存Long对象 **有固定范围: -128 到 127**
+    - 有CharacterCache用于缓存Character对象 **范围是 0 到 127**
 
-- 其它约束
+* 其它约束
 
 除了Integer以外，缓存范围都不能改变
 
