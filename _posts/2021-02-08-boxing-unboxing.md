@@ -11,14 +11,23 @@ author: ddmcc
 * content
 {:toc}
 
-  
+
+### **概念**
+
+       在说到拆箱和装箱之前，需要了解Java中有八种基本的数据类型，分别是：byte、short、char、int、long、float、double和boolean。这八种基本类型在Java中都有对应的包装类型：Byte、Short、Character、Integer、Long、Float、Double以及Boolean。
+
+
+
+
+有了基本类型为什么还需要包装类型呢？这是由Java本身的语言特性决定的，Java是一种面向对象的编程语言，在学习Java之初就被明确灌输了一个概念：OOP，即面向对象编程。一切皆对象。但是基本类型是不具备Java中对象的某些特征，对象内部可以封装一系列属性和行为，但是这些在基本数据类型中都无法满足，所以对应的包装类型就应运而生了。这里的装箱和拆箱的概念描述的其实就是Java中这八种基本数据类型和对应的包装类型之间的转换过程。我们把基本数据类型转换成对应的包装类型的过程叫做装箱。反之就是拆箱。在Java中的装箱和拆箱不是人为操作的，是程序在编译的时候编译器帮助我们完成这项任务的，因此说它是自动的。
+
+ 
 ### **自动拆装箱（1.5引入）**
 
 #### **什么是自动拆、装箱？**
 
 - 自动装箱：就是将基本数据类型自动转换成对应的包装类
 - 自动拆箱：就是将包装类自动转换成对应的基本数据类型
-
 
 
 ### **自动拆装箱有什么好处**
@@ -149,7 +158,8 @@ true
 
 缓存在第一次使用时被初始化。大小可以由JVM参数-XX:AutoBoxCacheMax=size来指定。JVM初始化时此值被设置成java.lang.Integer.IntegerCache.high属性并作为私有的系统属性保存在sun.misc.vm.class中。
 
-在[Java语言规范规定](https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.1.7)
+
+##### **在[Java语言规范规定](https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.1.7)**
 
 - 缓存的范围
 
@@ -176,3 +186,9 @@ true
 - 其它约束
 
 除了Integer以外，缓存范围都不能改变
+
+
+### **参考资料**
+
+[Java的自动拆装箱](https://www.jianshu.com/p/cc9312104876)
+[Java中整型的缓存机制](http://www.hollischuang.com/archives/1174)
