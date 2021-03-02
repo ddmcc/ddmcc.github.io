@@ -62,9 +62,8 @@ CONSTANT_Utf8_info {
 其中，`length` 代表数组 `bytes[]` 的长度，其类型为u2，`bytes[]` 是表示字符串值的byte数组。
 
 在规范 [Java虚拟机规范 4](https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html) 中说明：u2表示两个字节的无符号数，那么1个字节有8位，2个字节就有16位。
-在[Java虚拟机规范 4.11](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.11) 中也说明：字段和方法名称、字段和方法描述符以及其他常量字符串值（包括由ConstantValue（§4.7.2）属性引用的值）的长度被常量信息结构（§4.4.7）的16位无符号长度项限制为65535个字符。
+16位无符号数可表示的最大值位2^16 - 1 = 65535。在 [Java虚拟机规范 4.11](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.11) 中也说明：字段和方法名称、字段和方法描述符以及其他常量字符串值（包括由ConstantValue（§4.7.2）属性引用的值）的长度被常量信息结构（§4.4.7）的16位无符号长度项限制为65535个字符。
 
-16位无符号数可表示的最大值位2^16 - 1 = 65535
 
 也就是说，Class文件中常量池的格式规定了，其字符串常量的长度不能超过65535。
 
