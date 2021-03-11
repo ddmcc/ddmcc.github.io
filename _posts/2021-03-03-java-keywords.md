@@ -20,7 +20,7 @@ Java语言的关键字，变量修饰符，如果用transient声明一个实例�
 
 >这里的对象存储是指，Java的serialization提供的一种持久化对象实例的机制。当一个对象被序列化的时候，transient型变量的值不包括在序列化的表示中，然而非transient型的变量是被包括进去的。使用情况是：当持久化对象时，可能有一个特殊的对象数据成员，我们不想用serialization机制来保存它。为了在一个特定对象的一个域上关闭serialization，可以在这个域前加上关键字transient。
 
-简单点说，就是被transient修饰的成员变量，在序列化的时候其值会被忽略，在被反序列化后， transient 变量的值被设为初始值， 如 int 型的是 0，对象型的是 null。
+简单点说，就是被transient修饰的成员变量，在序列化的时候其值会被忽略，在被反序列化后， transient 变量的值被设为初始值， 如 int 型的是 0，引用类型的是 null。
 
 
 `ArrayList` 中的保存数据的数组被 `transient` 所修饰。
@@ -30,7 +30,7 @@ Java语言的关键字，变量修饰符，如果用transient声明一个实例�
 ```
 
 
-如果如上面的所说，序列化、反序列化后，列表的数据将会为空：
+如果如上面的所说，被 `transient` 修饰的变量值在序列化、反序列化后，列表的数据将会为空：
 
 ```java
     public static void main(String[] args) throws IOException, ClassNotFoundException {
@@ -122,17 +122,17 @@ Java语言规范关于 `instanceof` 关键字的解释：
 举个🌰：
 
 ```java
-if (a instanceof b) {
-
-}
-
-if (o instanceof Vector) {
-     System.out.println("对象是 java.util.Vector 类的实例");
-} else if (o instanceof ArrayList) {
-    System.out.println("对象是 java.util.ArrayList 类的实例");
-} else {
-    System.out.println("对象是 " + o.getClass() + " 类的实例");
-}
+    if (a instanceof b) {
+    
+    }
+    
+    if (o instanceof Vector) {
+         System.out.println("对象是 java.util.Vector 类的实例");
+    } else if (o instanceof ArrayList) {
+        System.out.println("对象是 java.util.ArrayList 类的实例");
+    } else {
+        System.out.println("对象是 " + o.getClass() + " 类的实例");
+    }
 ```
 
 - a的类型必须是 `引用类型` 或 `空类型`(null)，否则就会产生编译时错误。
@@ -160,7 +160,7 @@ if (o instanceof Vector) {
 
 ##### **final方法**
 
-如果任何方法声明为 `final`，则不能覆盖它。
+如果任何方法声明为 `final`，则不能覆盖它。即不能被重写
 
 
 ##### **final变量**
@@ -216,3 +216,142 @@ static {
 
 ##### **静态类**
 
+Java可以嵌套使用静态类，但是静态类不能用于嵌套的顶层。
+
+让我们来看一个使用静态的样例程序：
+
+```java
+public class StaticExample {
+
+    //static block
+    static{
+        //can be used to initialize resources when class is loaded
+        System.out.println("StaticExample static block");
+        //can access only static variables and methods
+        str="Test";
+        setCount(2);
+    }
+
+    //multiple static blocks in same class
+    static{
+        System.out.println("StaticExample static block2");
+    }
+
+    //static variable example
+    private static int count; //kept private to control it's value through setter
+    public static String str;
+
+    public int getCount() {
+        return count;
+    }
+
+    //static method example
+    public static void setCount(int count) {
+        if(count > 0) {
+            StaticExample.count = count;
+        }
+    }
+
+    //static util method
+    public static int addInts(int i, int...js){
+        int sum=i;
+        for(int x : js) {
+            sum+=x;
+        }
+        return sum;
+    }
+
+    //static class example - used for packaging convenience only
+    public static class MyStaticClass{
+        public int count;
+
+    }
+
+
+```
+
+接下来，在测试程序中使用这些静态变量、静态方法和静态类。
+
+```java
+
+    public static void main(String[] args) {
+        StaticExample.setCount(5);
+
+        //non-private static variables can be accessed with class name
+        StaticExample.str = "abc";
+        StaticExample se = new StaticExample();
+        System.out.println(se.getCount());
+        //class and instance static variables are same
+        System.out.println(StaticExample.str +" is same as "+se.str);
+        System.out.println(StaticExample.str == se.str);
+
+        //static nested classes are like normal top-level classes
+        StaticExample.MyStaticClass myStaticClass = new StaticExample.MyStaticClass();
+        myStaticClass.count=10;
+
+        StaticExample.MyStaticClass myStaticClass1 = new StaticExample.MyStaticClass();
+        myStaticClass1.count=20;
+
+        System.out.println(myStaticClass.count);
+        System.out.println(myStaticClass1.count);
+    }
+}
+```
+
+
+执行结果如下：
+
+```java
+StaticExample static block
+StaticExample static block2
+5
+abc is same as abc
+true
+10
+20
+```
+
+可见，静态块代码是最先被执行的，而且是只在类载入内存时执行。
+
+
+##### **静态import**
+
+一般，Java允许用静态成员使用类引用，从Java1.5开始，我们可以使用静态import而不用类引用。下面是一个简单的静态import的例子。
+
+
+```java
+public class A {
+
+	public static int MAX = 1000;
+	
+	public static void foo(){
+		System.out.println("foo static method");
+	}
+}
+```
+
+
+```java
+
+import static A.MAX;
+import static A.foo;
+
+public class B {
+
+	public static void main(String args[]){
+		System.out.println(MAX); //normally A.MAX
+		foo(); // normally A.foo()
+	}
+}
+```
+
+
+第2段代码用了import语句，导入静态类使用import static，后面跟着的是静态成员的全称。
+
+为了导入一个类中的所有的静态成员，可以这样写“import static A.*”，这只有在我们要多次使用一个类的静态变量时，才这样写，但这种写法的可读性不好。
+
+
+### **synchronized**
+
+
+### **volatile**
