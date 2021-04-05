@@ -33,7 +33,9 @@ author: ddmcc
 
 
 
-## 磁盘IO与预读
+## **磁盘IO与预读**
+
+
 
 在介绍索引之前，先了解一下磁盘IO，数据库数据文件是存在磁盘上的，磁盘读取数据靠的是机械运动，每次读取数据花费的时间可以分为寻道时间、旋转延迟、传输时间三个部分。
 
@@ -55,7 +57,7 @@ Trotation是指盘片旋转将请求数据所在的扇区移动到读写磁盘�
 
 
 
-## 索引数据结构 
+## **索引数据结构**
 
 在 mysql 中，索引是 `存储引擎` 层实现的，并没有统一的标准。不同的存储引擎的索引实现并不一样。即使多个存储引擎支持同一种类型的索引，其底层的实现也可能不同。如：`InnoDB` 中根据主键引用被索引的行，而 `MyISAM` 则通过数据的物理位置引用被索引的行
 
@@ -179,7 +181,7 @@ possible_keys: NULL
 
 
 
-## 索引的查找
+## **索引的查找**
 
 
 
@@ -295,25 +297,337 @@ SELECT * FROM user WHERE age = 15;
 
 
 
-## **建索引的几大原则**
+## **建索引的原则和使用时注意点**
 
-- 最左前缀匹配原则
 
-- 尽量选择区分度高的列作为索引
 
-- 尽量的扩展索引，不要新建索引
+以下表结构来说明：
+
+```sql
+CREATE TABLE `t` (
+  `a` varchar(32) NOT NULL,
+  `b` varchar(50) DEFAULT NULL,
+  `c` varchar(20) DEFAULT NULL,
+  `d` varchar(20) DEFAULT NULL,
+  `e` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`a`),
+  KEY `IDX_B_C_D` (`b`,`c`,`d`) USING BTREE
+) ENGINE=InnoDB;
+```
+
+
+
+### **原则**
+
+
+
+#### **最左前缀匹配原则**
+
+mysql会一直向右匹配直到遇到范围查询(>、<、between、like)就停止匹配，比如b = 2 and c > 3 and d = 4 如果建立(b,c,d)顺序的索引，d是用不到索引的，如果建立(b,d,c)的索引则都可以用到，b,d的顺序可以任意调整，因为查询优化器会帮你优化成索引可以识别的形式
+
+**总结为以下三点：**
+
+- **如果不是按照索引的最左列开始查找，则无法使用索引**
+
+  
+
+下面查询语句，不是最左列开始查找：
+
+```shell
+mysql> EXPLAIN SELECT * FROM t WHERE c = 'bbb'\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: t
+   partitions: NULL
+         type: ALL
+possible_keys: NULL
+          key: NULL
+      key_len: NULL
+          ref: NULL
+         rows: 3
+     filtered: 33.33
+        Extra: Using where
+1 row in set, 1 warning (0.00 sec)
+```
+
+
+
+可以看到并没有使用索引。如果从最左列开始查找，并且使用右模糊，也是可以使用索引进行匹配的，因为可以按左前缀字符查找
+
+```shell
+mysql> EXPLAIN SELECT * FROM t WHERE b LIKE 'aa%'\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: t
+   partitions: NULL
+         type: range
+possible_keys: IDX_B_C_D
+          key: IDX_B_C_D
+      key_len: 153
+          ref: NULL
+         rows: 1
+     filtered: 100.00
+        Extra: Using index condition
+1 row in set, 1 warning (0.01 sec)
+```
+
+
+
+
+
+- **不能跳过索引中的列**
+
+也就是说上面的索引无法用于查找 b = 'xxx' and d = 'xxx' 的记录。如果不指定b的值，则 `mysql` 只能使用索引的第一列。在索引 `IDX_B_C_D ` 中匹配到所有 b = 'xxx' 的记录，再拿着这些记录的主键去聚簇索引中查找
+
+
+
+- **如果查询中有某个列是范围查询，则其右边所有列都无法使用索引**
+
+例如查询 b = 'xxx' and c >/</between/like 'xxx' and d = 'xxx' 这个查询只能用前面两列，因为列c是一个范围查询。但是存储引擎会用d列进行查询优化（索引下推）。如果范围查询的列值有限，那么可以通过使用多个等于条件来代替范围条件
+
+
+
+#### **尽量选择区分度高的列作为索引**
+
+区分度的公式是 count(distinct col) / count(*)，表示字段不重复的比例，比例越大查询效率越高，唯一键的区分度是1。而一些状态、性别字段可能在大数据面前区分度就是0。存在非等号和等号混合判断条件时，在建索引时，等号条件的列前置。如：where c > ? and d = ? 那么即使 c 的区分度更高，也必须把 d 放在索引的最前列，即建立组合索引 idx_d_c。**当然这也只是“经验法则”，还需要考虑到索引的复用能力**
+
+根据[美团技术团队博客文章](https://tech.meituan.com/2014/06/30/mysql-index.html)，需要join的字段这个值一般都要求是0.1以上，即平均1条扫描10条记录
+
+
+
+#### **尽量的扩展索引，不要新建索引**
+
+- 空间：`InnoDB` 会为每个索引都建立 `B+` 树索引，所以会占用更多的空间
+- 性能：每次修改数据时要对索引进行维护，多棵索引树无疑增加了维护成本。并且在查询上，多列索引有机会使用 `覆盖索引` 和 `索引下推` 来提升查询效率
+
+
+
+### **使用时注意点**
+
+- 索引列不能参与计算：比如 from_unixtime(create_time) = ’2014-05-29’  或 left(code,  6) = '010108'  或 score + 1 = 80 就不能使用到索引。所以语句应该写成create_time = unix_timestamp(’2014-05-29’)  和 code LIKE '010108%'
+- 索引列与参数类型不匹配：比如字符串字段索引 phone = 13024532432
+- 最左前缀匹配：比如左模糊查询
+- ...
 
 
 
 ## **索引的使用**
 
-#### **单列索引**
 
- #### **联合索引**
 
-#### **索引覆盖**
+#### **联合索引**
+
+`联合索引` 也是一棵 `B+` 树，不同的是联合索引的键值数量不是 1，而是大于等于 2。并且和单个键值的 `B+` 树一样，键值都是排序的，通过叶子节点可以逻辑上读出所有的数据。
+
+如有以下表：
+
+```sql
+CREATE TABLE t1 ( 
+a INT, 
+b INT, 
+c INT, 
+PRIMARY KEY ( a ), 
+KEY IDX_B_C ( b, c ) ) 
+ENGINE = INNODB;
+```
+
+
+
+索引先按字段b排序，如果b字段值相等，再按c字段排序，即(1, 1)、(1, 2)、(2, 1)、(2, 4)、(3, 1)、(3, 2) 数据按(b, c) 的顺序进行了存放。因为对第二字段进行了排序，在很多场景下可以利用这个特性来避免多一次排序操作。如查询一个人的最近3笔订单，则可以建立(user_id,  create_time) 的联合索引，建表、查询语句为：
+
+```sql
+CREATE TABLE `buy_order` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) DEFAULT NULL,
+  `create_time` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `IDX_USER_CREATE_TIME` (`user_id`,`create_time`) USING BTREE,
+  KEY `IDX_USER` (`user_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=6;
+
+INSERT INTO `user`.`buy_order`(`id`, `user_id`, `create_time`) VALUES (1, 1, '2021-04-04 23:14:27');
+INSERT INTO `user`.`buy_order`(`id`, `user_id`, `create_time`) VALUES (2, 1, '2021-04-07 23:14:35');
+INSERT INTO `user`.`buy_order`(`id`, `user_id`, `create_time`) VALUES (3, 1, '2021-04-07 23:14:43');
+INSERT INTO `user`.`buy_order`(`id`, `user_id`, `create_time`) VALUES (4, 1, '2021-04-30 23:14:52');
+INSERT INTO `user`.`buy_order`(`id`, `user_id`, `create_time`) VALUES (5, 2, '2021-04-14 23:15:49');
+```
+
+
+
+为了做比较还加了一个单独的IDX_USER索引，先查询用户为1的所有订单，这个语句应该是两个索引都可以使用：
+
+```sql
+mysql> EXPLAIN SELECT * FROM buy_order WHERE user_id = 1\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: buy_order
+   partitions: NULL
+         type: ref
+possible_keys: IDX_USER_CREATE_TIME,IDX_USER
+          key: IDX_USER_CREATE_TIME
+      key_len: 9
+          ref: const
+         rows: 4
+     filtered: 100.00
+        Extra: Using index
+1 row in set, 1 warning (0.00 sec)
+```
+
+
+
+可以看到上面的执行计划，优化器最终选择了单个索引的IDX_USER，**因为该索引的节点包含单个键值，所以理论上一个页能存放更多的记录** 
+
+
+
+接着假设要查询用户为1的最近三个订单：
+
+```sh
+mysql> EXPLAIN SELECT * FROM buy_order WHERE user_id = 1 ORDER BY create_time DESC LIMIT 3\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: buy_order
+   partitions: NULL
+         type: ref
+possible_keys: IDX_USER_CREATE_TIME
+          key: IDX_USER_CREATE_TIME
+      key_len: 9
+          ref: const
+         rows: 4
+     filtered: 100.00
+        Extra: Using where; Using index
+1 row in set, 1 warning (0.00 sec)
+```
+
+
+
+同样的，对于这个查询既可以使用 IDX_USER 索引，也可以使用 IDX_USER_CREATE_TIME 索引。但是这次优化器使用了 IDX_USER_CREATE_TIME 的联合索引，**因为在这个联合索引中 create_time 已经排序好了，根据该联合索引取出数据，无须再对create_time 做一次额外的排序操作**，若强制使用 IDX_USER索引，则执行计划如下图：
+
+
+
+```shell
+mysql> EXPLAIN SELECT * FROM buy_order FORCE INDEX(IDX_USER) WHERE user_id = 1 ORDER BY create_time DESC LIMIT 3\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: buy_order
+   partitions: NULL
+         type: ref
+possible_keys: IDX_USER
+          key: IDX_USER
+      key_len: 9
+          ref: const
+         rows: 4
+     filtered: 100.00
+        Extra: Using index condition; Using filesort
+1 row in set, 1 warning (0.00 sec)
+```
+
+
+
+在Extra选项中可以看到 `Using filesort`，即需要额外的一次排序操作才能完成查询。而这次显然需要对列 create_time 排序，因为索引 IDX_USER 中的 create_time 是未排序的
+
+
+
+正如前面所介绍的那样，联合索引(b, c)其实是根据列b、c进行排序，因此下列语句可以直接使用联合索引得到结果：
+
+```sql
+SELECT * FROM TABLE WHERE a = ? ORDER BY b
+```
+
+
+
+然而对于联合索引(a,b,c)来说，下列语句同样可以直接通过联合索引得到结果：
+
+```sql
+SELECT * FROM TABLE WHERE a = ? ORDER BY b
+SELECT * FROM TABLE WHERE a = ? AND b = ? ORDER BY c
+```
+
+
+
+
+
+#### **覆盖索引**
+
+
+
+如果执行的语句是 :
+
+```sql
+SELECT ID FROM t WHERE k BETWEEN 3 AND 5;
+```
+
+
+
+这时只需要查 ID 的值，而 ID 的值已经在 k 索引树上了，因此可以直接提供查询结果，不需要回表。也就是说从二级索引就可以得到查询的字段，而不需要查询聚簇索引中的记录（mysql5.0或以下版本不支持）
+
+
+
+使用覆盖索引另一个好处是针对某些统计，如下面查询语句：
+
+```sql
+SELECT COUNT(*) FROM t WHERE b = ?;
+```
+
+
+
+假设 b 字段也是表的主键，并且b字段上还有其它的索引，InnoDB存储引擎并不会通过聚簇索引来进行统计。因为二级索引远小于聚簇索引，选择二级索引可以减少IO操作
+
+此外，通常情况下，如有索引(a, b)的联合索引，是不可以选择作为列b的查询索引。但是如果是统计操作，并且是覆盖索引，则优化器会选择它
+
+比如以下查询语句：
+
+```sql
+SELECT COUNT(a) FROM t WHERE b = ?;
+```
+
+
 
 #### **索引下推**
+
+从 `mysql5.6` 开始支持的一种根据索引进行查询的优化方式
+
+
+
+如有索引(a, b)的联合索引和以下查询语句：
+
+```sql
+SELECT * FROM t WHERE a LIKE 'a%' AND b = ?;
+```
+
+在 `mysql5.6` 之前，根据最左匹配规则，只能查询出a字段以a开头的主键，再一个个回表到聚簇索引对比b的值。在引入下推优化之后，可以在索引遍历过程中，对索引中包含的字段先做判断，直接过滤掉不满足条件的记录，**也就是将WHERE的部分过滤操作放在了存储引擎层**，减少回表次数
+
+
+
+#### **MRR优化**
+
+
+
+
+
+#### **怎么给字符串字段加索引**
+
+
+
+#### **普通索引和唯一索引，应该怎么选择**
+
+
+
+## **其它索引**
+
+
+
+#### **哈希索引**
+
+
+
+#### **全文索引**
+
+
 
 
 
@@ -321,10 +635,11 @@ SELECT * FROM user WHERE age = 15;
 
 ## 参考
 
-**<<高性能mysql第3版>>**
+**《高性能MySQL第3版》**
+
+**《MySQL技术内幕InnoDB存储引擎第2版》**
 
 [MySQL索引原理及慢查询优化](https://tech.meituan.com/2014/06/30/mysql-index.html)
 
 [磁盘I/O那些事](https://tech.meituan.com/2017/05/19/about-desk-io.html)
 
-[MySQL实战45讲](https://time.geekbang.org/column/intro/139)
