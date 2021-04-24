@@ -127,12 +127,18 @@ binlog主要用来point-in-time恢复和主/从复制同步，从这里就可以
   ![markdown](https://ddmcc-1255635056.file.myqcloud.com/50f38b45-d325-4378-84b0-ffc5c386720a.png)
 
   - 有一个主库Master，所有的更新操作都在master上进行
+
   - 同时会有多个Slave，每个Slave都连接到Master上，获取binlog在本地回放，实现数据复制。
-  - 在应用层面，需要对执行的sql进行判断。所有的更新操作都通过Master(Insert、Update、Delete等)，而查询操作(Select等)都在Slave上进行。由于存在多个slave，所以我们可以在slave之间做负载均衡。通常业务都会借助一些数据库中间件，如tddl、sharding-jdbc等来完成读写分离功能。
+
+  - 在应用层面，需要对执行的sql进行判断。所有的更新操作都通过Master(Insert、Update、Delete等)，而查询操作(Select等)都在Slave上进行。由于存在多个slave，所以我们可以在slave之间做负载均衡。通常业务都会借助一些数据库中间件，如tddl、sharding-jdbc等来完成读写分离功能
+
+    
 
 - **2.数据恢复**
 
   如果数据误删，或需要恢复到某个时间点，则可以通过较旧时间点的版本+binlog来恢复，或通过全量binlog
+
+  
 
 - **3.数据最终一致性**
 
@@ -144,13 +150,13 @@ binlog主要用来point-in-time恢复和主/从复制同步，从这里就可以
 
   ![markdown](https://ddmcc-1255635056.file.myqcloud.com/7ee0475d-a45c-42c2-89dd-d63f0df66b1a.png)
 
-- **4.异地多活**
+- **4.异地多活，数据同步**
 
   
 
 #### **写入时机**
 
-binlog只在 **事务提交前** 进行一次写入。当然，什么时候刷新到磁盘跟参数`sync_binlog`相关
+binlog只在 **事务提交前** 进行一次写入。什么时候从缓存刷新到磁盘跟参数`sync_binlog`相关
 
 
 
@@ -158,13 +164,19 @@ binlog只在 **事务提交前** 进行一次写入。当然，什么时候刷�
 
 ## **redo log**
 
+重做日志用来实现事务
+
 
 
 #### **文件格式**
 
 
 
+
+
 #### **作用**
+
+**重做日志用来保证事务的持久性。**为了更好的性能，InnoDB会将数据缓存在内存中（Buffer Pool），对数据的修改也是先修改缓存中的，所以磁盘数据会落后于内存，这时如果进程或机器奔溃，会导致内存数据丢失。为了维护数据库本身的一致性和持久性，InnoDB维护了redo log，修改 `page` 之前需要先将修改的内容记录到redo log中，并保证 redo log早于对应的page落盘，也就是通常说的WAL（Write Ahead Log）。当故障发生导致内存数据丢失后，InnoDB会在重启时，通过重放redo，将page数据恢复到奔溃前的状态
 
 
 
@@ -175,6 +187,14 @@ binlog只在 **事务提交前** 进行一次写入。当然，什么时候刷�
 
 
 ## bin log与redo log区别
+
+**1.** redo log是InnoDB引擎特有的；binlog 是 mysql 的 Server 层实现的，所有引擎
+
+
+
+## undo log
+
+
 
 
 

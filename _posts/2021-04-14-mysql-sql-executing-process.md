@@ -137,6 +137,28 @@ SELECT * FROM T WHERE ID = 10；
 
 
 
+## 一条更新查询语句是如何执行的
+
+更新语句前面的步骤和查询一致，解析器通过解析知道这是一条更新语句，然后执行器选择最优执行计划去执行
+
+
+
+- 执行器会先open table，如果该表上有 `MDL（X）` （元数据排他锁），则等待。如果没有则在该表上加 `MDL（S）` （元数据共享锁）
+- 进入到引擎层，首先会去 `innodb_buffer_pool` 里的 `data dictionary` (元数据信息，是InnoDB自己管理的表缓存) 得到表信息，通过元数据信息，去 `lock info` 里查出是否会有相关的锁信息，并把这条update语句需要的锁信息写入到 `lock info` 里
+- 然后涉及的旧数据以快照的形式存储到缓冲池中的 `undo page` 里，并在 redo log 中记录 undo log（undo log持久化）
+- 对数据页进行修改，并把数据页的物理修改记录到 redo log buffer里。由于一个事务会涉及到多个页面的修改，所以redo log buffer里会有多条页面的修改信息。并且由于 group_commit 的原因，本次事务所产生的redo log buffer可能会跟其它事务一同刷新到磁盘上
+- 同时修改的信息，会按照 `event` 的格式，以不同的 event type 记录到 binlog_cache 中，在 **事务 commit 后** dump 线程会从 binlog_cache 里把 event 发送给 slave 的 I/O 线程
+- 之后把还需要在二级索引上做的修改，写入到 change buffer page，等到下次有读取该二级索引页时，再去与二级索引页做 merge
+- commit操作，由于存储引擎层与 server 层之间采用的是内部 XA (保证两个事务的一致性，这里主要保证redo log和binlog的原子性)，所以提交分为prepare阶段与commit阶段
+  - 引擎将新数据更新到内存中，同时将这个更新操作记录到 redo log 里面，此时 redo log 处于 prepare 状态
+  - 执行器将 binlog_cache 里的日志进行刷新到磁盘，并进行同步操作
+  - 执行器调用引擎的提交事务接口，引擎把刚刚写入的 redo log 改成提交（commit）状态，更新完成
+
+
+
+
+
+
 ## **参考**
 
 [MYSQL实战 45讲](https://time.geekbang.org/column/article/68319) 
