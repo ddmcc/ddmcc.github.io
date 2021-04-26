@@ -2,8 +2,8 @@
 layout: post
 title:  "远程连接MySql"
 date:   2018-05-05 14:37:53
-categories: MySql
-tags: MySql
+categories: mysql
+tags: mysql
 author: ddmcc
 ---
 
