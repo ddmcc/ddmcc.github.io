@@ -81,7 +81,86 @@ MDL 不需要显式使用，在访问一个表的时候会被自动加上。在 
 
 
 
+#### **外键和锁**
+
+
+
+#### **自增长与锁**
+
+
+
 #### **锁的算法**
+
+InnoDB 通过给索引项加锁来实现行锁，如果没有索引，则通过隐藏的聚簇索引来对记录加锁。如果操作不通过索引条件检索数据，InnoDB 则对表中的所有记录加锁，实际效果就和表锁一样
+
+InnoDB 存储引擎有3种行锁的算法，分别是：
+
+- Record Lock: 单个记录上的锁
+- Gap Lock: 间隙锁，锁定一个范围，但不包括本记录
+- Next-Key Lock: Gap Lock+Record Lock，锁定一个范围，并且锁定记录本身
+
+
+
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/4e3f16e6-5a2e-4bb7-b240-bf9c4ab1005b.png)
+
+例如一个索引有10，30这两个值，InnoDB 可以根据需要使用 `Record Lock` 将10，30两个索引锁住；也可以使用 `Gap Lock` 将(-∞,10)，(10,30)，(30, +∞)三个范围区间锁住；`Next-Key Lock` 类似于上述两种锁的结合，它可以锁住的区间有为(-∞,10]，(10,30]，(30, +∞)，可以看出它即锁定了一个范围，也会锁定记录本身
+
+
+
+InnoDB 对于行的查询都是默认采用 `Next-Key lock` 算法。**当条件索引是唯一索引时，InnoDB 存储引擎会进行优化，将其降级为 Record Lock，即锁住索引本身** ，而不是范围，从而提高并发性。若是通过辅助索引查询，**不但会给辅助索引加锁，还会为聚集索引上锁。对于辅助索引加 Next-Key Lock，而聚集索引因为是唯一的，所以只会加 Record Lock**
+
+
+
+对于没有显示创建索引的表，则会对 rowId 的聚集索引来加锁。如果操作未使用索引查询，那么会对表中所有记录加锁，实际效果和表锁一样
+
+
+
+**Next-Key Lock 解决幻读问题**
+
+在默认隔离级别 `REPEATABLE READ` 下，InnoDB 中行锁默认使用算法 Next-Key Lock，只有当查询的索引是唯一索引或主键时，InnoDB会对 Next-Key Lock 进行优化，将其降级为 Record Lock，即仅锁住索引本身，而不是范围
+
+当查询的索引为辅助索引时，InnoDB则会使用Next-Key Lock进行加锁。InnoDB对于辅助索引有特殊的处理，不仅会锁住辅助索引值所在的范围，还会将其下一键值加上Gap Lock
+
+
+
+```sql
+CREATE TABLE e4 (a INT, b INT, PRIMARY KEY(a), KEY(b));
+INSERT INTO e4 SELECT 1,1;
+INSERT INTO e4 SELECT 3,1;
+INSERT INTO e4 SELECT 5,3;
+INSERT INTO e4 SELECT 7,6;
+INSERT INTO e4 SELECT 10,8;
+```
+
+
+
+然后执行下面的语句：
+
+```text
+SELECT * FROM e4 WHERE b=3 FOR UPDATE;
+```
+
+
+
+因为通过辅助索引b来进行查询，所以 InnoDB 会使用 Next-Key Lock 进行加锁，并且还会对主键索引a进行加锁。对于主键索引a，仅仅对值为5的索引加上 Record Lock。而对于索引b，需要加上 Next-Key Lock 索引，锁定的范围是(1,3]。除此之外，还会对其下一个键值加上Gap Lock，即还有一个范围为(3,6)的锁
+
+再新开一个会话，执行下面的SQL语句，会发现都会被阻塞：
+
+```text
+SELECT * FROM e4 WHERE a = 5 FOR UPDATE; # 主键a被锁
+INSERT INTO e4 SELECT 4,2; # 插入行b的值为2，在锁定的(1,3]范围内
+INSERT INTO e4 SELECT 6,5; # 插入行b的值为5，在锁定的(3,6)范围内
+```
+
+
+
+若此时没有 Gap Lock 锁定(3,6) ，虽然会话A锁住了 b = 3 这条记录，但是会话B可以插入一条值为4的记录，这会导致会话A中再次执行查询时会返回不同的记录，即导致幻读问题
+
+InnoDB 存储引擎采用 Next-Key Lock 来解决幻读问题。因为 Next-Key Lock 是锁住一个范围，所以就不会产生幻读问题。但是需要注意的是，**InnoDB 只在 Repeatable Read 隔离级别下使用该机制**
+
+
+
+#### **锁与事务隔离级别**
 
 
 
