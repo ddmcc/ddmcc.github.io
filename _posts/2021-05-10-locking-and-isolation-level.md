@@ -65,14 +65,20 @@ RC（不可重读）模式下的展现
 | select id,class_name,teacher_id from class_teacher where teacher_id=1;<br />id \| class_name \| teacher_id<br />1  \| 初三二班     ｜1<br />2  \| 初三一班     ｜1 |                                                            |
 |                                                              | update class_teacher set class_name='初三三班' where id=1; |
 |                                                              | commit;                                                    |
-| select id,class_name,teacher_id from class_teacher where teacher_id=1;<br />id \| class_name \| teacher_id<br />1  \| 初三三班      \| 1<br />2  \| 初三一班      \| 1 <br /><br />读到了事务B修改的数据，和第一次查询的结果不一样，是不可重读的。 |                                                            |
+| select id,class_name,teacher_id from class_teacher where teacher_id=1;<br />id \| class_name \| teacher_id<br />1  \| 初三三班      \| 1<br />2  \| 初三一班      \| 1 <br /> |                                                            |
 | commit;                                                      |                                                            |
 
+
+
+----
 
 
 事务 B 修改 `id = 1` 的数据提交之后，事务 A 同样的查询，后一次和前一次的结果不一样，这就是不可重读（重新读取产生的结果不一样）
 
 这就很可能带来一些问题，那么我们来看看在RR级别中MySQL的表现：
+
+----
+
 
 | 事务A                                                        | 事务B                                                        | 事务C                                                        |
 | :----------------------------------------------------------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
