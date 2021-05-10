@@ -18,6 +18,10 @@ author: ddmcc
 
 
 
+##  InnoDB存储引擎中的锁
+
+
+
 我们都知道事务的4个特性，即 **ACID**。mysql 数据库使用加锁的方式来实现其中的 **I** (Isolation隔离性)。对于 InnoDB 存储引擎来说，它 **支持行锁和表锁** ，而且行锁是由存储引擎通过给索引记录加锁来实现的，并且 InnoDB 默认是加行锁。好处就是锁定颗粒度小，发生锁冲突的概率低，并发度高
 
 
@@ -115,7 +119,142 @@ InnoDB 对于行的查询都是默认采用 `Next-Key lock` 算法。**当条件
 
 
 
-**Next-Key Lock 解决幻读问题**
+## 锁与事务隔离级别
+
+
+
+#### **Read Committed**
+
+```sql
+mysql> show create table t \G\
+*************************** 1. row ***************************
+       Table: t
+Create Table: CREATE TABLE `t` (
+  `a` varchar(32) NOT NULL,
+  `b` varchar(50) DEFAULT NULL,
+  `c` varchar(20) DEFAULT NULL,
+  `d` varchar(20) DEFAULT NULL,
+  `e` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`a`),
+  KEY `IDX_B_C_D` (`b`,`c`,`d`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+1 row in set (0.00 sec)
+
+mysql> select * from t;
++---+------+------+------+------+
+| a | b    | c    | d    | e    |
++---+------+------+------+------+
+| 4 | 1    | 12   | 1    | 1    |
++---+------+------+------+------+
+1 row in set (0.01 sec)
+```
+
+
+
+在RC级别中，数据的读取都是不加锁的，但是数据的写入、修改和删除是需要加锁的
+
+为了防止并发过程中的修改冲突，事务 A 给a=4的数据行加锁，并一直不commit（释放锁），那么事务 B 也就一直拿不到该行锁，wait直到超时
+
+上面这种情况是在 a 是有索引情况下，如果是没有索引的其它字段呢？
+
+```sql
+update t set a=3 where e = 1; 
+```
+
+
+
+那么MySQL会给整张表的所有数据行的加行锁。MySQL并不知道哪些数据行是 e = 1 的，如果一个条件无法通过索引快速过滤，存储引擎层面就会将所有记录加锁后返回，再由MySQL Server层进行过滤
+
+但在实际使用过程当中，MySQL做了一些改进，在MySQL Server过滤条件，发现不满足后，会调用unlock_row方法，把不满足条件的记录释放锁 (违背了二段锁协议的约束)。这样做，保证了最后只会持有满足条件记录上的锁，但是每条记录的加锁操作还是不能省略的。（参见《高性能MySQL》中文第三版p181）
+
+这种情况同样适用于MySQL的默认隔离级别RR。所以对一个数据量很大的表做批量修改的时候，如果无法使用相应的索引，MySQL Server过滤数据的时候特别慢，就会出现虽然没有修改某些行的数据，但是它们还是被锁住了的现象
+
+
+
+#### **Repeatable Read**
+
+RC（不可重读）模式下的展现
+
+| 事务A                                                        | 事务B                                                      |
+| :----------------------------------------------------------- | :--------------------------------------------------------- |
+| begin;                                                       | begin;                                                     |
+| select id,class_name,teacher_id from class_teacher where teacher_id=1;<br />id \| class_name \| teacher_id<br />1  \| 初三二班     ｜1<br />2  \| 初三一班     ｜1 |                                                            |
+|                                                              | update class_teacher set class_name='初三三班' where id=1; |
+|                                                              | commit;                                                    |
+| select id,class_name,teacher_id from class_teacher where teacher_id=1;<br />id \| class_name \| teacher_id<br />1  \| 初三三班      \| 1<br />2  \| 初三一班      \| 1 <br /><br />读到了事务B修改的数据，和第一次查询的结果不一样，是不可重读的。 |                                                            |
+| commit;                                                      |                                                            |
+
+
+
+事务B修改id=1的数据提交之后，事务A同样的查询，后一次和前一次的结果不一样，这就是不可重读（重新读取产生的结果不一样）。
+
+这就很可能带来一些问题，那么我们来看看在RR级别中MySQL的表现：
+
+| 事务A                                                        | 事务B                                                        | 事务C                                                        |
+| :----------------------------------------------------------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
+| begin;                                                       | begin;                                                       | begin;                                                       |
+| select id,class_name,teacher_id from class_teacher where teacher_id=1;<br />id \| class_name \| teacher_id<br />1  \| 初三二班      \| 1<br />2  \| 初三一班      \| 1 |                                                              |                                                              |
+|                                                              | update class_teacher set class_name='初三三班' where id=1;<br />commit; |                                                              |
+|                                                              |                                                              | insert into class_teacher values (null,'初三三班',1);<br />commit; |
+| select id,class_name,teacher_id from class_teacher where teacher_id=1;<br />id \| class_name \| teacher_id<br />1  \| 初三二班      \| 1<br />2  \| 初三一班      \| 1 <br /><br />没有读到事务B修改的数据，和第一次sql读取的一样，是可重复读的<br />没有读到事务C新添加的数据。 |                                                              |                                                              |
+| commit;                                                      |                                                              |                                                              |
+
+我们注意到，当teacher_id=1时，事务A先做了一次读取，事务B中间修改了id=1的数据，并commit之后，事务A第二次读到的数据和第一次完全相同。所以说它是可重读的
+
+
+
+**悲观锁和乐观锁**
+
+- 悲观锁
+
+在整个数据处理过程中，将数据处于锁定状态。悲观锁的实现，往往依靠数据库提供的锁机制（也只有数据库层提供的锁机制才能真正保证数据访问的排他性，否则，即使在本系统中实现了加锁机制，也无法保证外部系统不会修改数据）
+
+在悲观锁的情况下，为了保证事务的隔离性，就需要 **一致性锁定读**。读取数据时给加锁，其它事务无法修改这些数据。修改删除数据时也要加锁，其它事务无法读取这些数据
+
+- 乐观锁
+
+相对悲观锁而言，乐观锁机制采取了更加宽松的加锁机制。悲观锁大多数情况下依靠数据库的锁机制实现，以保证操作最大程度的独占性
+
+而乐观锁机制在一定程度上解决了这个问题。**乐观锁，大多是基于数据版本（ Version ）记录机制实现**。在基于数据库表的版本解决方案中，一般是通过为数据库表增加一个 “version” 字段来实现。读取出数据时，将此版本号一同读出，之后更新时，对此版本号加一。此时，将提交数据的版本数据与数据库表对应记录的当前版本信息进行比对，如果提交的数据版本号大于数据库表当前版本号，则予以更新，否则认为是过期数据
+
+
+
+#### **MVCC在InnoDB中的实现**
+
+在InnoDB中，会在每行数据后添加两个额外的隐藏的值来实现MVCC，这两个值一个记录这行数据何时被创建，另外一个记录这行数据何时过期（或者被删除）。 在实际操作中，存储的并不是时间，而是事务的版本号，每开启一个新事务，事务的版本号就会递增。 在可重读Repeatable reads事务隔离级别下：
+
+- SELECT时，读取创建版本号<=当前事务版本号，删除版本号为空或>当前事务版本号。
+- INSERT时，保存当前事务版本号为行的创建版本号
+- DELETE时，保存当前事务版本号为行的删除版本号
+- UPDATE时，插入一条新纪录，保存当前事务版本号为行创建版本号，同时保存当前事务版本号到原来删除的行
+
+通过MVCC，虽然每行记录都需要额外的存储空间，更多的行检查工作以及一些额外的维护工作，但可以减少锁的使用，大多数读操作都不用加锁，读数据操作很简单，性能很好，并且也能保证只会读取到符合标准的行，也只锁住必要行。
+
+RR级别是可重复读的，但无法解决幻读，而只有在Serializable级别才能解决幻读。于是我就加了一个事务C来展示效果。在事务C中添加了一条teacher_id=1的数据commit，RR级别中应该会有幻读现象，事务A在查询teacher_id=1的数据时会读到事务C新加的数据。但是测试后发现，在MySQL中是不存在这种情况的，在事务C提交后，事务A还是不会读到这条数据。可见在MySQL的RR级别中，是解决了幻读的读问题的。参见下图
+
+![innodb_lock_1](https://awps-assets.meituan.net/mit-x/blog-images-bundle-2014/6eb5d3b1.png)
+
+
+
+读问题解决了，根据MVCC的定义，并发提交数据时会出现冲突，那么冲突时如何解决呢？我们再来看看InnoDB中RR级别对于写数据的处理。
+
+
+
+#### **在RC和RR隔离级别下MVCC的差异**
+
+在事务隔离级别 READ COMMITTED和 REPEATABLE READ( INNODB存储引整 的默认事务隔离级别)下, INNODB存储引擎使用非锁定一致性读。然而,对于快照数据的定义却不相同。在 READ COMMITTED事务隔离级别下,对于快照数据,非一致性读总是读取被锁定行的最新一份快照数据。而在 REPEATABLE READ事务隔离级别下,对于快照数据,非一致性读总是读取事务开始时的行数据版本
+
+
+
+
+
+#### **MVCC解决不可重复读问题**
+
+
+
+
+
+#### **Next-Key Lock 解决幻读问题**
 
 在默认隔离级别 `REPEATABLE READ` 下，InnoDB 中行锁默认使用算法 Next-Key Lock，只有当查询的索引是唯一索引或主键时，InnoDB会对 Next-Key Lock 进行优化，将其降级为 Record Lock，即仅锁住索引本身，而不是范围
 
@@ -160,10 +299,6 @@ InnoDB 存储引擎采用 Next-Key Lock 来解决幻读问题。因为 Next-Key 
 
 
 
-#### **锁与事务隔离级别**
-
-
-
 
 
 ## **参考**
@@ -171,4 +306,8 @@ InnoDB 存储引擎采用 Next-Key Lock 来解决幻读问题。因为 Next-Key 
 [Mysql锁：灵魂七拷问](https://tech.youzan.com/seven-questions-about-the-lock-of-mysql/) 
 
 **《MySQL技术内幕InnoDB存储引擎第2版》**
+
+[Innodb中的事务隔离级别和锁的关系](https://tech.meituan.com/2014/08/20/innodb-lock.html)
+
+
 
