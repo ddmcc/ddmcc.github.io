@@ -86,7 +86,7 @@ RC（不可重读）模式下的展现
 | select id,class_name,teacher_id from class_teacher where teacher_id=1;<br />id \| class_name \| teacher_id<br />1  \| 初三二班      \| 1<br />2  \| 初三一班      \| 1 |                                                              |                                                              |
 |                                                              | update class_teacher set class_name='初三三班' where id=1;<br />commit; |                                                              |
 |                                                              |                                                              | insert into class_teacher values (null,'初三三班',1);<br />commit; |
-| select id,class_name,teacher_id from class_teacher where teacher_id=1;<br />id \| class_name \| teacher_id<br />1  \| 初三二班      \| 1<br />2  \| 初三一班      \| 1 <br /><br />没有读到事务B修改的数据，和第一次sql读取的一样，是可重复读的<br />没有读到事务C新添加的数据。 |                                                              |                                                              |
+| select id,class_name,teacher_id from class_teacher where teacher_id=1;<br />id \| class_name \| teacher_id<br />1  \| 初三二班      \| 1<br />2  \| 初三一班      \| 1 <br /><br />没有读到事务B修改的数据，和第一次sql读取的一样，是可重复读的<br />没有读到事务C新添加的数据，没有出现幻读问题 |                                                              |                                                              |
 | commit;                                                      |                                                              |                                                              |
 
 
@@ -122,7 +122,7 @@ RC（不可重读）模式下的展现
 
 
 
-**MVCC 在mysql 中的实现依赖的是 undo log 与 read view **
+**MVCC 实现依赖的是 undo log 与 read view**
 
  [**undo log**](http://ddmcc.cn/2021/04/18/mysql-log-files/)
 
@@ -222,32 +222,55 @@ update 或 delete 操作中产生的 undo log。 因为会对已经存在的记�
 
 
 
-
-RR级别是可重复读的，但无法解决幻读，而只有在Serializable级别才能解决幻读。于是我就加了一个事务C来展示效果。在事务C中添加了一条teacher_id=1的数据commit，RR级别中应该会有幻读现象，事务A在查询teacher_id=1的数据时会读到事务C新加的数据。但是测试后发现，在MySQL中是不存在这种情况的，在事务C提交后，事务A还是不会读到这条数据。可见在MySQL的RR级别中，是解决了幻读的读问题的。参见下图
-
-![innodb_lock_1](https://awps-assets.meituan.net/mit-x/blog-images-bundle-2014/6eb5d3b1.png)
+## **在RC和RR隔离级别下MVCC的差异**
 
 
 
-读问题解决了，根据MVCC的定义，并发提交数据时会出现冲突，那么冲突时如何解决呢？我们再来看看InnoDB中RR级别对于写数据的处理。
+在事务隔离级别 RC 和 RR (InnoDB存储引擎的默认事务隔离级别)下， InnoDB存储引擎使用MVCC（非锁定一致性读），但它们生成 read view 的时机却不同
+
+- 在 RC 隔离级别下的每次读取数据前都生成一个ReadView (m_ids列表)
+
+- 在  RR 隔离级别下只在事务开始后第一次读取数据时生成一个ReadView（m_ids列表）
+
+
+**总的来说：**
+>在 READ COMMITTED 中每次查询都会生成一个实时的 ReadView，做到保证每次提交后的数据是处于当前的可见状态。而REPEATABLE READ 中，在当前事务第一次查询时生成当前的 ReadView，并且当前的 ReadView 会一直沿用到当前事务提交，以此来保证可重复读。简单的说在 READ COMMITTED 事务隔离级别下，对于快照数据，非一致性读总是读取被锁定行的最新一份快照数据。而在 REPEATABLE READ事务隔离级别下，对于快照数据，非一致性读总是读取事务开始时的行数据版本
 
 
 
-#### **在RC和RR隔离级别下MVCC的差异**
+## **MVCC解决不可重复读问题**
 
-在事务隔离级别 READ COMMITTED和 REPEATABLE READ( INNODB存储引整 的默认事务隔离级别)下, INNODB存储引擎使用非锁定一致性读。然而,对于快照数据的定义却不相同。在 READ COMMITTED事务隔离级别下,对于快照数据,非一致性读总是读取被锁定行的最新一份快照数据。而在 REPEATABLE READ事务隔离级别下,对于快照数据,非一致性读总是读取事务开始时的行数据版本
-
-
+虽然 RC 和 RR 都通过 MVCC 来读取快照数据，但由于生成 ReadView 时机不同，从而实现可重复读
 
 
 
-#### **MVCC解决不可重复读问题**
+举个例子：
+
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/241c1f49-898c-42a5-94fe-bd0a388978ce.png)
+
+----
+
+#### **在 RC 下 ReadView 生成情况**
+
+1. 假设时间来到 `T4` ，那么此时数据行 id = 1 的版本链为：
+
+
+
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/a3fd1ec6-8f37-42fa-b090-7446d488fd04.png)
 
 
 
 
 
-#### **Next-Key Lock 解决幻读问题**
+由于 RC 级别下每次查询都会生成 ReadView ，并且事务101、102并未提交，此时 ReadView 中活跃的事务 **trx_ids ：[101,102]** 。所以查询语句会用当前版本链去 `trx_ids` 中对比，查找小于最大事务id且不在列表中的，由此可以知道返回的数据为 `name = '菜花'`
+
+
+
+2. 时间线来到 `T6` 
+
+
+
+## **Next-Key Lock 解决幻读问题**
 
 在默认隔离级别 `REPEATABLE READ` 下，InnoDB 中行锁默认使用算法 Next-Key Lock，只有当查询的索引是唯一索引或主键时，InnoDB会对 Next-Key Lock 进行优化，将其降级为 Record Lock，即仅锁住索引本身，而不是范围
 
