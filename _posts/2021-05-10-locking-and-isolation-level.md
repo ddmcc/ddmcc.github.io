@@ -57,6 +57,8 @@ update t set a=3 where e = 1;
 
 ## **Repeatable Read**
 
+
+
 RC（不可重读）模式下的展现
 
 | 事务A                                                        | 事务B                                                      |
@@ -75,7 +77,7 @@ RC（不可重读）模式下的展现
 
 事务 B 修改 `id = 1` 的数据提交之后，事务 A 同样的查询，后一次和前一次的结果不一样，这就是不可重读（重新读取产生的结果不一样）
 
-这就很可能带来一些问题，那么我们来看看在RR级别中MySQL的表现：
+这就很可能带来一些问题，那么我们来看看在 RR 级别中的表现：
 
 ----
 
@@ -91,6 +93,8 @@ RC（不可重读）模式下的展现
 
 
 
+----
+
 我们注意到，当 `teacher_id=1` 时，事务 A 先做了一次读取，事务 B 中间修改了` id=1` 的数据，并commit之后，事务A第二次读到的数据和第一次完全相同。所以说它是可重读的
 
 
@@ -103,7 +107,7 @@ RC（不可重读）模式下的展现
 
 在InnoDB中，会在每行数据后添加两个额外的隐藏的值来实现 MVCC，这两个值一个记录这行数据创建事务id（**DB_TRX_ID**），另外一个记录这行回滚指针（**DB_ROLL_PTR**）
 
->DB_TRX_ID：表示最近一次对本记录行作修改（insert | update）的事务ID。至于delete操作，InnoDB认为是一个update操作，不过会更新一个另外的删除位，将行表示为deleted。并非真正删除
+>DB_TRX_ID：表示最近一次对本记录行作修改（insert 或 update）的事务ID。至于delete操作，InnoDB认为是一个update操作，不过会更新一个另外的删除位，将行表示为deleted。并非真正删除
 >
 >DB_ROLL_PTR：回滚指针，指向 undo log 记录。每次对某条记录进行改动时，该列会存一个指针，可以通过这个指针找到该记录修改前的信息 。当某条记录被多次修改时，该行记录会存在多个版本，通过DB_ROLL_PTR 链接形成一个类似版本链的概念。
 >
@@ -220,11 +224,9 @@ update 或 delete 操作中产生的 undo log。 因为会对已经存在的记�
 
 
 
+**[附判断源码：](https://leviathan.vip/2019/03/20/InnoDB%E7%9A%84%E4%BA%8B%E5%8A%A1%E5%88%86%E6%9E%90-MVCC/#MVCC-1)**
 
-
-## // todo readview 比较流程
-
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/8778836b-34a8-480b-b8c7-654fe207a8c2.png)
 
 ## **在RC和RR隔离级别下MVCC的差异**
 
@@ -234,7 +236,7 @@ update 或 delete 操作中产生的 undo log。 因为会对已经存在的记�
 
 - 在 RC 隔离级别下的每次读取数据前都生成一个ReadView (m_ids列表)
 
-- 在  RR 隔离级别下只在事务开始后第一次读取数据时生成一个ReadView（m_ids列表）
+- 在  RR 隔离级别下只在事务开始后 **第一次** 读取数据时生成一个ReadView（m_ids列表）
 
 
 
@@ -344,7 +346,51 @@ update 或 delete 操作中产生的 undo log。 因为会对已经存在的记�
 
 
 
-## **Next-Key Lock 解决幻读问题**
+## **MVCC + Next-Key Lock 解决幻读问题**
+
+可能在很多地方看到 RR 级别是可重复读的，但无法解决幻读问题，而只有在Serializable级别才能解决幻读。但在上面重现可重复读的额例子中，在事务 C 中添加了一条 `teacher_id = 1` 的数据并且 commit，RR 级别中应该会有幻读现象，事务 A 在查询 `teacher_id = 1` 的数据时会读到事务 C 新加的数据。但是测试后发现，是不存在这种情况的，在事务 C 提交后，事务A还是不会读到这条数据。**可见 MVCC 在MySQL的RR级别中，是解决了幻读的读问题**
+
+
+
+#### 快照读与当前读
+
+
+
+- **[快照读](https://dev.mysql.com/doc/refman/5.7/en/innodb-consistent-read.html)**：在RR级别中，通过 MVCC 机制，让数据变得可重复读，但我们读到的数据可能是历史数据，是不及时的数据，不是数据库当前的数据！对于这种读取历史数据的方式，我们叫它快照读 (snapshot read)，**通过 MVCC + undo log 来实现**
+- **[当前读](https://dev.mysql.com/doc/refman/5.7/en/innodb-locking-reads.html)**：当前读也就是 `一致性锁定读` ，读的是当前最新版本的数据。读的时候需要给数据加锁，其它事务无法修改这些数据。其它事务可以读取这些数据，但读取到的是快照
+
+
+
+根据定义快照读和当前读在 mysql 中分别值：
+
+
+
+- 快照读：普通 select
+  - select * from table ….;
+- 当前读：特殊的读操作，插入/更新/删除操作，属于当前读，还有手动加锁读
+  - select * from table where ? lock in share mode;
+  - select * from table where ? for update;
+  - insert;
+  - update ;
+  - delete;
+
+
+
+只靠 MVCC 实现 RR 隔离级别，可以保证可重复读，还能防止部分幻读，但并不是完全防止。
+
+比如事务 A 开始后，执行普通 select 语句，创建了快照；之后事务 B 执行 `insert` 语句；然后事务 A 再执行普通 `select` 语句，得到的还是之前B没有 `insert` 过的数据，因为这时候 A 读的数据是符合快照可见性条件的数据。这就防止了部分幻读，此时事务 A 是快照读
+
+> 这点上面介绍过也复现过
+
+
+
+但是，如果事务 A 执行的不是普通 select 语句，而是 select ... for update / update 等语句。这时候，事务 A 是 **当前读**，每次语句执行的时候都是获取的最新数据。也就是说，在只有 MVCC 时，A 先执行 select ... where nid between 1 and 10 … for update；然后事务B再执行  insert … nid = 5 …；然后 A 再执行 select ... where nid between 1 and 10 … for update，就会发现，多了一条B insert进去的记录。这就产生幻读了，所以单独靠MVCC并不能完全防止幻读
+
+
+
+// todo 
+
+
 
 在默认隔离级别 `REPEATABLE READ` 下，InnoDB 中行锁默认使用算法 Next-Key Lock，只有当查询的索引是唯一索引或主键时，InnoDB会对 Next-Key Lock 进行优化，将其降级为 Record Lock，即仅锁住索引本身，而不是范围
 
