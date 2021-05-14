@@ -68,7 +68,7 @@ public class Main {
 运行结果
 
 
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1fycg7qgc2mj30ia04raa5.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/89cf5660-550c-4dc0-926c-34ea1106d65d.png)
 
 
 以现在需求看上去感觉还行。但是如果现在需求变更，增加一个常客，打7折呢？就得在原来方法上加一个分支。
@@ -209,7 +209,7 @@ public class Main {
 
 运行结果
 
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1fyched7t0uj30i5058jrj.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/7bc1c45d-e84b-4d04-a855-423435c50c92.png)
 
 ## 模式使用
 

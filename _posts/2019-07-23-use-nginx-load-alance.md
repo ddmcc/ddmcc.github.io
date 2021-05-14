@@ -51,8 +51,8 @@ author: ddmcc
 
 
 **3,输入`docker ps`查看,tomcat已正常启动**
-![](https://i.loli.net/2019/07/23/5d37182cd7a4086825.png)
 
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/e3a5d1b9-62ab-484c-b091-f6fd405dfec3.png)
 
 
 
@@ -70,8 +70,10 @@ author: ddmcc
 
 
 输入`192.168.132.129:9090` 查看端口是否已追加
-![](https://i.loli.net/2019/08/03/W4cC5RfrGwIOd8o.png)
+----
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/41e68c25-4a34-41ac-b7c2-662d0628dded.png)
 
+----
 tomcat2重复tomcat1的操作,追加端口9091
 
 
@@ -131,14 +133,13 @@ tomcat2重复tomcat1的操作,追加端口9091
 
 
 3,`docker-compose up -d` 启动nginx
-![](https://i.loli.net/2019/07/23/5d37182cd7a4086825.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/7b10f129-07ae-4c28-ab98-b663c1c1abd9.png)
 
 
 
 
 4,输入`192.168.132.129:81`可以看到反向代理到了9090和9091,并且实现了负载均衡
-
-![](https://i.loli.net/2019/07/23/5d371f7e6869c97164.png)
-
-![](https://i.loli.net/2019/07/23/5d371f6eed21d12084.png)
+----
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/1d5b04e5-8969-493f-bb07-5499f76587a3.png)
+----
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/a9ef6708-0591-4c6c-8883-b723bbd43695.png)

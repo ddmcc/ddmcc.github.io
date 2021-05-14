@@ -22,7 +22,7 @@ author: ddmcc
 
 ### github仓库
 - 新建代码仓库
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32aijkcn6j30zf09574w.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/651e4a3c-0ecc-4a98-a96e-487f84716d13.png)
 
 ### 添加webhook
 

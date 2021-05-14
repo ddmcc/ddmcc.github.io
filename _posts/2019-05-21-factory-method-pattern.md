@@ -17,7 +17,7 @@ author: ddmcc
 
 **定义一个创建对象的接口,但由子类决定要实例化的类是哪一个。工厂方法让类把实例化推迟到子类。**
 
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1g39aavm6fbj30hh0dyta5.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/0836da16-6df7-493a-be20-f03ccbfc966f.png)
 
 Creator是一个类(接口),有一个工厂方法 `factoryMethod()` ,由子类去实现。
 
@@ -256,7 +256,7 @@ public class Main {
 ```
 
 
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1g39cp387qej31g10ohgoy.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/8148a6d1-ec00-46df-804a-58dc6abd1e71.png)
 
 
 

@@ -214,8 +214,8 @@ public class DrinkMachine {
 - 最后将贩卖机的动作委托到状态类
 
 ### 封装的状态类图
-![](https://i.loli.net/2019/11/04/WPZofAc6IpliEnU.png)
 
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/812502f7-2ee4-4b24-acdf-8614e8a59440.png)
 
 
 ---
@@ -432,7 +432,7 @@ public class DrinkMachine {
 
 ## 类图
 
-![](https://i.loli.net/2019/11/02/9wsS3tdYjGVqr4U.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/c054b9e7-4727-448f-81fa-f2be97ae19c7.png)
 
 ## 状态模式的优缺点
 - 优点

@@ -19,8 +19,7 @@ author: ddmcc
 
 ## 16.3之前
  
-![](https://i.loli.net/2019/09/02/KLbZQvPx6dOEwh2.png)
- 
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/f9d08583-fb5b-413f-82b0-9bd462cff551.png)
  
  ---
 #### 挂载阶段
@@ -122,8 +121,9 @@ author: ddmcc
  **如果是要去后台获取数据或者初始化的工作则可以移到`componentWillMount`和`componentWillUpdate`方法中**。这两个方法不会有被执行多次的可能。
  
  ---
- ![](https://i.loli.net/2019/09/02/zMHdVaikvAprOTE.png)
- 
+
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/ab61714e-cb0e-429b-82ed-e5f03eff57f9.png)
+
  ---
  图来源于[http://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/](http://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)
  
@@ -199,8 +199,8 @@ author: ddmcc
  　　所以16.4的生命周期方法如下图：
  
     
-![](https://i.loli.net/2019/09/03/vUF4JQlijD5yCoT.png)
 
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/3b8e2d83-7d94-4461-b053-c8a71435bb65.png)
 ---
  　　解释：略
       

@@ -382,8 +382,8 @@ public class EducationBureau {
 ```
 
 ## 上面代码的类图
-![](https://i.loli.net/2019/10/10/CtIKuwp8jXyAvQ2.png)
 
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/2b5ae82a-e502-438a-8c28-780fcdffba54.png)
 ## JDK中的迭代器
 
   　　JDK中也有迭代器`Iterator`接口，位于`java.util`包下，该接口有方法：`hasNext()`,`next()`,`remove()`,`forEachRemaining()`。在集合顶层接口`Collection`中有一个方法`Iterator<E> iterator()` ，用来返回一个迭代器，

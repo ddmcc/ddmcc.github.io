@@ -68,8 +68,8 @@ public class Test {
 输出结果为：
 
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g4274s666fj30wz0cqjs2.jpg)
 
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/f733c676-f954-4abe-8e09-d18c6fa3296b.png)
 
 
 在上面的Test单例的，就如我们交给Spring管理的Bean， **当有两个线程同时操作时，其中一个先操作修改了，刚好另一个线程拿到cpu时间片，就会引发线程安全问题。**
@@ -170,8 +170,7 @@ public class Test {
 ### 详解
 
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g45ofkaoi1j30ju0b7jrg.jpg)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/03ff0bbc-478e-4ebf-bd1c-5c3c5ee1108c.png)
 
 结构如上图所示
 
@@ -323,8 +322,8 @@ tab[i] == null 则此位置为空，插入新的Entry，插入后会调用cleanS
 
 ##### cleanSomeSlot总结
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g45rccxdkzj30kh08cq30.jpg)
 
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/51d8250c-aab5-4d4d-aace-37717a3582ec.png)
 
 
 - 当前n等于hash表的size即n=10，i=1，在第一趟搜索过程中通过nextIndex，i指向了索引为2的位置，
@@ -414,8 +413,7 @@ tab[i] == null 则此位置为空，插入新的Entry，插入后会调用cleanS
 
 ###### 向前向后都有
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g45s7mq58jj30kh08cq30.jpg)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/c4e0830d-f3e7-4202-88cb-8ee3bf23cb27.png)
 
 slotToExpunge初始状态和staleSlot相同，当前向环形搜索遇到脏entry时，在第1行代码中slotToExpunge会更新为当前脏entry的索引i，
 直到遇到哈希桶（table[i]）为null的时候，前向搜索过程结束。在接下来的for循环中进行后向环形查找，若查找到key相等的entry，
@@ -425,23 +423,21 @@ slotToExpunge初始状态和staleSlot相同，当前向环形搜索遇到脏entr
 
 ###### 前有后没有
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g45sf5wyddj30kq09674c.jpg)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/2ff9e26f-9885-4aea-9bd9-83933943eea6.png)
 则把staleSlot上的entry清除，并把新的entry存入到tab[staleSlot]。然后调用cleanSomeSlots从slotToExpunge作为起点开始清除，
 即向前搜索null key的索引。
 
 
 ###### 前没有后有
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g45soi1ln4j30o7093t8y.jpg)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/08851268-19fb-4bec-aa12-e8e191cdfb48.png)
 先覆盖当前位置的entry，然后再与staleSlot位置上的脏entry进行交换。交换之后脏entry就更换到了i处，
 最后使用cleanSomeSlots方法从i为起点开始进行清理脏entry的过程
 
 ###### 前后都没有
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g45szj9z20j30mo08zt8v.jpg)
 
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/f1c528a3-2d31-4dcb-a5d5-3cd9c5bc7b86.png)
 则把staleSlot上的entry清除，并把新的entry存入到tab[staleSlot]。然后也就不需要清除了
 
 

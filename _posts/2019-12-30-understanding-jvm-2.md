@@ -11,7 +11,7 @@ author: ddmcc
 {:toc}
 
 
-上一篇已经介绍了 [jvm运行时数据区](https://ddmcc.space/2019/08/19/understanding-jvm-1/) ，下面将学习垃圾收集器和内存分配与回收策略
+上一篇已经介绍了 [jvm运行时数据区](https://ddmcc.cn/2019/08/19/understanding-jvm-1/) ，下面将学习垃圾收集器和内存分配与回收策略
 
 
 
@@ -115,7 +115,7 @@ B b = new B();
 
 - ##### **标记-清除**
 
-![DEC23C39-431D-4060-873B-F7BD57752254.jpeg](https://i.loli.net/2020/01/05/CT1oD6IWBM8L2vP.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/5108da21-274e-48e0-b7d7-6daad8efe054.png)
 
 先标记要回收的垃圾，在标记完成后统一回收对象
 

@@ -27,22 +27,21 @@ author: ddmcc
 
 ## 模式结构
 
-![](https://i.loli.net/2019/08/07/tfWiqmF4aJphzMv.png)
 
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/9c95864c-be47-4e3f-9868-8047cc288279.png)
+----
 
 在客户端生成命令对象，调用调用者对象`Invoker`中的**setCommand()**方法，设置命令对象（命令对象可以是一个或多个，命令也可以不执行或记录下来执行多次），在某个时间点再调用命令对象中的`execute()`方法执行命令，
 这将导致调用接受者`receiver`中的具体操作。
 
 **具体也就是把Invoker和Receiver解耦，他们之间没有直接的引用关系，将请求发送者与请求处理中责任分开。**
 
-![](https://i.loli.net/2019/08/07/IlgG9H6hw7LtXPZ.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/9d53b538-c77d-4d76-850b-81a2973cba1a.png)
 ---
 
 时序图（网上扣得）
 
-![](https://i.loli.net/2019/08/07/HVD6BWsba5XodO1.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/0c4d370b-4982-4175-b31a-c9fa3109d0a6.png)
 
 ## 使用栗子
 
@@ -59,8 +58,7 @@ author: ddmcc
 ---
 #### 类图
 
-![](https://i.loli.net/2019/08/07/g4VR27vxwkJWmFy.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/fac21ee6-3e6a-41d6-9aa7-5cd8c2a40512.png)
 
 ---
 #### 代码

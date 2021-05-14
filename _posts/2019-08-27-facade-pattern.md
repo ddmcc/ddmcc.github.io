@@ -23,8 +23,8 @@ author: ddmcc
 
 ## 类图
 
-![](https://i.loli.net/2019/08/27/cKlurjJQDaGYqem.png)
 
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/2e07676c-88e9-4b94-9d1e-78e782364287.png)
 
 ---
  　　外观对象中有许多子系统的实例，在外观提供的接口中统一对子系统调用（上图对Sub1和Sub2接口调用），子系统也可能再调用用其它的子系统（Sub1对Sub3和Sub5的接口调用，Sub2对Sub4和Sub5），即使它内部再复杂，对于客户端来说只要调用外观`Facade`的接口就行了，内部是由谁实现的，怎么实现的并不关心。
@@ -41,8 +41,9 @@ author: ddmcc
  　　这时如果将这几个操作封装成一个操作，当加完水后洗衣机自己就会开始洗涤，接着漂洗。。。而且重要的是它知道何时开始脱干！
 
 ---
-![](https://i.loli.net/2019/08/27/K2ExBR3vu1gtWeI.png)
 
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/e25843d0-028c-4e52-8df9-75f71da05058.png)
+----
 
 ps：这个类图和上面那个不是一软件画的。觉得上面那个太难用了。这个是一个在线网页上画的 [diagrams.visual-paradigm.com](https://diagrams.visual-paradigm.com/#proj=0&type=ClassDiagram)
 

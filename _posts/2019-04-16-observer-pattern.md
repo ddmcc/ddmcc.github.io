@@ -151,7 +151,7 @@ public class Main {
 运行结果
 
 
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1g24vhuwu1uj30wb0cxgmq.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/2e6c65fa-7c76-4c3c-944a-35ff058a4253.png)
 
 
 

@@ -219,4 +219,4 @@ public class Main {
 
 ## 钩子函数
 
- 　　通俗一点讲，可以看成是在执行到某一个步骤时调用的方法，比如 [React组件生命周期的钩子函数](https://ddmcc.space/2019/09/02/react-component-lifecycle-methods/)，当执行到的时候就会调用钩子，来询问是否要做些什么
+ 　　通俗一点讲，可以看成是在执行到某一个步骤时调用的方法，比如 [React组件生命周期的钩子函数](https://ddmcc.cn/2019/09/02/react-component-lifecycle-methods/)，当执行到的时候就会调用钩子，来询问是否要做些什么

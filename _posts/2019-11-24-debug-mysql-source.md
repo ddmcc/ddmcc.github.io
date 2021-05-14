@@ -37,22 +37,20 @@ Undo log来实现的，read view来判断数据行是否可读，undo log用来�
 打开cmake-gui，选择源码，指定构建目录等
 
 ---
-![](https://i.loli.net/2019/11/24/VamFtbh3ylerGIx.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/8677b01b-31bf-4dd4-bbe8-cfa8c6569415.png)
 ---
 好了之后点击 **Configure** ，会弹窗让选择VS版本，选择对应版本
 
 ---
 
-![](https://i.loli.net/2019/11/24/eBzlAUxswFLSh3P.png)
 
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/9fa0967b-7944-4248-a8e2-68087d450364.png)
 --- 
 完成后会在输出框中看见 **Configure Done**，然后再点击 **Generate**，后会看见Generating Done
 
 ---
 
-![](https://i.loli.net/2019/11/24/wsIAarzOQNt6D7l.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/af9c8305-c85f-4b2a-a243-2b697957e9b1.png)
 
 ## 打开VS CODE生成方案
 
@@ -85,11 +83,11 @@ Undo log来实现的，read view来判断数据行是否可读，undo log用来�
 
 启动并连接成功后，打开VS2013点击`调试`，`附加到进程`，找到mysql进程附加进去。
 
-![](https://i.loli.net/2019/11/24/gxhwAEROWLUuXdj.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/1d9a9557-2fad-4fe2-af2f-ccc460522773.png)
 
 ---
 然后就可以debug了！
 
 
-![G8WK6N0KJ_H49QR08TG9_JS.png](https://i.loli.net/2019/11/24/MkSr5Dvlziac74u.png)
+
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/a259f14d-7bcc-4482-971a-5924a71c5812.png)

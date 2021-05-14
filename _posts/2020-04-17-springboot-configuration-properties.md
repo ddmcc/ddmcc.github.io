@@ -2,8 +2,8 @@
 layout: post
 title:  "SpringBoot参数配置的坑"
 date:   2020-04-17 23:37:36
-categories: 坑
-tags:  ConfigurationProperties
+categories: 开发问题
+tags:  开发问题
 author: ddmcc
 ---
 
@@ -21,7 +21,7 @@ author: ddmcc
 
 
 ---
-![915FA91686ED76C3005305808E4A1D82.png](https://i.loli.net/2020/04/17/BftEkDcwOrdv3A9.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/abeef1ec-0534-44f0-bdf1-1dfedf42c081.png)
 
 ---
 

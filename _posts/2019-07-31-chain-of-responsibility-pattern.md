@@ -137,8 +137,7 @@ public void transferLeave(LeaveInfo leaveInfo) {
 
 在每个处理对象中都有下一个处理对象的引用，形成一个责任链。
 
-![](https://i.loli.net/2019/08/01/5d42462960dc169192.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/3942ea02-09de-457d-933f-e745377440a4.png)
 
 1，抽象出一个处理类
 
@@ -362,8 +361,7 @@ public class Main {
 
 会发现，在jdk源码使用责任链的模式中，基本都不是我们上述的业务流程，或者说都不怎么相似。像过滤器这样都是经过所有的过滤器后，最后在处理我们的业务。
 
-![](https://i.loli.net/2019/08/01/5d424b777ff4447368.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/cbb5d526-987a-47d0-a0ac-c09097ac5c55.png)
 
 比如做吃饭这件事，在吃饭之前要买菜，洗菜，煮菜...
 

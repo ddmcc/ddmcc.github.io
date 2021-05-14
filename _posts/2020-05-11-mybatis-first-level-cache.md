@@ -45,7 +45,7 @@ mybatis有一级，二级缓存机制，**一级缓存是默认开启的本地�
 
 
 
-![Q_7NCCE33X1G_036BWUCPIK.png](https://i.loli.net/2020/05/11/4rkunxAsyJFV3Ql.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/a69a0708-b5d8-4a31-8dc7-8676ab37f16e.png)
 
 ---
 
@@ -57,7 +57,7 @@ mybatis有一级，二级缓存机制，**一级缓存是默认开启的本地�
 
 
 
-![_4G0_~TZ783JE__7TJOMVL6.png](https://i.loli.net/2020/05/11/CSteAFPKop1jGbR.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/e8f2bf39-ffad-4759-aec8-7a7d4cd4ba46.png)
 
 ---
 
@@ -68,7 +68,7 @@ mybatis有一级，二级缓存机制，**一级缓存是默认开启的本地�
 
 
 
-![_A_1_WZ25QBF`VQTV5F_4GY.png](https://i.loli.net/2020/05/11/72FB5MD1aebp9fo.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/4e91b475-98f4-4f84-8768-1581c23bfcc8.png)
 
 ---
 
@@ -80,7 +80,7 @@ mybatis有一级，二级缓存机制，**一级缓存是默认开启的本地�
 一级缓存执行的时序图，如下图所示。
 
 
-![Q1RG8~_TL3N_5BT8_I_6HGI.png](https://i.loli.net/2020/05/14/ITw1j3DJrtoablO.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/0b669d40-30ff-4108-bf06-faf0bf0ced4c.png)
 
 ---
 
@@ -97,7 +97,7 @@ mybatis有一级，二级缓存机制，**一级缓存是默认开启的本地�
 
 
 
-![LY~I_44L_YMVM6__DSE_BKQ.png](https://i.loli.net/2020/05/14/JLOEANZhduSFG6H.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/3638bd86-bbe1-495e-9b58-b2010cb956bd.png)
 
 
 ## Cache接口的设计以及CacheKey的定义
@@ -272,11 +272,11 @@ public void update(Object object) {
 从而造成和真实数据的误差；同时对于这种情况，可以手动地适时清空SqlSession中的缓存，或设置强制刷新缓存，或设置一级缓存为STATEMENT
 
 
-3. **一级缓存直接返回对象的唯一引用，如果直接修改将会影响缓存中的值** ![M3836J5V9~1_8SSWHAG_8SV.png](https://i.loli.net/2020/05/18/3vVICDXeO6WkHyb.png)
+3. **一级缓存直接返回对象的唯一引用，如果直接修改将会影响缓存中的值** ![markdown](https://ddmcc-1255635056.file.myqcloud.com/3c44b99f-956e-4aa2-82e0-070cb6683190.png)
 
 
 4. **由于一级缓存的范围是 `SqlSession` 的，所以当有多个 `SqlSession` 同时进行读写操作，可以会读取到脏数据**
-![_U5703__4I7__G_K_AVON_X.png](https://i.loli.net/2020/05/18/3cLbgQAeWjH4hUF.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/49bd0787-ba67-4912-b1d4-99b95d1514b7.png)
 
 
 

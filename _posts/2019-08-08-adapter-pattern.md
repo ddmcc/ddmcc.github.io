@@ -28,14 +28,12 @@ author: ddmcc
 ---
 #### 对象适配器
 
-![](https://i.loli.net/2019/08/08/iuboUjrYZKIpAQm.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/d6998d87-fd83-4f46-bd86-b15d913ff80d.png)
 
 ---
 #### 类适配器
 
-![](https://i.loli.net/2019/08/08/ONXbIotK6Cvy98f.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/49b7d6cc-653a-4a9e-b937-2b0612372c07.png)
 
 ---
 适配器模式主要分为四个角色
@@ -59,7 +57,9 @@ Adaptee：没有，只有`method`方法
 
 Adaptee：没有，快滚！
 
-![](https://i.loli.net/2019/08/08/BqM2eryRhnbzV6L.png)
+----
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/76049c8b-aec6-47fd-ade6-5945cd4e4658.png)
+----
 
 然后它们就打起来了....
 
@@ -108,14 +108,12 @@ public class Main {
 现在大部分手机产商都不送耳机了，而且也取消了3.5mm的耳机孔，改成充电器孔和耳机孔一起。。假如你买了一个新手机是无耳机孔，但是你的耳机是3.5mm接口的。这时就出现了手机与耳机无法适配的情况。
 
 
-![](https://i.loli.net/2019/08/09/pu6obZqAhEKVQdS.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/0eb9e727-810e-48f4-947f-f63377e8fae1.png)
 ---
 这时候就需要用转接器了！而适配器就相当于做了转接器的工作。类图如下
 ---
 
-![](https://i.loli.net/2019/08/09/546zVHfjwdhUNSn.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/55e8c59c-cbe1-44d5-b266-5fece4518d47.png)
 ---
 代码如下：
 

@@ -27,8 +27,8 @@ author: ddmcc
 
 结构如图:
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g3g6375ewdj30x00ig3zq.jpg)
 
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/8ffe3172-cbba-4ad1-beec-521c751dddc7.png)
 
    源码如下:
     
@@ -66,8 +66,7 @@ author: ddmcc
 
 ### 结构:
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g3g7bx3j8sj30cl0bqdg2.jpg)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/942e870e-f79b-4d6a-a71e-15b54290521c.png)
 
 ### 链表转为红黑树
 

@@ -18,7 +18,7 @@ author: ddmcc
 
 ## 1.7运行时数据区
 
-![](https://i.loli.net/2019/08/19/zjiESkyLQuWcCHD.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/4907fc82-9cab-45a0-b0cf-13655262eb43.png)
 
 
 如上图所示，可分为线程共享（ **堆**， **方法区**）和线程私有数据区（ **虚拟机栈**， **本地方法栈**， **程序计数器**）。

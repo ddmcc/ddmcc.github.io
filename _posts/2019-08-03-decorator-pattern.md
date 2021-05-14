@@ -40,12 +40,13 @@ author: ddmcc
 ## UML类图
 
 
-![](https://i.loli.net/2019/08/03/NhvUZtnB4J8pTu6.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/69be5258-e868-43d1-9688-1f25959ed1a4.png)
 
 #### 疑问
 
-![](https://i.loli.net/2019/08/04/kIQ2heNiwWXy5PS.jpg)
+
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/fe465b21-ba17-40ab-8a1b-4e00d511ecb5.png)
+----
 
 看你这类图不也用了继承了么！
 
@@ -68,8 +69,7 @@ author: ddmcc
 
 #### UML类图
 
-![](https://i.loli.net/2019/08/03/39K2RWqu1sGNziV.png)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/4747fa24-a55f-4676-ac69-63234b112a9e.png)
 
 #### 创建代码
 
@@ -286,9 +286,9 @@ Furniture IKEADesk = new IKEAFurniture(new Desk());
 IKEAFurniture IKEADesk = new IKEAFurniture(new Desk());
 
 看了看这个普通的宜家桌子不太喜欢，我想要这个桌子是红木的！！
-
-![](https://i.loli.net/2019/08/04/5jVBMY4U1zsuCec.jpg)
-
+----
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/e24d43d1-e98f-4889-b94c-62ad18e92ad6.png)
+----
 很简单，我们只需要在包装一层，包装层红木的：`Furniture desk = new MahoganyFurniture(IKEADesk);` 。嗯，的确很简单。
 但是如果没有继承，`IKEAFurniture`实例并不是一个可以被装饰的对象。也就无法组合成宜家的红木桌子了。
 
@@ -303,14 +303,14 @@ IKEAFurniture IKEADesk = new IKEAFurniture(new Desk());
 上面其实我们只创建了4个具体的装饰者，就能实现他们之间的随意组合。而如果用继承的方式则需要4*4也就是创建16个类。如果品类多的话，无疑
 是个类爆炸。并且可能出来后期修改一个功能，会要在很多类中修改。
 
-![](https://i.loli.net/2019/08/04/fPmReJyraNt2YLQ.jpg)
-
+----
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/200e0a04-8b3e-478b-b8cd-e9a9832bd7a4.png)
 
 
 ## JDK中的栗子
 
-![](https://i.loli.net/2019/08/04/63aXuDk7i2AbWef.jpg)
-
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/a27e5cac-b20e-44c0-9e76-9beb98611a34.png)
+----
 
 这是IO流的部分类图，`inputStream`组件提供了基本的字节读写功能。`FilterInputStream` 是抽象的装饰者，它下面的子类是有具体实现的装饰者。
 

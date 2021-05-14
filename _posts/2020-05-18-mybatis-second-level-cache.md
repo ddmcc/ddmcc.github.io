@@ -12,21 +12,16 @@ author: ddmcc
 {:toc}
 
 
+
+
 ## 二级缓存的机制与工作模式
 
 在上一篇 [mybatis3 一级缓存](https://ddmcc.cn/2020/05/11/mybatis-first-level-cache/) 中提到一级缓存的最大共享范围是 `SqlSession` ，如果需要多个 `SqlSession`  共享，就需要使用二级缓存。**二级缓存是默认开启的**，当开启后（ **cacheEnabled=true** ）会使用 `CachingExecutor` 装饰 `Executor` 。CachingExecutor 是 Executor 的装饰者，以增强**Executor**的功能，使其具有缓存查询的功能。
 
 
-
-
-
-
-
-
-
 类图如下：
 
-![7Q4W_LYH92GE2~ET_M_NQ68.png](https://i.loli.net/2020/05/21/MSGcHRwZ86vebyn.png) 
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/3f072f85-60d3-4c9d-8c7c-b68b2de4b1d9.png)
 
 以下是`Configuration`类初始化 `Executor` 对象代码片段：
 
@@ -59,7 +54,7 @@ configuration.setCacheEnabled(booleanValueOf(props.getProperty("cacheEnabled"), 
 
 在查询一级缓存之前会先在 `CachingExecutor` 中查询二级缓存中是否有数据，具体查询工作流程如图：
 
-![J07__8BG_QYPE_163E73464.png](https://i.loli.net/2020/05/21/GZHuXFeU68tOqcE.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/f399a3f5-cbee-47a4-a5ff-5ee78771ffbd.png)
 
 查询的工作流程为 **二级缓存 -> 一级缓存 -> 数据库**
 
@@ -297,7 +292,7 @@ Mybatis二级缓存粒度很细，可以精确到每一条查询语句是否使�
 
 
 
-![B_C93__7GNKM3UGF_93_@J3.png](https://i.loli.net/2020/06/08/2GDkdl7Mrisv9IH.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/9f533c40-33c6-4f2b-bc43-7fa7a45ce7f1.png)
 
 
 
@@ -327,7 +322,8 @@ Mybatis二级缓存粒度很细，可以精确到每一条查询语句是否使�
 
 运行结果分析：
 
-![X2ZKWYTLBCS_QKOCF29_8S9.png](https://i.loli.net/2020/06/09/Hl5vBQYS46DReao.png)
+
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/a9fba440-fab2-4259-9a4f-0c1e9b7e3c5e.png)
 
 
 
@@ -345,7 +341,8 @@ sqlSession.commit();
 
 运行结果，sqlSession2命中二级缓存：
 
-![V9UP__JWDVPO_SI~41_2FEC.png](https://i.loli.net/2020/06/09/LpChfZseaHP6QR2.png)
+
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/919c3c0a-c197-4ca5-a61f-ad02e6b1ca65.png)
 
 
 
@@ -439,7 +436,7 @@ private Serializable deserialize(byte[] value) {
 
 `readOnly` 默认为false的情况下，二级缓存取出的是一个新的对象：
 
-![R_2E_A__R_8@__OE~62_2_W.png](https://i.loli.net/2020/06/09/Q3OijZXKdFsfblJ.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/30a24a6f-f3cf-4bfb-b5be-1a1206dee6cd.png)
 
 
 
@@ -457,7 +454,7 @@ private Serializable deserialize(byte[] value) {
 
 
 
-![SILSAI2Z86CU3RUVFEW@696.png](https://i.loli.net/2020/06/09/fotxrU9BWRLviZj.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/4dd41b09-4a84-41c4-9c7a-0df821ed2d51.png)
 
 
 
