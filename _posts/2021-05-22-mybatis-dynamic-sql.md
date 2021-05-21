@@ -48,13 +48,13 @@ author: ddmcc
     @Test
     void select() {
         Book book = new Book();
-        book.setBookName("书籍2");
         book.setType(2);
         System.out.println(bookMapper.select(book));
         System.out.println(book);
     }
 ```
 
+---
 
 按照想的应该要拼接上 ` AND book_name = '书籍2' ` 的查询条件，因为满足 `type = 2`。然而并没有！
 
@@ -65,6 +65,8 @@ author: ddmcc
 
 并且在经过查询后，参数对象 `book` 的type字段值变成了1 ！
 
+---
+
 ![markdown](https://ddmcc-1255635056.file.myqcloud.com/15ea80c7-b3a6-4ae5-a141-431c7cdd2a4f.png)
 
 ---
@@ -73,14 +75,14 @@ author: ddmcc
 ## 发现问题
 
 如果认真一点看就能够发现，在第一个 `if` 标签中，写的是 `=` 号，第二个中写的是 `==` 。所以到这里大概也就能猜到， **是因为第一个 `if` 给type重新赋值变成了1，且
-赋值操作返回结果为 true ，导致进了第一个if判断，而第二个if因为type = 1，所以不满足**
+赋值操作返回结果为 true ，导致进了第一个if判断，而第二个if因为type = 2，所以不满足**
 
 
 ## mybatis中动态sql的实现
 
-1. 在初始化阶段，mybatis会解析xml文件中的sql，并解析成对象（SqlSource），比如动态sql会被解析成 `DynamicSqlSource`
+- 在初始化阶段，mybatis会解析xml文件中的sql，并解析成对象（SqlSource），比如动态sql会被解析成 `DynamicSqlSource`
 
-2. 然后在 `XMLScriptBuilder` 中会根据动态标签解析成相应的节点对象，比如 `if` 标签 对应 `IfSqlNode` 节点对象
+- 然后在 `XMLScriptBuilder` 中会根据动态标签解析成相应的节点对象，比如 `if` 标签 对应 `IfSqlNode` 节点对象
 
 所有节点对象在 `org.apache.ibatis.scripting.xmltags` 包目录下
 
@@ -90,13 +92,17 @@ author: ddmcc
 
 ---
 
-如本例子的sql 被解析成5个node
+**如本例子的sql 被解析成5个node**
+
+---
 
 ![markdown](https://ddmcc-1255635056.file.myqcloud.com/c2334433-a75f-4f58-aece-0b7222ab8094.png)
 
 ---
 
-3. 调用各自 SqlNode 对象的 apply方法去执行相应判断，拼接sql，如：`StaticTextSqlNode` 静态sql则可以直接拼接
+- 调用各自 SqlNode 对象的 apply方法去执行相应判断，拼接sql，如：`StaticTextSqlNode` 静态sql则可以直接拼接
+
+---
 
 ```java
   // StaticTextSqlNode ====> apple直接把sql拼接到context
@@ -107,8 +113,10 @@ author: ddmcc
   }
 ```
 
+---
 如果是 `IfSqlNode` 则会用 `Ognl` 执行表达式来获取结果，根据结果判断拼接sql
 
+---
 
 `evaluateBoolean` 方法结果为真，拼接字符串
 
