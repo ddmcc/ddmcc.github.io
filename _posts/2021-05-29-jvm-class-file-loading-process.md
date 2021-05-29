@@ -191,7 +191,7 @@ author: ddmcc
     }
 ```
 
-
+---
 
 而 **问题1** 则要看 `ClassLoader` 的无参构造方法，在构造方法中会调用 `getSystemClassLoader()` 方法取获取系统的ClassLoader，内部实现其实就是取获取 `Launcher` 类的 loader 属性，也就是上面问题2代码片段中的 `this.loader = ...`，**所以自定义loader未指定父加载器，默认就为 `AppClassLoader`**
 
