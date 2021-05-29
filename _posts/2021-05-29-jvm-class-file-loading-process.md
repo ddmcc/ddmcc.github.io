@@ -144,9 +144,7 @@ author: ddmcc
     }
 ```
 
-
-
-
+---
 
 这种委派机制是以 **组合的方式** 实现的，如我们自定义一个 `MyClassLoader` 继承 `ClassLoader` ，并且不指定父加载器：
 
@@ -160,7 +158,7 @@ author: ddmcc
 
 
 
-可以看到不同加载器通过组合的方式实现。经过观察上图页产生两个疑惑：
+可以看到不同加载器通过组合的方式实现。经过观察上图也产生两个疑惑：
 
 1. 我并没有给自定义加载器 `MyClassLoader` 指定父加载器，为什么会有父加载器，并且是 AppClassLoader？
 2. AppClassLoader 父类加载器就是ExtClassLoader吗？
@@ -203,7 +201,7 @@ author: ddmcc
 
 ---
 
-![image-20210529204340830](/Users/jiangrz/Library/Application Support/typora-user-images/image-20210529204340830.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/bba3babd-3753-4753-9f81-5538b3a2377f.png)
 
 
 
