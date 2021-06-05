@@ -1,7 +1,7 @@
 ---
 
 layout: post
-title:  "Java虚拟机类加载过程"
+title:  "Java虚拟机类加载过程与类加载机制"
 date:   2021-05-29 16:56:23
 categories: jvm
 tags:  jvm ClassLoader
