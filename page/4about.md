@@ -11,13 +11,9 @@ type: page
 
 ## 关于我
 
-==================================
-
-## 联系我
-
 * GitHub：[ddmcc](https://github.com/ddmcc)
-* email：308119975@qq.com
-* Weibo: 
+* email：ddmcc66@gmail.com
+
 
 ## 关于本站
 
