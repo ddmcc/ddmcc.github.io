@@ -278,6 +278,10 @@ public static final String b = "123";
 
 
 
+**[了解更多关于符号引用替换为直接引用的过程]()**
+
+
+
 ### 初始化（Initialization）
 
 初始化阶段就是执行初始化方法 `<clinit> ()` 方法的过程，是类加载的最后一步，这一步 JVM 才开始真正执行类中定义的 Java 程序代码(字节码)
@@ -313,5 +317,4 @@ public static final String b = "123";
 所以，在 JVM 生命周期中，**由 jvm 自带的类加载器加载的类是不会被卸载的。但是由我们自定义的类加载器加载的类是可能被卸载的**
 
 只要想通一点就好了，jdk 自带的 `BootstrapClassLoader`, `ExtClassLoader`, `AppClassLoader` 负责加载 `jdk` 提供的类，所以它们(类加载器的实例)肯定不会被回收。而我们自定义的类加载器的实例是可以被回收的，所以使用我们自定义加载器加载的类是可以被卸载掉的
-
 
