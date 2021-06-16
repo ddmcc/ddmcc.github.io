@@ -217,11 +217,108 @@ Constant pool:
 
 
 
-```java
+```typescript
 4: invokevirtual #3                  // Method com/example/demo/Address.printAddress:()V
 ```
 
 
 
-和上面相同，这个虚拟机指令是调用 `Address.printAddress`
+和上面相同，这个虚拟机指令是调用 `Address` 类的 `printAddress` 方法。找到常量池中下标为 **#3** 的项：
 
+
+
+```typescript
+ #3 = Methodref          #26.#27        // com/example/demo/Address.printAddress:()V
+```
+
+
+
+``Methodref``  和 `Fieldref` 的结构相同，由 1 个字节的 tag / 2 个字节 class_index / 2 个字节的 name_and_type_index 组成：
+
+> u1 为1个字节，u2为两个字节  [The class File Format](https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html)
+
+
+
+```typescript
+CONSTANT_Fieldref_info {
+    u1 tag;
+    u2 class_index;
+    u2 name_and_type_index;
+}
+
+CONSTANT_Methodref_info {
+    u1 tag;
+    u2 class_index;
+    u2 name_and_type_index;
+}
+```
+
+
+
+所以可以知道 **#26** 为类符号结构的下标，**#27** 则是方法名和返回值的结构下标。根据上面的方法得到引用关系：
+
+
+
+```typescript
+ #3 = Methodref          #26.#27        // com/example/demo/Address.printAddress:()V
+#26 = Class              #30            // com/example/demo/Address
+#30 = Utf8               com/example/demo/Address
+#27 = NameAndType        #31:#15        // printAddress:()V
+#31 = Utf8               printAddress
+#15 = Utf8               ()V    // 这是方法返回值的符号引用
+```
+
+
+
+
+
+**由此可以看出，Class文件中的invokevirtual指令的操作数经过几层引用之后，最后都是由字符串来表示的**
+
+
+
+## 直接引用
+
+
+
+上面都是说的 `“符号引用”`，下面在看看直接引用：
+
+大致是在类加载的时候会把 `Class` 文件的各个部分分别解析（parse）为 JVM 的内部数据结构。例如说类的元数据记录在 `Class` 结构体里，每个方法的元数据记录在各自的 `methodblock` 结构体里等等
+
+在刚加载好一个类的时候，`Class` 文件里的常量池和每个方法的字节码（Code属性）会被基本原样的拷贝到内存里先放着，也就是说仍然处于使用 “符号引用” 的状态，直到真的要被使用到的时候才会被解析（resolve）为直接引用
+
+假定我们要第一次执行到 **printName()** 方法里调用 **printAddress()** 方法的那条invokevirtual指令了，此时 JVM 会发现该指令尚未被解析（resolve），所以会先去解析一下。通过其操作数所记录的常量池下标找到常量池项 **#3**，发现该常量池项也尚未被解析（resolve），于是进一步去解析一下。通过 `Methodref` 所记录的 `class_index` 找到类名，进一步找到被调用方法的类的 `Class` 结构体，然后通过`name_and_type_index` 找到方法名和方法返回类型，到找到的 `Class` 结构体上记录的方法列表里找到匹配的那个 `methodblock`，最终把找到的 `methodblock` 的指针写回到常量池项 **#3** 里
+
+**也就是说，原本常量池项 #3 在类加载后的运行时常量池里的内容跟Class文件里的一致，只是解析后它的内容变了，由原来的字符串表示的 “符号引用” 变为一个能直接找到 Java 方法元数据的 methodblock 了。这里的 methodblock 就是一个  “直接引用”**
+
+
+
+解析好常量池项 **#3** 之后回到 `invokevirtual` 指令的解析，在解析后虚拟机指令从 `invokevirtual` 改写为 `invokevirtual_quick`表示该指令已经解析完毕。原本存储操作数的 **2** 字节空间现在分别存了 **2个1** 字节信息，第一个是 **虚方法表的下标（vtable index）**，第二个是 **方法的参数个数（args_size）**。这两项信息都由前面解析常量池项 **#3** 得到的 methodblock 读取而来
+
+
+
+```typescript
+invokevirtual_quick vtable_index=6, args_size=1
+```
+
+
+
+在 `Address` 类的虚方法表就会有：
+
+```typescript
+[0]: java.lang.Object.hashCode:()I
+[1]: java.lang.Object.equals:(Ljava/lang/Object;)Z
+[2]: java.lang.Object.clone:()Ljava/lang/Object;
+[3]: java.lang.Object.toString:()Ljava/lang/String;
+[4]: java.lang.Object.finalize:()V
+[5]: Address.printAddress:()V
+```
+
+
+
+
+
+
+
+## 参考
+
+[JVM里的符号引用如何存储？](https://www.zhihu.com/question/30300585)
