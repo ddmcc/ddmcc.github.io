@@ -217,7 +217,7 @@ Constant pool:
 
 
 
-```xaml
+```java
 4: invokevirtual #3                  // Method com/example/demo/Address.printAddress:()V
 ```
 
