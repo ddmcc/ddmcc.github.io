@@ -172,7 +172,7 @@ Constant pool:
 
 
 
-**Fieldref** 是字段的结构表示，具体查看 [虚拟机规范4.4.2](https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4.2) ，后面的 **#4.#25** 分别表示 `class_index` 和 `name_and_type_index` ，这两个都是常量池下标，引用着另外两个常量池项。顺着这个方法把所有引用的常量都找出来，可以得到：
+**Fieldref** 是字段的结构表示，具体查看 [虚拟机规范4.4.2](https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4.2) ，后面的 **#4.#25** 分别表示 `class_index` 和 `name_and_type_index` ，这两个都是常量池下标（即所在类结构在常量池的下标和字段名与字段类型在常量池的下标），引用着另外两个常量池项。顺着这个方法把所有引用的常量都找出来，可以得到：
 
 
 
@@ -213,11 +213,13 @@ Constant pool:
 
 
 
-上面是字段的符号引用表示，我们再来看一个方法的符号引用表示：
+上面是字段的符号引用表示，我们再来看一个方法的符号引用表示，还是在 **printName()** 方法：
 
 
 
-// 未完待续......
+```xaml
+4: invokevirtual #3                  // Method com/example/demo/Address.printAddress:()V
+```
 
 
 
