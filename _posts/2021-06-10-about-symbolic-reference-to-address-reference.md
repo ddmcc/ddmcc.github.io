@@ -71,7 +71,7 @@ public class Address {
 
 ---
 
-```shell
+```typescript
 Classfile /Users/jiangrz/workspace/other/demo/target/classes/com/example/demo/User.class
   Last modified 2021年6月14日; size 553 bytes
   SHA-256 checksum d9a9b9e80018881155b444972b9bcc32d83988780b8fbdf5e717ca49c1a5b944
@@ -158,7 +158,7 @@ Constant pool:
 
 看到 **printName()** 方法有一条字节码指令：
 
-```sh
+```typescript
 1: getfield      #2                  // Field address:Lcom/example/demo/Address;
 ```
 
@@ -166,7 +166,7 @@ Constant pool:
 
 其中 **#2** 代表在常量池中的下标，在常量池中找到下标为2的信息：
 
-```sh
+```typescript
  #2 = Fieldref           #4.#25         // com/example/demo/User.address:Lcom/example/demo/Address;
 ```
 
@@ -176,7 +176,7 @@ Constant pool:
 
 
 
-```sh
+```typescript
  #2 = Fieldref           #4.#25         // com/example/demo/User.address:Lcom/example/demo/Address;
  #4 = Class              #28            // com/example/demo/User
 #28 = Utf8               com/example/demo/User
@@ -201,7 +201,7 @@ Constant pool:
 
 
 
-```sh
+```shell
                     #2：Fieldref   #4.#25
                     /                   \
                #4：Class #28         #25：NameAndType #12:#13
@@ -297,7 +297,7 @@ CONSTANT_Methodref_info {
 
 
 ```typescript
-invokevirtual_quick vtable_index=6, args_size=1
+invokevirtual_quick vtable_index=5, args_size=1
 ```
 
 
@@ -315,7 +315,7 @@ invokevirtual_quick vtable_index=6, args_size=1
 
 
 
-
+// 未完待续。。。
 
 
 
