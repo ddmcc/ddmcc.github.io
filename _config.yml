@@ -49,11 +49,11 @@ baidu_tongji_id: d0a79a27037afccbe63395ae24727ed6
 # Build settings
 markdown: kramdown
 
-highlighter: pygments
+highlighter: rouge
 
 kramdown:
   input: GFM
-  syntax_highlighter: pygments
+  syntax_highlighter: rouge
 
 
 # url
