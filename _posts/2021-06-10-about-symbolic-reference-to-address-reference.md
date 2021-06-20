@@ -288,7 +288,7 @@ CONSTANT_Methodref_info {
 
 假定我们要第一次执行到 **printName()** 方法里调用 **printAddress()** 方法的那条invokevirtual指令了，此时 JVM 会发现该指令尚未被解析（resolve），所以会先去解析一下。通过其操作数所记录的常量池下标找到常量池项 **#3**，发现该常量池项也尚未被解析（resolve），于是进一步去解析一下。通过 `Methodref` 所记录的 `class_index` 找到类名，进一步找到被调用方法的类的 `Class` 结构体，然后通过`name_and_type_index` 找到方法名和方法返回类型，到找到的 `Class` 结构体上记录的方法列表里找到匹配的那个 `methodblock`，最终把找到的 `methodblock` 的指针写回到常量池项 **#3** 里
 
-**也就是说，原本常量池项 #3 在类加载后的运行时常量池里的内容跟Class文件里的一致，只是解析后它的内容变了，由原来的字符串表示的 “符号引用” 变为一个能直接找到 Java 方法元数据的 methodblock 了。这里的 methodblock 就是一个  “直接引用”**
+**也就是说，原本常量池项 #3 在类加载后的运行时常量池里的内容跟Class文件里的一致，只是解析后它的内容变了，由原来的字符串表示的 “符号引用” 变为一个能直接找到 Java 方法元数据的 methodblock 了。这里的 methodblock 就是一个  “直接引用”**，**#3** 常量项保存着 `methodblock` 直接指针
 
 
 
@@ -310,12 +310,54 @@ invokevirtual_quick vtable_index=5, args_size=1
 [2]: java.lang.Object.clone:()Ljava/lang/Object;
 [3]: java.lang.Object.toString:()Ljava/lang/String;
 [4]: java.lang.Object.finalize:()V
-[5]: Address.printAddress:()V
+[5]: com.example.demo.Address.printAddress:()V
 ```
 
 
 
-// 未完待续。。。
+`User` 类的虚方法表则：
+
+```typescript
+[0]: java.lang.Object.hashCode:()I
+[1]: java.lang.Object.equals:(Ljava/lang/Object;)Z
+[2]: java.lang.Object.clone:()Ljava/lang/Object;
+[3]: java.lang.Object.toString:()Ljava/lang/String;
+[4]: java.lang.Object.finalize:()V
+[5]: com.example.demo.User.printName:()V
+```
+
+
+
+在执行 `invokevirtual_quick` 调用 **printAddress()** 时，通过对象引用查找到虚方法表后，从中取出第 **#5** 项的`methodblock`，就可以找到实际应该调用的目标然后调用过去了
+
+
+
+**直接引用是运行时所能直接使用的形式，即可以表现为直接指针（如上面#3常量项解析为 methodblock），也可能是其它形式（如invokevirtual_quick 指令里的vtable的下标），关键点不在于是否为直接指针或其它偏移量，在于jvm能不能直接使用**
+
+
+
+## jvm中多态的实现
+
+假如有一个类 `Staff` 继承了类 `User` ，并重写了 `printName()方法` ，那么类 Staff 的虚方法表就会有：
+
+
+
+```typescript
+[0]: java.lang.Object.hashCode:()I
+[1]: java.lang.Object.equals:(Ljava/lang/Object;)Z
+[2]: java.lang.Object.clone:()Ljava/lang/Object;
+[3]: java.lang.Object.toString:()Ljava/lang/String;
+[4]: java.lang.Object.finalize:()V
+[5]: com.example.demo.User.otherMethod:()V    // 继承而来的方法
+[5]: com.example.demo.Staff.printName:()V   // 重写了父类的方法
+[6]: com.example.demo.Staff.printStaff:()V  // 子类自己的方法
+```
+
+
+
+虚方法表中方法存放顺序是先父类-再子类的顺序，所有的类都继承自 Object 类，所以表中 **最先存放的是Object类的方法**，接下来是该类的父类 **User** 的方法，最后是该类本身的方法。当调用的时候通过传入的实际指向this来确定方法的接收者（receiver），动态绑定（分派）具体对象的类型（因为是多态，所以指向的是子类对象的类型），继而找到方法区里子类的方法表，根据偏移量找到子类方法表对应的方法
+
+ 
 
 
 
