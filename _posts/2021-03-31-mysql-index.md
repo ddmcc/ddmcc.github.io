@@ -253,7 +253,7 @@ SELECT * FROM user WHERE age = 15;
 
 
 
-![图5](https://www.percona.com/blog/wp-content/uploads/2017/04/Locality_3.png)
+![图5](https://ddmcc-1255635056.file.myqcloud.com/6bd6678b-f019-4bab-9803-5979d01fe402.png)
 
 <center style="font-size:14px;color:#ddd;text-decoration:underline">图1</center> 
 
@@ -261,7 +261,7 @@ SELECT * FROM user WHERE age = 15;
 
 
 
-![图6](https://www.percona.com/blog/wp-content/uploads/2017/04/Locality_4.png)
+![图6](https://ddmcc-1255635056.file.myqcloud.com/094dd932-bd0e-455c-bcf0-997bb7fddbda.png)
 
 <center style="font-size:14px;color:#C0C0C0;text-decoration:underline">图2</center> 
 
@@ -271,7 +271,7 @@ SELECT * FROM user WHERE age = 15;
 
 
 
-![](https://www.percona.com/blog/wp-content/uploads/2017/04/Locality_5.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/d6bb782b-693c-4bbc-9f4b-d5f32f79eaa7.png)
 
 <center style="font-size:14px;color:#C0C0C0;text-decoration:underline">图3</center> 
 
@@ -281,7 +281,7 @@ SELECT * FROM user WHERE age = 15;
 
 
 
-![](https://www.percona.com/blog/wp-content/uploads/2017/04/Locality_6.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/cf4f005c-22a6-4f81-b10d-e36d7131a102.png)
 
 <center style="font-size:14px;color:#C0C0C0;text-decoration:underline">合并后的图2</center> 
 
