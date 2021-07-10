@@ -23,8 +23,10 @@ author: ddmcc
 ## 准备工作
 
 ### github仓库
+
 - 新建代码仓库
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32aijkcn6j30zf09574w.jpg)
+
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/67496643-1e74-4c05-a8b9-aa23bfe1d140.png)
 
 
 ### 安装jenkins
@@ -34,14 +36,14 @@ author: ddmcc
 填写token,此处填写的token为镜像服务配置链接中 `invoke?itoken={}` 括号的值。
 
 
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32amsd7u5j30wu0o5go2.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/0d3b988f-8681-4831-88fd-ac816a7950ba.png)
 
 
 
 新增header token参数
 
 
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32c1q3xl3j30zp0i1407.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/a54f2d89-0b38-46c1-9848-df89110eb638.png)
 
 
 
@@ -49,13 +51,13 @@ author: ddmcc
 
 
 
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32b6r80rzj30ww0fejrz.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/2dd0d4e7-e398-4c60-98e3-956ebd7d7182.png)
 
 
 - 生成API token,点击用户名->设置->API token->填写生成.此处填写的token为镜像服务配置链接中 `http://账户名:{}@jenkins地址` 括号的值
 
 
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32awrjvt9j30wc06tt8x.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/4fc3a556-70c5-4681-968d-9163c1ebda87.png)
 
 
 
@@ -66,14 +68,14 @@ author: ddmcc
 
 
 #### 新建仓库
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1g329s4tva6j30qv0nhwfg.jpg)
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1g329tiatufj30r10fwq3x.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/1f945bdc-32c6-457b-8e13-286d386b1b9e.png)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/3506699a-796e-4786-9744-a154521da685.png)
 
 #### 新建构建规则
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32a2nr20bj30ko0g9aal.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/95d0e38c-a042-4cef-97b3-0c907b4f3191.png)
 
 #### 新建触发器
-![](http://ww1.sinaimg.cn/large/0060GLrDgy1g32a6hsk86j30jt0dimxo.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/fce17da7-6037-4977-9beb-93a03891d21a.png)
 
 
 格式为: **http://账户名:加密API TOKEN@jenkins地址/generic-webhook-trigger/invoke?token=jenkins任务配置的token**
