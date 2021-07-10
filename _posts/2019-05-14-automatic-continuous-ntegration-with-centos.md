@@ -26,7 +26,7 @@ author: ddmcc
 
 ### 添加webhook
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g3szpyp6pfj312m0p5jtv.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/1fc64d92-af48-4ebd-95f6-c9a82b5f935b.png)
 
 
 ### 创建github access tokens
@@ -42,7 +42,7 @@ author: ddmcc
 
 没有的话先安装 `Github Plugin` 插件
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g3sy0odorcj313l0iwdgv.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/93b9a16e-f0f1-44f7-8045-21177354abf9.png)
 
 Secret 就是刚刚生成的token
 
@@ -54,19 +54,19 @@ Secret 就是刚刚生成的token
 
 新建任务 -> 构建一个Maven项目
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g3syng57bmj31590n2n0h.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/93b9a16e-f0f1-44f7-8045-21177354abf9.png)
 
 #### 填入项目地址
 
 github项目 -> 填入项目地址
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g3sypscda8j310c0mjdha.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/291d90ff-e8e7-4ae2-bf89-9c8f11d270c2.png)
 
 #### Git -> 填入项目地址
 
 Source Code Management -> Git -> 填入项目地址
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g3sysm87dtj317v0oxq4p.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/b52f5b68-1376-4109-bb41-04848cffaca2.png)
 
 #### 勾选触发器
 
@@ -76,7 +76,7 @@ Build Triggers -> 勾选 GitHub hook trigger for GITScm polling
 
 Post Steps -> Execute shell -> 填入脚本
 
-![](http://ws3.sinaimg.cn/large/005BYqpggy1g3syzuhlozj31070nmq4c.jpg)
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/09134806-431f-47fa-b92a-65f898e503b2.png)
 
 start.sh:
 
