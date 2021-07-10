@@ -1,7 +1,7 @@
 ---
 
 layout: post
-title:  "利用公众号+腾讯云cos制作图床"
+title:  "利用微信公众号+腾讯云cos制作图床"
 date:   2021-07-10 16:56:23
 categories: 其它
 tags:  图床
@@ -14,7 +14,7 @@ author: ddmcc
 
 
 
-## 工作流程
+## **工作流程**
 
 1. 向 **公众号** 发送图片，微信服务器收到后推送给配置的接口
 2. 接口收到消息、校验、解析根据消息类型路由到具体的处理类
@@ -23,15 +23,15 @@ author: ddmcc
 
 
 
-## 准备工作
+## **准备工作**
 
-#### 图床
+#### **图床**
 
 - [开通腾讯云cos服务、创建桶](https://console.cloud.tencent.com/cos5/bucket)
 
 - [申请公众号](https://mp.weixin.qq.com/)
 
-#### 部署准备
+#### **部署准备**
 
 部署的话，因为我为了方便，所以打成镜像用 `docker` 运行了。也可以打成 `jar` 包直接运行 
 
@@ -90,11 +90,48 @@ services:
 
 
 
+`nginx.cnf`
+
+```shell
+worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    sendfile        on;
+    keepalive_timeout  65;
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+    access_log /var/log/nginx/access.log main;
+    
+     server {
+        listen 80;
+        charset utf-8;
+        server_name  api.ddmcc.cn;
+
+        location /index {
+            alias /usr/share/nginx/html;
+            index index.html;
+        }
+        location ^~/api/ {
+            proxy_pass http://127.0.0.1:10001/wxServer/api/;
+        }
+    }
+}
+```
 
 
-## 编写实现
 
-#### `pom.xml` 中引入依赖
+
+
+## **编写实现**
+
+#### **`pom.xml` 中引入依赖**
 
 ```xml
 <!-- 微信开发工具包 https://github.com/Wechat-Group/WxJava -->
@@ -113,11 +150,9 @@ services:
 
 
 
-#### 配置微信开发工具
+#### **配置微信开发工具**
 
 **设置与开发** --> **基本配置** --> **服务器配置** [地址](https://mp.weixin.qq.com/advanced/advanced?action=dev&t=advanced/dev&token=1134739721&lang=zh_CN)
-
-
 
 **`application.yml`** 中加入
 
@@ -134,8 +169,11 @@ wx:
 
 
 
-#### Controller类
+**服务器地址(URL) 根据自己 `nginx` 配置和接口地址来配置如：http://api.ddmcc.cn/api/wx/message**
 
+
+
+#### **Controller类**
 
 
 ```java
@@ -230,7 +268,7 @@ public class WeChatController {
 
 
 
-#### 图片消息处理类ImageHandle
+#### **图片消息处理类 ImageHandle**
 
 ```java
 @Component
@@ -313,7 +351,7 @@ public class ImageHandler extends AbstractHandler {
 
 
 
-#### 上传工具类 CosUploader
+#### **上传工具类 CosUploader**
 
 
 
@@ -351,7 +389,7 @@ public class CosUploader implements Uploader {
 
 
 
-#### cos上传服务配置
+#### **cos上传服务配置**
 
 配置cos服务密钥、存储桶、区域信息 [地址](https://console.cloud.tencent.com/cam/capi)
 
@@ -387,9 +425,17 @@ public class CosProperties {
 
 
 
+## **持续自动部署配置**
+
+[github+jenkins自动化持续部署](http://ddmcc.cn/2019/06/07/automatic-continuous-ntegration-with-centos/)
+
+[github+阿里云容器镜像服务+jenkins自动化持续部署](http://ddmcc.cn/2019/05/15/automatic-continuous-ntegration/)
 
 
-## 持续自动部署配置
 
 
 
+## 最后看看效果
+
+
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/fea119e4-05cd-4b42-bf79-9cec67f600c7.png)
