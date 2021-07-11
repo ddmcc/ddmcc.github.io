@@ -16,11 +16,20 @@ author: ddmcc
 
 ## **工作流程**
 
+
+#### **图床**
+
 1. 向 **公众号** 发送图片，微信服务器收到后推送给配置的接口
 2. 接口收到消息、校验、解析根据消息类型路由到具体的处理类
 3. 下载图片后上传到cos服务器
 4. 组装图片地址信息返回给发送者
 
+
+#### **自动部署**
+
+1. 向 `github`、`gitlab` 等推送代码，触发 `webhooks` 通知阿里云镜像服务
+2. 镜像服务接口到请求、拉取代码、根据 `Dockerfile` 构建镜像，完后根据触发器配置链接通知 `jenkins`
+3. `jenkins` 接收到请求、拉取镜像、部署
 
 
 ## **准备工作**
@@ -28,6 +37,10 @@ author: ddmcc
 #### **图床**
 
 - [开通腾讯云cos服务、创建桶](https://console.cloud.tencent.com/cos5/bucket)
+
+- gitlab、github创建代码仓库，配置 `webhooks`
+
+- [开通阿里云镜像服务，创建、配置代码仓库，构建规则、触发器](https://cr.console.aliyun.com/cn-hangzhou/instance/repositories)
 
 - [申请公众号](https://mp.weixin.qq.com/)
 
