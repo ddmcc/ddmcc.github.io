@@ -6,7 +6,7 @@
 # 'jekyll serve'. If you change this file, please restart the server process.
 
 # Site settings
-title: ddmcc
+title: jiangrz
 brief-intro: Java Coder.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://ddmcc.github.io" # the base hostname & protocol for your site
@@ -15,7 +15,7 @@ permalink: /:year/:month/:day/:title/
 
 # other links
 github_username:  ddmcc
-email: 308119975@qq.com
+email: ddmcc66@gmail.com
 weibo_username: 
 
 linkedIn_username: 
@@ -35,7 +35,7 @@ gitalk:
   repo: ddmcc.github.io
   owner: ddmcc
   admin: ['ddmcc']
-  distractionFreeMode: false
+  distractionFreeMode: true
   titlePref: '[评论]'
 
 # statistic analysis 统计代码
