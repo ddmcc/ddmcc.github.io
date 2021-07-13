@@ -111,3 +111,25 @@ public class SingletonPatternTest1 {
 ## **特殊情况**
 
 在单例模式中虽然大多数都是调用 `getInstance` 方法，但是也不能确定有其他的方式（或者调用其他的静态方法）导致类执行显示初始化。这时候懒汉模式对于饿汉就有懒加载的优势
+
+
+## **其它**
+
+最后还是推荐静态内部类单例的写法，在未调用 `getInstance` 时，内部类不会被加载内存，实例对象自然也不会被实例化！并且它是线程安全的
+
+>对于 <clinit> () 方法的调用，虚拟机会自己确保其在多线程环境中的安全性。因为 <clinit> () 方法是带锁线程安全
+
+```java
+public class SingletonPattenTest {
+
+	private SingletonPattenTest(){}
+
+	private static class SingletonHolder {
+		private static SingletonPattenTest instance = new SingletonPattenTest();
+	}
+
+	public static SingletonPattenTest getInstance(){
+		return SingletonHolder.instance;
+	}
+}
+```
