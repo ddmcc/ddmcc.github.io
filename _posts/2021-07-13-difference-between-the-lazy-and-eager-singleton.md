@@ -115,9 +115,9 @@ public class SingletonPatternTest1 {
 
 ## **其它**
 
-最后还是推荐静态内部类单例的写法，在未调用 `getInstance` 时，内部类不会被加载内存，实例对象自然也不会被实例化！并且它是线程安全的
+最后还是推荐静态内部类单例的写法，在未调用 `getInstance` 时，内部类不会被加载内存，实例对象自然也不会被实例化！并且它是 [线程安全的](https://blog.csdn.net/qq_35590091/article/details/107348114)
 
->对于 <clinit> () 方法的调用，虚拟机会自己确保其在多线程环境中的安全性。因为 <clinit> () 方法是带锁线程安全
+>对于 clinit 方法的调用，虚拟机会自己确保其在多线程环境中的安全性。因为 <clinit> () 方法是带锁线程安全
 
 ```java
 public class SingletonPattenTest {
