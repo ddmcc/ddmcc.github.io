@@ -71,7 +71,7 @@ public class SingletonPatternTest1 {
 
 ---
 
-[markdown](https://ddmcc-1255635056.file.myqcloud.com/eeaf25b4-5baa-43f9-8b2d-87d60e572026.png)
+![](https://ddmcc-1255635056.file.myqcloud.com/eeaf25b4-5baa-43f9-8b2d-87d60e572026.png)
 
 ---
 
