@@ -6468,7 +6468,7 @@ var GitalkComponent = function (_Component) {
           title = _options3.title,
           body = _options3.body,
           id = _options3.id,
-          labels = _options3.labels,
+          labels = _options3.labels.map(e => e.length <= 50 ? e : e.substr(0, 50)),
           url = _options3.url,
 		  titlePref = _options3.titlePref;
       return _util.axiosGithub.post('/repos/' + owner + '/' + repo + '/issues', {
