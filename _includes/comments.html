@@ -60,8 +60,8 @@ var gitalk = new Gitalk({
   admin: '{{ site.gitalk.admin }}',
   titlePref: '{{ site.gitalk.titlePref }} ',
   labels: ['comment'],
-  title: md5('([评论] {{page.title}})'),
-  id: '{{ page.url }}',      // Ensure uniqueness and length less than 50
+  title: '[评论] '+'{{page.title}}',
+  id: md5('{{ page.url }}'),      // Ensure uniqueness and length less than 50
   distractionFreeMode: '{{ site.gitalk.distractionFreeMode }}'  // Facebook-like distraction free mode
 })
 
