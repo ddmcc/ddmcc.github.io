@@ -35,7 +35,7 @@ gitalk:
   repo: ddmcc.github.io
   owner: ddmcc
   admin: ['ddmcc']
-  distractionFreeMode: true
+  distractionFreeMode: false
   titlePref: '[评论]'
 
 # statistic analysis 统计代码
