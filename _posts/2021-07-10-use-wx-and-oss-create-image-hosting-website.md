@@ -440,6 +440,22 @@ public class CosProperties {
 
 ## **持续自动部署配置**
 
+#### Dockerfile
+
+```dockerfile
+FROM openjdk:8-jre
+FROM maven:3.5.3
+RUN mkdir /app
+ADD . /app/
+WORKDIR /app
+RUN mvn clean package
+ENTRYPOINT ["java", "-jar", "/app/bills-application/target/bills-application-1.0.0.jar", "--spring.profiles.active=prod"]
+EXPOSE 10001
+```
+
+
+#### 自动化持续部署
+
 [github+jenkins自动化持续部署](http://ddmcc.cn/2019/06/07/automatic-continuous-ntegration-with-centos/)
 
 [github+阿里云容器镜像服务+jenkins自动化持续部署](http://ddmcc.cn/2019/05/15/automatic-continuous-ntegration/)
