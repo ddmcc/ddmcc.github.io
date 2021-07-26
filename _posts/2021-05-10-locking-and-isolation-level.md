@@ -387,11 +387,6 @@ update 或 delete 操作中产生的 undo log。 因为会对已经存在的记�
 但是，如果事务 A 执行的不是普通 select 语句，而是 select ... for update / update 等语句。这时候，事务 A 是 **当前读**，每次语句执行的时候都是获取的最新数据。也就是说，在只有 MVCC 时，A 先执行 select ... where nid between 1 and 10 … for update；然后事务B再执行  insert … nid = 5 …；然后 A 再执行 select ... where nid between 1 and 10 … for update，就会发现，多了一条B insert进去的记录。这就产生幻读了，所以单独靠MVCC并不能完全防止幻读
 
 
-
-// todo 
-
-
-
 在默认隔离级别 `REPEATABLE READ` 下，InnoDB 中行锁默认使用算法 Next-Key Lock，只有当查询的索引是唯一索引或主键时，InnoDB会对 Next-Key Lock 进行优化，将其降级为 Record Lock，即仅锁住索引本身，而不是范围
 
 当查询的索引为辅助索引时，InnoDB则会使用Next-Key Lock进行加锁。InnoDB对于辅助索引有特殊的处理，不仅会锁住辅助索引值所在的范围，还会将其下一键值加上Gap Lock
