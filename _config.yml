@@ -7,7 +7,7 @@
 
 # Site settings
 title: jiangrz
-brief-intro: '[我的学习笔记](https://study.ddmcc.cn/).'
+brief-intro: '<a href="https://study.ddmcc.cn/", target="_blank") a></a>'
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://ddmcc.github.io" # the base hostname & protocol for your site
 
