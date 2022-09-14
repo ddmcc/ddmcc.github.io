@@ -1,5 +1,4 @@
 ---
-
 layout: post
 title:  "InnoDB对MVCC的实现"
 date:   2021-07-26 16:56:23
@@ -268,5 +267,4 @@ author: ddmcc
 
 - [Innodb中的事务隔离级别和锁的关系](https://tech.meituan.com/2014/08/20/innodb-lock.html)
 - [MySQL事务与MVCC如何实现的隔离级别](https://blog.csdn.net/qq_35190492/article/details/109044141)
-
 
