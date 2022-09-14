@@ -1,12 +1,10 @@
 ---
-​---
 layout: post
 title:  "消息队列基础知识"
 date:   2022-09-13 16:56:23
 categories: 消息队列
 tags:  mq message-queue
 author: ddmcc
-​---
 ---
 
 * content
