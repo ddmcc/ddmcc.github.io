@@ -1,9 +1,9 @@
 ---
 layout: post
-title:  "maven1111111"
-date:   2018-04-05 21:08:15
-categories: maven
-tags: Java maven oracle
+title:  "Spring Cloud Gateway工作原理"
+date:   2023-03-12 15:08:15
+categories: Spring Cloud Gateway
+tags: Spring Cloud Gateway
 ---
 
 * content
