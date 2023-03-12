@@ -8,8 +8,7 @@ author: ddmcc
 ---
 
 * content
-  {:toc}
-
+{:toc}
 
 
 
@@ -29,7 +28,7 @@ author: ddmcc
 
 要摸清请求流程，首先要找到请求入口，网关请求入口在 `DispatcherHandler` ，当收到请求后，会执行 `handle` 方法
 
-1. **根据请求获取handle**
+- **根据请求获取handle**
 
 当请求到达 `DispatcherHandler` 时，向 `handlerMappings` 获取处理请求的 `handler` ，`handlerMappings` 就是所有路由的映射，包括 `Controller` 接口、一些系统自带的接口及下游服务，如果没找到则直接返回 `404`
 
@@ -63,7 +62,7 @@ public Mono<Void> handle(ServerWebExchange exchange) {
 >我们也可以定义自己 `handlerMapping`，通过继承 `AbstractHandlerMapping` ，重写获取handle的方法 `getHandlerInternal`，这里可以根据请求路径等匹配，然后返回handle处理器就是用于处理请求的类
 
 
-2. 根据请求预设规则匹配路由
+- **根据请求预设规则匹配路由**
 
 `RoutePredicateHandlerMapping#getHandlerInternal` 方法返回的是具体的处理器 `handle`，这里handle其实是同一个 `webHandler`，并不会根据路径接口或者路由的服务变化， **方法里的逻辑是匹配路由，然后把路由放到请求上下文中**
 
@@ -129,7 +128,7 @@ protected Mono<Route> lookupRoute(ServerWebExchange exchange) {
 
 ```
 
-3. webHandler处理路由
+- **webHandler处理路由**
 
 网关的处理步骤和springMVC一样，由 `HandlerAdapter` 适配器处理，适配器也是一个列表，通过重写 `supports` 方法来判断是否支持该处理器。对于路由请求处理器webHandler来说，对应的适配器为 `org.springframework.web.reactive.result.SimpleHandlerAdapter`。
 
