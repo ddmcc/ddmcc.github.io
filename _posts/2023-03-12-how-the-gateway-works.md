@@ -2,8 +2,8 @@
 layout: post
 title:  "Spring Cloud Gateway工作原理"
 date:   2023-03-11 15:34:00
-categories: "Spring Cloud Gateway"
-tags:  "Spring Cloud Gateway"
+categories: "spring-cloud-gateway"
+tags:  "spring-cloud-gateway"
 author: ddmcc
 ---
 
