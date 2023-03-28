@@ -164,9 +164,9 @@ Boolean result = NoticeFactory.getNotice(param.getNoticeType()).notice(param, me
 
 ## 责任链模式
 
-这个功能是从旧的用户系统同步用户到新的SSO系统中，方便已有的系统切换到SSO，以及后续用户信息有变更时能自动同步。同步方式是通过mq的方式，当人员信息有变更时会从旧的用户系统发一条消息出来，消息包含基本信息、公司组织、岗位部门等
+这个功能是从旧的用户系统同步用户到新的SSO系统中，方便已有的系统切换到SSO，以及后续用户信息有变更时能自动同步。同步通过mq的方式，当人员信息有变更时会从旧的用户系统发一条消息出来，消息包含基本信息、公司组织、岗位部门等
 
-通常我们会写成这样：
+面对这样的业务，我们通常会采用面向过程的设计方法将流程拆分成N个步骤，每个步骤执行独立的逻辑：
 
 ```java
 public void doSync() {
@@ -178,16 +178,143 @@ public void doSync() {
 }
 ```
 
-如上代码是不符合开闭原则的，当我们需要增加、修改某部分逻辑时，不可避免的要修改该段代码。当逻辑复杂后，后续的扩展和维护会容易出错，其他人接手也需要更多的时间
-
+如上代码是不符合开闭原则的，修改其中一个步骤仍然可能影响其他步骤(同一个类修改，不符合开闭原则)。当逻辑复杂后，后续的扩展和维护会容易出错，其他人接手也需要更多的时间。
+在这种场景下，有一种通过责任链模式，可以将这些子步骤封装成独立的handler，然后通过pipeline将其串联起来
 
 #### 责任链的定义
 
+常见的责任链模式会设计如下：
+
+![markdown](https://ddmcc-1255635056.file.myqcloud.com/d538733f-7367-465d-82c5-44ef4857d42d.png)
 
 
-分成了处理基本信息、用户组织、岗位部门、用户默认角色等几个处理步骤，来降低他们之间的耦合度和增加灵活性和可扩展性
+这边使用了自动生成责任链模式代码的工具 `foldright/auto-pipeline` ，在需要生成pipeline的接口上加上 `@AutoPipeline`
+
+```java
+/**
+ * 同步人员处理
+ *
+ * @author jiangrz
+ * @date 2022-09-28 14:26
+ */
+@AutoPipeline
+public interface Sync {
+
+    /**
+     * 同步用户
+     *
+     * @param param param
+     * @return boolean
+     * @author jiangrz
+     * @date 2022/9/28 14:29
+     */
+    boolean sync(SyncUserDTO param);
+}
+```
+
+会自己生成handle接口，名称为pipeline接口名+Handler。即：SyncHandler 
+
+```java
+public interface SyncHandler {
+    boolean sync(SyncUserDTO param, SyncHandlerContext syncHandlerContext);
+}
+```
+
+然后自定义handler去实现SyncHandler即可，这里分成了处理基本信息、用户组织、岗位部门、用户默认角色等几个处理类：
+
+```java
+/**
+ * 用户信息处理逻辑
+ *
+ * @author jiangrz
+ * @date 2022-09-28 14:54
+ */
+@Slf4j
+public class UserInfoHandler implements SyncHandler {
 
 
+    @Override
+    public boolean sync(SyncUserDTO param, SyncHandlerContext syncHandlerContext) {
+        // 同步用户信息
 
-比如后面用户信息增加了缓存，需要在同步后清除，直接增加一个后置处理链，放在最后面
+        // 下一步
+        return syncHandlerContext.sync(param);
+    }
 
+}
+
+/**
+ * 用户组织同步
+ *
+ * @author jiangrz
+ * @date 2022-09-28 14:54
+ */
+@Slf4j
+public class UserOrgHandler implements SyncHandler {
+
+    @Override
+    public boolean sync(SyncUserDTO param, SyncHandlerContext syncHandlerContext) {
+        // 同步用户组织信息
+        
+        // 下一步
+        return syncHandlerContext.sync(param);
+    }
+}
+
+/**
+ * 用户部门/岗位同步
+ *
+ * @author jiangrz
+ * @date 2022-09-28 14:54
+ */
+@Slf4j
+public class UserDeptPostHandler implements SyncHandler {
+
+    @Override
+    public boolean sync(SyncUserDTO param, SyncHandlerContext syncHandlerContext) {
+        
+        // 下一步
+        return syncHandlerContext.sync(param);
+    }
+}
+
+
+/**
+ * 赋予用户默认角色
+ *
+ * @author jiangrz
+ * @date 2022-09-28 14:54
+ */
+@Slf4j
+public class DefaultRoleHandler implements SyncHandler {
+
+    @Override
+    public boolean sync(SyncUserDTO param, SyncHandlerContext syncHandlerContext) {
+        // 用户默认角色逻辑
+        // 下一步
+        return syncHandlerContext.sync(param);
+    }
+}
+```
+
+#### 责任链使用
+
+```java
+ // 用户信息
+UserInfoHandler userInfoHandler = new UserInfoHandler(params);
+// 用户组织
+UserOrgHandler userOrgHandler = new UserOrgHandler(params);
+// 用户默认角色
+DefaultRoleHandler defaultRoleHandler = new DefaultRoleHandler(params);
+// 用户部门岗位
+UserDeptPostHandler userDeptPostHandler = new UserDeptPostHandler(params);
+
+SyncPipeline syncPipeline = new SyncPipeline()
+        .addLast(userInfoHandler)
+        .addLast(userOrgHandler)
+        .addLast(defaultRoleHandler)
+        .addLast(userDeptPostHandler);
+// 开始处理
+SyncUserDTO syncUser = "";
+syncPipeline.sync(syncUser);
+```
