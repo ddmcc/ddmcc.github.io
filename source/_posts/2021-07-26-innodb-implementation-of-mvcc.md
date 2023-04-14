@@ -11,9 +11,6 @@ toc: true
 
 <!-- more -->
 
-这篇主要是对 [锁与事务隔离级别](http://ddmcc.cn/2021/05/10/locking-and-isolation-level/) 中MVCC内容的一个总结
-
-
 ## 一致性非锁定读和锁定读
 
 #### 一致性非锁定读
