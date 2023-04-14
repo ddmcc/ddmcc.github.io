@@ -7,13 +7,6 @@ tags:  设计模式 装饰者模式
 toc: true
 ---
 
-`Leaf` 叶子节点和 `Composite` 组合对象实现共同接口，不同的是子节点在方法中编写具体的处理逻辑，组合对象的作用是循环所有子节点的处理方法。如上图，`Composite` 维护一个子对象列表 List<Component> ，
-当使用者向Composite对象（类型）发送请求时，该请求被转发到所有子Component对象（Leaf和Composite）
-
-<!-- more -->
-
-
-
 
 ## 结构
 
@@ -24,6 +17,8 @@ toc: true
 
 `Leaf` 叶子节点和 `Composite` 组合对象实现共同接口，不同的是子节点在方法中编写具体的处理逻辑，组合对象的作用是循环所有子节点的处理方法。如上图，`Composite` 维护一个子对象列表 List<Component> ，
 当使用者向Composite对象（类型）发送请求时，该请求被转发到所有子Component对象（Leaf和Composite）
+
+<!-- more -->
 
 >为什么说该请求被转发到所有子Leaf和Composite？因为组合对象维护的是List<Component>，是顶层Component，所以可以是一个组合对象Composite
 
