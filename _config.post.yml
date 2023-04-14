@@ -1,7 +1,10 @@
 widgets:
   -
+    type: toc
+    position: right
+    # 是否显示目录项目的序号
+    index: true
+  -
     type: recent_posts
     position: right
-  -
-    type: categories
-    position: right
+

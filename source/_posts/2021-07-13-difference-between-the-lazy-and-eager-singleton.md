@@ -4,6 +4,7 @@ title:  "饿汉单例真的是空间换时间吗？"
 date:   2021-07-13 16:56:23
 categories: jvm
 tags:  jvm 设计模式
+toc: true
 ---
 
 ## 饿汉、懒汉单例模式

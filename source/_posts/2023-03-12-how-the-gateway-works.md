@@ -4,6 +4,7 @@ title:  "Spring Cloud Gateway工作原理"
 date:   2023-03-11 15:34:00
 categories: "Spring Cloud"
 tags:  "Spring Cloud Gateway"
+toc: true
 ---
 
 客户端向 `Spring Cloud Gateway` 发出请求。如果网关 `HandlerMapping` 确定请求与路由匹配，则将其发送到网关 `WebHandler` 。`Handler` 通过特定的过滤器链来将请求发送到下游服务, 过滤器中间用虚线的原因是过滤器可以在发送代理请求之前和之后运行特定逻辑。顺序是所有“前置”过滤器逻辑都已执行，然后发出代理请求，后将运行“后置”过滤器逻辑

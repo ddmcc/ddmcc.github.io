@@ -4,6 +4,7 @@ title:  "InnoDB对MVCC的实现"
 date:   2021-07-26 16:56:23
 categories: mysql
 tags:  mysql
+toc: true
 ---
 
 这篇主要是对 [锁与事务隔离级别](http://ddmcc.cn/2021/05/10/locking-and-isolation-level/) 中MVCC内容的一个总结

@@ -4,6 +4,7 @@ title:  "mysql执行过程"
 date:   2021-04-14 16:56:23
 categories: mysql
 tags:  mysql
+toc: true
 ---
 
 一条SQL查询语句是如何执行的...

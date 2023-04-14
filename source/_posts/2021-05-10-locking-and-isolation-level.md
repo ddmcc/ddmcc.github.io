@@ -5,6 +5,7 @@ title:  "锁与事务隔离级别"
 date:   2021-05-10 16:56:23
 categories: mysql
 tags:  mysql
+toc: true
 ---
 
 锁与事务隔离级别...

@@ -4,6 +4,7 @@ title:  "设计模式之组合模式"
 date:   2023-04-01 15:34:00
 categories: 设计模式
 tags:  设计模式 装饰者模式
+toc: true
 ---
 
 `Leaf` 叶子节点和 `Composite` 组合对象实现共同接口，不同的是子节点在方法中编写具体的处理逻辑，组合对象的作用是循环所有子节点的处理方法。如上图，`Composite` 维护一个子对象列表 List<Component> ，

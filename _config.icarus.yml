@@ -25,6 +25,11 @@ sidebar:
   right:
     sticky: true
 
+widgets:
+  - type: recent_posts
+    position: right
+  - type: categories
+    position: right
 
 comment:
   type: gitalk
@@ -42,3 +47,7 @@ comment:
   flip_move_options:              # 可选填
   enable_hotkey: true             # 可选填
   language: zh-CN                 # 可选填
+
+search:
+  # Name of the search plugin
+  type: insight

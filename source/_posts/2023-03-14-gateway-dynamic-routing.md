@@ -4,6 +4,7 @@ title:  "Spring Cloud Gateway路由的管理"
 date:   2023-03-14 15:34:00
 categories: "Spring Cloud"
 tags:  "Spring Cloud Gateway"
+toc: true
 ---
 
 gateway支持多种配置路由的方式，如通过 `properties` 文件配置、通过接口添加、从注册中心获取等等。不管是在yml文件配置的 `routes` 节点，还是通过 `DiscoveryClient` 加载的注册中心的服务，亦或是通过 `/gateway/routes/{id}` 接口增加的，在网关中都会生成对应一个个 `RouteDefinition` ，再通过 

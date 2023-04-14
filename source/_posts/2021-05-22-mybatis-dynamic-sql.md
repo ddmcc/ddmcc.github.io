@@ -5,6 +5,7 @@ title:  "mybatis动态sql的问题"
 date:   2021-05-22 16:56:23
 categories: 开发问题
 tags:  开发问题
+toc: true
 ---
 
 最近组内有个小伙伴求助，说在 `xml` 中写 `mybatis` 动态sql，明明 `if` 条件是成立的，但实际执行的 sql 语句并没有拼接上，而是走了另外的判断分支

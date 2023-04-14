@@ -5,6 +5,7 @@ title:  "InnoDB存储引擎中的锁"
 date:   2021-04-26 16:56:23
 categories: mysql
 tags:  mysql
+toc: true
 ---
 
 我们都知道事务的4个特性，即 **ACID**。mysql 数据库使用加锁的方式来实现其中的 **I** (Isolation隔离性)。对于 InnoDB 存储引擎来说，它 **支持行锁和表锁** ，而且行锁是由存储引擎通过给索引记录加锁来实现的，并且 InnoDB 默认是加行锁。好处就是锁定颗粒度小，发生锁冲突的概率低，并发度高

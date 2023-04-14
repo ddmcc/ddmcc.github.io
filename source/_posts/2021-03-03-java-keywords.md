@@ -5,6 +5,7 @@ title:  "Java中各种关键字"
 date:   2021-03-03 16:56:23
 categories: Java
 tags:  Java基础
+toc: true
 ---
 
 简单点说，就是被transient修饰的成员变量，在序列化的时候其值会被忽略，在被反序列化后， transient 变量的值被设为初始值， 如 int 型的是 0，引用类型的是 null...
