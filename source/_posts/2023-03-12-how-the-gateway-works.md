@@ -12,6 +12,8 @@ toc: true
 
 下图概括介绍了 `Spring Cloud Gateway` 的工作流程：
 
+<!-- more -->
+
 ![](https://docs.spring.io/spring-cloud-gateway/docs/current/reference/html/images/spring_cloud_gateway_diagram.png)
 
 
