@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "open-feign的实现原理"
+title:  "OpenFeign的实现原理"
 date:   2023-04-13 15:34:00
 categories: Spring Cloud
 tags:  OpenFeign
