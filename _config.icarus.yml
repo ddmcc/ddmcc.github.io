@@ -21,7 +21,7 @@ article:
 
 sidebar:
   left:
-    sticky: false
+    sticky: true
   right:
     sticky: true
 
@@ -49,5 +49,5 @@ comment:
   language: zh-CN                 # 可选填
 
 search:
-  # Name of the search plugin
   type: insight
+  include_pages: true     # 可选项。设置为false时从搜索结果中排除所有page
