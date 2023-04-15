@@ -4,18 +4,15 @@ title:  "ConcurrentHashMap"
 date:   2019-05-27 20:11:52
 categories: 并发编程
 tags: ConcurrentHashMap
-author: ddmcc
+toc: true
 ---
-
-* content
-{:toc}
-
-
 
 
 ## JDK1.8之前ConcurrentHashMap
 
 - concurrentHashMap在JDK1.5出现的，为了解决HashMap线程不安全问题和Hashtable使用synchronized导致并发性能低问题。
+
+<!-- more -->
 
 - 在1.7中使用分段锁来提升map的并发性能。在 `ConcurrentHashMap` 有一个 **Segment** 数组，
 (**Segment<K,V> 是ConcurrentHashMap内部类**)，将HashMap分成多个段(**默认分成16个Segment，通过hash来定位Segment的位置**),将锁的颗粒度降低至一个段(即一个Segment数组)。

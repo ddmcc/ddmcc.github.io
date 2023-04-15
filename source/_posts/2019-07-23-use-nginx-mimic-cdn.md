@@ -4,17 +4,14 @@ title:  "nginx搭建伪CDN服务器"
 date:   2019-07-23 22:09:38
 categories: nginx
 tags: nginx
-author: ddmcc
+toc: true
 ---
-
-* content
-{:toc}
 
 
 **1,编写`docker-compose.yml`**
 
 
-
+<!-- more -->
 
 
 	version: '3.1'

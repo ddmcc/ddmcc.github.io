@@ -4,17 +4,12 @@ title:  "深入理解jvm"
 date:   2019-12-30 22:36:00
 categories: jvm
 tags:  jvm
-author: ddmcc
+toc: true
 ---
-
-* content
-{:toc}
-
 
 上一篇已经介绍了 [jvm运行时数据区](https://ddmcc.cn/2019/08/19/understanding-jvm-1/) ，下面将学习垃圾收集器和内存分配与回收策略
 
-
-
+<!-- more -->
 
 
 #### **为什么要了解gc和内存分配呢？**

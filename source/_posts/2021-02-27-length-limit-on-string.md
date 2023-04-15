@@ -5,16 +5,15 @@ title:  "String字符串的长度限制"
 date:   2021-02-27 16:56:23
 categories: Java基础
 tags:  Java基础
+toc: true
 ---
-
-最近和第三方进行系统对接，约定是我们这边将文件的转成BASE64编码后，进行传输。对方反馈将BASE64字符串转成文件后，文件损坏打不开，怀疑是BASE64字符串的问题...
-
-<!-- more -->
 
 ### **字符串的长度限制**
 
 最近和第三方进行系统对接，约定是我们这边将文件的转成BASE64编码后，进行传输。对方反馈将BASE64字符串转成文件后，文件损坏打不开，怀疑是BASE64字符串的问题。我在本地尝试将base64字符串嵌入到img标签，
 图片正常显示，说明字符串是没问题的。然后尝试将字符串保存为文件：
+
+<!-- more -->
 
 ```java
 String a = "data:image/jpg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBARXhpZgAA......";  // 7w多个字符

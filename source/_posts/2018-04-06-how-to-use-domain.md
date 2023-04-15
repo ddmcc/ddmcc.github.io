@@ -3,15 +3,9 @@ layout: post
 title:  "如何用自己的域名来访问博客"
 categories: other
 date: 2018-04-06 15:57:27
-tags:  blog domain
+tags:  blog
+toc: true
 ---
-
-首先需要一个域名,可以在各个服务商购买
-
-  * [腾讯](https://dnspod.cloud.tencent.com/act/yearendsales?from=dnspodqcloud)
-  * [阿里](https://wanwang.aliyun.com/?utm_content=se_1010760)
-  * [GoDaddy](https://sg.godaddy.com/zh/domains)
-<!-- more -->
 
 ## 准备
 
@@ -21,7 +15,7 @@ tags:  blog domain
   * [阿里](https://wanwang.aliyun.com/?utm_content=se_1010760)
   * [GoDaddy](https://sg.godaddy.com/zh/domains)
 
-
+<!-- more -->
 
 
 我是从[GoDaddy](https://sg.godaddy.com/zh/domains) 买的,不要 <del>998</del> 一年只要7块钱，`不是打广告！`

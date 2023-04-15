@@ -4,17 +4,14 @@ title:  "多线程与高并发"
 date:   2020-07-26 16:40:00
 categories: 并发编程
 tags:  synchronized cas volatile
+toc: true
 ---
-
-`synchronized` 锁的是对象而不是代码，`synchronized(this)` 和 `synchronized方法` 是一样的，都是锁定当前对象。锁升级从偏向锁到自旋锁再到重量级锁...
-
-<!-- more -->
 
 ## synchronized 
 
 `synchronized` 锁的是对象而不是代码，`synchronized(this)` 和 `synchronized方法` 是一样的，都是锁定当前对象。锁升级从偏向锁到自旋锁再到重量级锁。
 
-
+<!-- more -->
 
 ```java
 // this

@@ -3,14 +3,9 @@ layout: post
 title:  "阿里云服务器中安装Maven"
 date:   2019-05-29 23:24:09
 categories: linux
-tags: linux maven
-author: ddmcc
+tags: linux
+toc: true
 ---
-
-* content
-{:toc}
-
-
 
 
 ## 准备工作
@@ -18,6 +13,7 @@ author: ddmcc
 - 将下载包放到ubantu上 （本文放在/usr/maven中）
 - 解压下载包 `tar -zxvf apache-maven-3.5.3-bin.tar.gz`
 
+<!-- more -->
 
 ## 配置环境变量
 

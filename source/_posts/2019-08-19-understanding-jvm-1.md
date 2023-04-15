@@ -3,17 +3,14 @@ layout: post
 title:  "jvm之运行时数据区"
 date:   2019-08-19 21:18:50
 categories: jvm
-tags:  jvm
-author: ddmcc
+tags: jvm
+toc: true
 ---
-
-* content
-{:toc}
 
 
  　　Java虚拟机运行Java程序时会将所管理的内存分为不同的数据区域。这些区域的作用以及生命周期都不同。有的随虚拟机进程创建而创建，有的则随线程的启动和结束而建立和销毁。下图是 **JDK1.7**的运行时数据区
 
-
+<!-- more -->
 
 
 ## 1.7运行时数据区

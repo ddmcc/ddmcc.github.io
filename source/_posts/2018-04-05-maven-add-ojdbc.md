@@ -3,16 +3,15 @@ layout: post
 title:  "maven添加oracle jar包"
 date:   2018-04-05 21:08:15
 categories: maven
-tags: Java maven oracle
+tags: maven
+toc: true
 ---
-
-在 Maven 中央仓库上的几个ojdbc包依赖配置,都没法通过Maven自动下载到本地目录,tomcat服务器启动错误
-
-<!-- more -->
 
 ## 问题
 
 在 Maven 中央仓库上的几个ojdbc包依赖配置,都没法通过Maven自动下载到本地目录,tomcat服务器启动错误
+
+<!-- more -->
 
 ## 解决方案
 

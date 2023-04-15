@@ -3,23 +3,19 @@ layout: post
 title:  "maven项目导入jstl包,tomcat启动找不到jar文件,页面无法使用jstl标签"
 categories: maven
 date: 2018-04-07 01:52:42
-tags:  maven jstl tomcat
+tags: maven
+toc: true
 ---
-
-在pom.xml配置文件中，已经添加jstl包，服务器启动报异常，jstl jar包不能初始化，成功添加jar包后页面jstl不解析，导致无法取数据
-
-<!-- more -->
 
 ## 问题
 
 在pom.xml配置文件中，已经添加jstl包，服务器启动报异常，jstl jar包不能初始化，成功添加jar包后页面jstl不解析，导致无法取数据
 
+<!-- more -->
+
 ```java
 org.apache.jasper.JasperException: The absolute uri: [http://java.sun.com/jsp/jstl/core] cannot be resolved in either web.xml or the jar files deployed with this application
 ```
-
-
-
 
 ## 解决
 

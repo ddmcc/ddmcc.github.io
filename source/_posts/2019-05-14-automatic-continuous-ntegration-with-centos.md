@@ -2,21 +2,17 @@
 layout: post
 title:  "github+jenkins自动化持续部署"
 date:   2019-06-07 21:36:17
-categories: 持续部署
-tags: jenkins github
-author: ddmcc
+categories: 自动化部署
+tags: jenkins
+toc: true
 ---
-
-* content
-{:toc}
-
-
 
 
 ## 工作流程
  - 提交代码到github触发webhooks通知jenkins
  - jenkins拉取代码构建，发布
 
+<!-- more -->
 
 ## 准备工作
 

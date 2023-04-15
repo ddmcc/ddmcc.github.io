@@ -4,18 +4,15 @@ title:  "React组件生命周期"
 date:   2019-09-02 23:25:18
 categories: 前端
 tags:  react
-author: ddmcc
+toc: true
 ---
-
-* content
-{:toc}
 
 
  　　React组件的一生主要分为四个阶段分别为初始化（`Initialization`），挂载（`Mounting`），更新（`Updation`），卸载（`Unmounting`），
  下面介绍挂载和更新的一些方法。
 
 
-
+<!-- more -->
 
 ## 16.3之前
  

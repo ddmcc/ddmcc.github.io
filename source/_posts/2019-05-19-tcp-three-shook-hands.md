@@ -2,22 +2,17 @@
 layout: post
 title:  "TCP三次握手与四次挥手"
 date:   2019-05-19 21:55:55
-categories: TCP
+categories: 网络协议
 tags: TCP
-author: ddmcc
+toc: true
 ---
-
-* content
-{:toc}
-
-
-
 
 
 ## TCP是什么？
 
 TCP（Transmission Control Protocol 传输控制协议）是一种面向连接的、可靠的、基于字节流的传输层通信协议。
 
+<!-- more -->
 
 ## 三次握手
 

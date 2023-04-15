@@ -2,15 +2,10 @@
 layout: post
 title:  "ubuntu中安装jenkins"
 date:   2019-05-15 19:33:42
-categories: ubuntu
-tags: jenkins ubuntu
-author: ddmcc
+categories: linux
+tags: ubuntu linux
+toc: true
 ---
-
-* content
-{:toc}
-
-
 
 
 ## 安装
@@ -18,6 +13,7 @@ author: ddmcc
 
 原来把jenkins安装docker容器里，太不方便了，还有权限的问题。
 
+<!-- more -->
 
 - `wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -`
 - `sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'`

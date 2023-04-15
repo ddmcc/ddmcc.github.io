@@ -3,14 +3,9 @@ layout: post
 title:  "阿里云服务器中安装Java"
 date:   2019-05-29 23:13:06
 categories: linux
-tags: linux Java
-author: ddmcc
+tags: linux
+toc: true
 ---
-
-* content
-{:toc}
-
-
 
 
 ## 准备工作
@@ -18,6 +13,7 @@ author: ddmcc
 - 将下载包放到服务器上 （本文放在/usr/java中）
 - 解压下载包 `tar -zxvf jdk-8u152-linux-x64.tar.gz`
 
+<!-- more -->
 
 ## 配置环境变量
 

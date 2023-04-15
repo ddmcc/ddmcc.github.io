@@ -3,14 +3,9 @@ layout: post
 title:  "ubuntu中安装Maven"
 date:   2019-05-09 20:27:29
 categories: ubuntu
-tags: ubuntu maven
-author: ddmcc
+tags: ubuntu linux
+toc: true
 ---
-
-* content
-{:toc}
-
-
 
 
 ## 准备工作
@@ -18,6 +13,7 @@ author: ddmcc
 - 将下载包放到ubantu上 （本文放在/opt/maven中）
 - 解压下载包 `tar -zxvf apache-maven-3.5.3-bin.tar.gz`
 
+<!-- more -->
 
 ## 配置环境变量
 

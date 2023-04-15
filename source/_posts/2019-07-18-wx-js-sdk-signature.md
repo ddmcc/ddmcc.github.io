@@ -2,20 +2,17 @@
 layout: post
 title:  "微信js-sdk定位服务签名生成"
 date:   2019-07-18 15:51:22
-categories: 微信开发
+categories: 公众号开发
 tags: 公众号开发
-author: ddmcc
+toc: true
 ---
 
-* content
-{:toc}
 
 公众号要用到定位服务，需要后台提供签名接口，记录一下。
 
 签名是由jsapi_ticket+随机字符串+时间戳+页面请求url拼接后通过SHA-1加密生成的。参数必须全部小写，url是调用定位服务的页面的url。
 
-
-
+<!-- more -->
 
 
 ## 获取token

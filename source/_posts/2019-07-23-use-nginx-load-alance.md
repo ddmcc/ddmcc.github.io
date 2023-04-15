@@ -3,12 +3,9 @@ layout: post
 title:  "nginx负载均衡的简单使用"
 date:   2019-07-23 22:09:38
 categories: nginx
-tags: nginx 负载均衡 tomcat
-author: ddmcc
+tags: nginx
+toc: true
 ---
-
-* content
-{:toc}
 
 
 ## 启动两个Tomcat
@@ -16,7 +13,7 @@ author: ddmcc
 **1,编写`docker-compose.yml`**
 
 
-
+<!-- more -->
 
 
 	version: '3'

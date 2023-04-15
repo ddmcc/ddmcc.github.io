@@ -5,16 +5,14 @@ title:  "mybatis3 二级缓存"
 date:   2020-05-18 23:27:43
 categories: mybatis
 tags:  mybatis
+toc: true
 ---
-
-在上一篇 [mybatis3 一级缓存](https://ddmcc.cn/2020/05/11/mybatis-first-level-cache/) 中提到一级缓存的最大共享范围是 `SqlSession` ，如果需要多个 `SqlSession`  共享，就需要使用二级缓存。**二级缓存是默认开启的**，当开启后（ **cacheEnabled=true** ）会使用 `CachingExecutor` 装饰 `Executor` 。CachingExecutor 是 Executor 的装饰者，以增强**Executor**的功能，使其具有缓存查询的功能。
-
-<!-- more -->
 
 ## 二级缓存的机制与工作模式
 
 在上一篇 [mybatis3 一级缓存](https://ddmcc.cn/2020/05/11/mybatis-first-level-cache/) 中提到一级缓存的最大共享范围是 `SqlSession` ，如果需要多个 `SqlSession`  共享，就需要使用二级缓存。**二级缓存是默认开启的**，当开启后（ **cacheEnabled=true** ）会使用 `CachingExecutor` 装饰 `Executor` 。CachingExecutor 是 Executor 的装饰者，以增强**Executor**的功能，使其具有缓存查询的功能。
 
+<!-- more -->
 
 类图如下：
 

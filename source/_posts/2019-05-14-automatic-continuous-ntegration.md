@@ -2,16 +2,10 @@
 layout: post
 title:  "github+阿里云容器镜像服务+jenkins自动化持续部署"
 date:   2019-05-15 20:27:29
-categories: 持续部署
-tags: jenkins github 阿里云容器镜像服务
-author: ddmcc
+categories: 自动化部署
+tags: jenkins
+toc: true
 ---
-
-* content
-{:toc}
-
-
-
 
 ## 工作流程
  - 提交代码到github触发webhooks通知镜像容器服务
@@ -19,6 +13,7 @@ author: ddmcc
  - 镜像构建完成触发通知jenkins,jenkins插件Generic Webhook Trigger收到通知
  - 拉取镜像部署
 
+<!-- more -->
 
 ## 准备工作
 

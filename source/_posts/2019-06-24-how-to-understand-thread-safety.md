@@ -3,12 +3,9 @@ layout: post
 title:  "如何理解线程安全"
 date:   2019-06-24 23:33:17
 categories: 并发编程
-tags: Thread volatile synchronized
-author: ddmcc
+tags: volatile synchronized
+toc: true
 ---
-
-* content
-{:toc}
 
 
 >线程安全问题都是由全局变量及静态变量引起的。
@@ -16,6 +13,8 @@ author: ddmcc
 JVM运行时数据区包括了程序计数器，本地方法栈，jvm栈，堆。在这四个区中，前三个都是线程间隔离的。
 只有堆内存是线程间共享的。而全局变量放在堆内存中，各线程内jvm栈只保存了对象引用，所以各线程更改的还是一个
 内存地址的数据。
+
+<!-- more -->
 
 在JDK1.8中元数据区取代了永久代，元数据区并不在虚拟机中，而在本地内存中。静态变量是保存在元数据区中的。所以对于
 线程来说，操作的还是同一内存地址上的数据。

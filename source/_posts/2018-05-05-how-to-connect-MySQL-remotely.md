@@ -4,15 +4,8 @@ title:  "远程连接MySql"
 date:   2018-05-05 14:37:53
 categories: mysql
 tags: mysql
-author: ddmcc
+toc: true
 ---
-
-```js
-- 1、mysql -u root -p
-
-- 2、use mysql;
-...
-<!-- more -->
 
 ## 远程访数据库
 
@@ -25,6 +18,8 @@ author: ddmcc
 
 - 4、flush privileges;
 ```
+
+<!-- more -->
 
 这样就可以远程访问数据库了
 

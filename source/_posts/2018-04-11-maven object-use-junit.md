@@ -3,20 +3,14 @@ layout: post
 title:  "maven项目中使用JUnit进行单元测试"
 categories: JUnit
 date: 2018-04-11 23:27:42
-tags:  maven JUnit 测试
-author: ddmcc
+tags:  JUnit
+toc: true
 ---
 
 发现通过Spring进行对象管理之后，做测试变得复杂了。因为所有的Bean都需要在 applicationContext.xml中加载好，之后再通过@Resource去取得。如果每次都要整个业务流做的差不多了再去测试，这样效率很 低，也很麻烦。
 这时候就需要Spring-text框架整合JUnit进行测试.
 
 <!-- more -->
-
-发现通过Spring进行对象管理之后，做测试变得复杂了。因为所有的Bean都需要在 applicationContext.xml中加载好，之后再通过@Resource去取得。如果每次都要整个业务流做的差不多了再去测试，这样效率很 低，也很麻烦。
-这时候就需要Spring-text框架整合JUnit进行测试.
-
-
-
 
 ## 步骤
 

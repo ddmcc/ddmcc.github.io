@@ -3,14 +3,9 @@ layout: post
 title:  "ubuntu中安装Java"
 date:   2019-05-09 20:27:29
 categories: ubuntu
-tags: ubuntu Java
-author: ddmcc
+tags: ubuntu linux
+toc: true
 ---
-
-* content
-{:toc}
-
-
 
 
 ## 准备工作
@@ -18,6 +13,7 @@ author: ddmcc
 - 将下载包放到ubantu上 （本文放在/opt/java中）
 - 解压下载包 `tar -zxvf jdk-8u152-linux-x64.tar.gz`
 
+<!-- more -->
 
 ## 配置环境变量
 

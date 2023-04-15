@@ -3,19 +3,16 @@ layout: post
 title:  "Servlet单实例多线程问题"
 date:   2018-04-06 01:54:41
 categories: Servlet
-tags: Servlet Thread
+tags: Servlet 多线程
+toc: true
 ---
-
-Servlet类本质上也是一个普通的类，并且Servlet容器默认只允许单个实例存在。当请求到达服务器时，Servlet实例如果已经存在的话则直接加载该实例，如果该Servlet类还未实例化则会先初始化这个Servlet。当请求到达Web服务器时，Web服务器中有一个线程池，它会从线程池中取一个工作线程，通过该线程调用请求的Servlet。因此，对Servlet来说，可以同时被多个请求调用，请求结束后，线程放回线程池。
-
-<!-- more -->
 
 >问题：Servlet是线程安全的吗？
 
 Servlet类本质上也是一个普通的类，并且Servlet容器默认只允许单个实例存在。当请求到达服务器时，Servlet实例如果已经存在的话则直接加载该实例，如果该Servlet类还未实例化则会先初始化这个Servlet。当请求到达Web服务器时，Web服务器中有一个线程池，它会从线程池中取一个工作线程，通过该线程调用请求的Servlet。因此，对Servlet来说，可以同时被多个请求调用，请求结束后，线程放回线程池。
 
 
-
+<!-- more -->
 
 ## 1,Servlet容器如何同时处理多个请求?
 

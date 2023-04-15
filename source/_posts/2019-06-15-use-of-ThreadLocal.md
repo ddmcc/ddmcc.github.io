@@ -4,19 +4,16 @@ title:  "ThreadLocal的使用与源码"
 date:   2019-06-15 20:24:01
 categories: 并发编程
 tags: ThreadLocal
-author: ddmcc
+toc: true
 ---
-
-* content
-{:toc}
-
-
 
 
 ## 使用
 
 当有一个单例类中有实例变量，而业务逻辑又要对变量进行处理，当有多个线程同时操作时，如果没有给处理代码加上锁，就有可能出现线程安全问题。如：我们最常见的获取JDBC连接的
-连接，还有我们交给Spring容器管理的类等。
+连接，还有我们交给Spring容器管理的类等
+
+<!-- more -->
 
 ```java
 public static void main(String[] args) throws InterruptedException {

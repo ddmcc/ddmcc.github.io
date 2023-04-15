@@ -4,17 +4,14 @@ title:  "debug调试Mysql源码"
 date:   2019-11-24 20:10:57
 categories: mysql
 tags:  mysql
-author: ddmcc
+toc: true
 ---
-
-* content
-{:toc}
 
 
 再上一篇的事务隔离级别中说了mysql是通过两个隐藏列来实现的，后来又看了一些相关文章，发现好像和《高性能Mysql》说的有点不一样。mysql的mvcc是通过Read View和
 Undo log来实现的，read view来判断数据行是否可读，undo log用来找到最近的可见版本。为了搞清楚内部是如何实现的（虽然不一定看的懂），所以想debug看下read view是如何生成的。
 
-
+<!-- more -->
 
 
 ## 需要下载的软件

@@ -7,15 +7,12 @@ tags:  mysql
 toc: true
 ---
 
-一条SQL查询语句是如何执行的...
-
-<!-- more -->
 
 ## 一条SQL查询语句是如何执行的
 
-
-
 下面是 `mysql` 查询的基本执行路径示意图：
+
+<!-- more -->
 
 ![markdown](https://ddmcc-1255635056.file.myqcloud.com/40fd5017-8a29-4da8-bfe7-d3bb19ec0599.png)
 

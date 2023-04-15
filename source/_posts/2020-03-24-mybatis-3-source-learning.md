@@ -4,22 +4,16 @@ title:  "mybatis3源码学习"
 date:   2020-3-24 23:34:31
 categories: mybatis
 tags:  mybatis
-author: ddmcc
+toc: true
 ---
-
-* content
-{:toc}
-
 
 ## 核心的类
 
 MyBatis有几个核心的类如：`SqlSessionFactoryBuilder`，`SqlSessionFactory`，`SqlSession`，`Configuration` 等
 
+<!-- more -->
 
 使用 MyBatis 的主要 Java 接口就是 SqlSession。可以通过这个接口来执行命令，获取Mapper接口和管理事务。SqlSessions 是由 SqlSessionFactory 实例创建的。SqlSessionFactory 对象包含创建 SqlSession 实例的各种方法。而 SqlSessionFactory 本身是由 SqlSessionFactoryBuilder 创建的，它可以从 XML、注解或 Java 配置代码来创建 SqlSessionFactory。
-
-
-
 
 
 ### Configuration

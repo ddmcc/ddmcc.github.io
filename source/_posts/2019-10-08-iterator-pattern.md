@@ -4,11 +4,8 @@ title:  "设计模式之迭代器模式"
 date:   2019-10-08 21:44:26
 categories: 设计模式
 tags:  设计模式 迭代器模式
-author: ddmcc
+toc: true
 ---
-
-* content
-{:toc}
 
 
 ## 定义
@@ -18,7 +15,7 @@ author: ddmcc
  　　**聚合对象** 是什么呢？可以看成将多个对象用某种数据结构聚集在一起。可以是一个数组Array，可以是一个列表List，也可以是一个散列表Map。
 
 
-
+<!-- more -->
 
 ## 实例
 

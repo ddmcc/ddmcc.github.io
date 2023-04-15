@@ -4,18 +4,15 @@ title:  "设计模式之工厂方法模式"
 date:   2019-05-21 21:51:03
 categories: 设计模式
 tags: 设计模式 工厂方法模式
-author: ddmcc
+toc: true
 ---
-
-* content
-{:toc}
-
-
 
 
 ## 什么是工厂方法模式
 
 **定义一个创建对象的接口,但由子类决定要实例化的类是哪一个。工厂方法让类把实例化推迟到子类。**
+
+<!-- more -->
 
 ![markdown](https://ddmcc-1255635056.file.myqcloud.com/0836da16-6df7-493a-be20-f03ccbfc966f.png)
 

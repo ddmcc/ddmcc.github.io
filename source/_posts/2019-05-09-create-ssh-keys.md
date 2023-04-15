@@ -3,14 +3,9 @@ layout: post
 title:  "生成git ssh key"
 date:   2019-05-09 20:27:29
 categories: git
-tags: ssh git
-author: ddmcc
+tags: git
+toc: true
 ---
-
-* content
-{:toc}
-
-
 
 
 ## 检查是否已经存在ssh key
@@ -19,6 +14,7 @@ author: ddmcc
 $ ls -al ~/.ssh
 ```
 
+<!-- more -->
 
 通常名称为以下这几种：
 - id_dsa.pub

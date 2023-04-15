@@ -4,19 +4,15 @@ title:  "设计模式之单例模式"
 date:   2019-07-17 22:30:03
 categories: 设计模式
 tags: 设计模式 单例模式
-author: ddmcc
+toc: true
 ---
-
-* content
-{:toc}
 
 
 ## 什么是单例模式
 
 确保一个类只有一个实例，并提供一个全局访问点。
 
-
-
+<!-- more -->
 
 
 ## 如何设计

@@ -4,12 +4,8 @@ title:  "设计模式之装饰者模式"
 date:   2019-08-03 16:50:22
 categories: 设计模式
 tags: 设计模式 装饰者模式
-author: ddmcc
+toc: true
 ---
-
-* content
-{:toc}
-
 
 ## 定义
 
@@ -21,8 +17,7 @@ author: ddmcc
 
 我们如果需要扩展一个类的功能，通常我们会有两种做法。
 
-
-
+<!-- more -->
 
 
 - 直接在类里面增加
