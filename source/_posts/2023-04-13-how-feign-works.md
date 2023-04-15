@@ -9,14 +9,12 @@ toc: true
 
 ## 前言
 
-在过去使用feign时，会将feign接口单独放在一个包，并在接口类上声明 `@FeignClient(name = 服务名)`， 在接口方法上声明 `@xxxMapping(接口路径)` ，实现者和使用者都会去引入这个包。对于 **使用者** 来说只需要注入接口类，然后调用对应的方法就能调用到
-在另一个服务的实现者实现的逻辑
+在过去使用feign时，会将feign接口单独放在一个包，并在接口类上声明 `@FeignClient(name = 服务名)`， 在接口方法上声明 `@xxxMapping(接口路径)` ，实现者和使用者都会去引入这个包。对于 **使用者** 来说只需要注入接口类，然后调用对应的方法就能调用到在另一个服务的实现者实现的逻辑
 
 <!-- more -->
 
 
-根据过去的经验我猜测，在调用侧上的原理和mybatis相似，扫描所有被 `@FeignClient` 注解声明的类，然后为其生成代理对象，当执行某个方法时，会被拦截转而请求方法上的链接，不同的是mybatis是找到这个方法对应的MappedStatement对象，然后执行sql
-实现侧的话则和普通controller类似，将这些方法封装成一个个handle并注册到handleMapping中，等待被DispatcherServlet调用
+根据过去的经验我猜测，在调用侧上的原理和mybatis相似，扫描所有被 `@FeignClient` 注解声明的类，然后为其生成代理对象，当执行某个方法时，会被拦截转而请求方法上的链接，不同的是mybatis是找到这个方法对应的MappedStatement对象，然后执行sql。实现侧的话则和普通controller类似，将这些方法封装成一个个handle并注册到handleMapping中，等待被DispatcherServlet调用
 
 
 ## 调用侧
@@ -33,8 +31,7 @@ public @interface EnableFeignClients {
 }
 ```
 
-可以看到注解 `EnableFeignClients` 通过 `@Import` 注解导入一个配置类 `FeignClientsRegistrar`，它实现了 `ImportBeanDefinitionRegistrar` 接口，
-这么说在启动的时候，`FeignClientsRegistrar` 类中的 `registerBeanDefinitions` 方法会被调用，来往Spring容器中注册 `BeanDefinition`
+可以看到注解 `EnableFeignClients` 通过 `@Import` 注解导入一个配置类 `FeignClientsRegistrar`，它实现了 `ImportBeanDefinitionRegistrar` 接口，这么说在启动的时候，`FeignClientsRegistrar` 类中的 `registerBeanDefinitions` 方法会被调用，来往Spring容器中注册 `BeanDefinition`
 
 ```java
 @Override
@@ -92,15 +89,16 @@ public void registerFeignClients(AnnotationMetadata metadata, BeanDefinitionRegi
 }
 ```
 
-先获取 `@EnableFeignClients` 的配置，看是否有配置指定的client，有的话就只生成配置的BeanDefinition，没有的话再用ClassPathScanningCandidateComponentProvider来扫描被 `@FeignClient` 注解标记的类，扫描的
-路径的话看有没有配置，如果没有配置则默认为 `@EnableFeignClients` 注解所在类的所在包开始向下扫描。扫描到的类都会生成一个BeanDefinition，可以把BeanDefinition看成对每个标有 `@FeignClient` 注解的类信息的封装。
-拿到所有BeanDefinition之后，遍历调用 `registerClientConfiguration` 和 `registerFeignClient` 
+先获取 `@EnableFeignClients` 的配置，看是否有配置指定的client，有的话就只生成配置的BeanDefinition，没有的话再用ClassPathScanningCandidateComponentProvider来扫描被 `@FeignClient` 注解标记的类，扫描的路径的话看有没有配置，如果没有配置则默认为 `@EnableFeignClients` 注解所在类的所在包开始向下扫描。扫描到的类都会生成一个BeanDefinition，可以把BeanDefinition看成对每个标有 `@FeignClient` 注解的类信息的封装。拿到所有BeanDefinition之后，遍历调用 `registerClientConfiguration` 和 `registerFeignClient` 
 
 
 **registerClientConfiguration**
 
 ```java
-private void registerClientConfiguration(BeanDefinitionRegistry registry, Object name, Object className, Object configuration) {
+private void registerClientConfiguration(BeanDefinitionRegistry registry, 
+                                        Object name, 
+                                        Object className, 
+                                        Object configuration) {
     BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(FeignClientSpecification.class);
     builder.addConstructorArgValue(name);
     builder.addConstructorArgValue(className);
@@ -115,8 +113,9 @@ private void registerClientConfiguration(BeanDefinitionRegistry registry, Object
 **registerFeignClient**
 
 ```java
-private void registerFeignClient(BeanDefinitionRegistry registry, AnnotationMetadata annotationMetadata,
-        Map<String, Object> attributes) {
+private void registerFeignClient(BeanDefinitionRegistry registry, 
+                                AnnotationMetadata annotationMetadata,
+                                Map<String, Object> attributes) {
     String className = annotationMetadata.getClassName();
     if (String.valueOf(false).equals(
             environment.getProperty("spring.cloud.openfeign.lazy-attributes-resolution", String.valueOf(false)))) {
