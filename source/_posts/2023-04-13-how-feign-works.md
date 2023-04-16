@@ -19,6 +19,9 @@ toc: true
 
 ## 调用侧
 
+
+#### 扫描 @FeignClient 注解类
+
 为了验证上面的猜想，我们从 `@EnableFeignClients` 入手，看看启动时都做了什么
 
 ```java
@@ -107,7 +110,7 @@ private void registerClientConfiguration(BeanDefinitionRegistry registry,
 }
 ```
 
-这里的意思就是拿出再 `@FeignClient` 指定的配置类，也就是 `configuration` 属性，然后构建一个bean class为FeignClientSpecification。这个类的最主要作用就是将每个client的配置类封装成一个FeignClientSpecification的BeanDefinition，注册到spring容器中
+这里的意思就是拿出再 `@FeignClient` 指定的配置类，也就是 `configuration` 属性，然后构建一个bean class为FeignClientSpecification。这个类的最主要作用就是将每个client的配置类（`configuration` 属性）封装成一个 `FeignClientSpecification` 的 `BeanDefinition`，注册到spring容器中
 
 
 **registerFeignClient**
@@ -170,3 +173,239 @@ private void eagerlyRegisterFeignClientBeanDefinition(String className, Map<Stri
     registerRefreshableBeanDefinition(registry, contextId, RefreshableUrl.class, RefreshableUrlFactoryBean.class);
 }
 ```
+
+默认情况下会调用 `eagerlyRegisterFeignClientBeanDefinition` ，所以我们来看这个方法做了哪些事。先构建了一个class为 `FeignClientFactoryBean` 的BeanDefinition，这个class实现了FactoryBean接口，spring在生成bean的时候判断BeanDefinition中bean的class如果是FactoryBean的实现的话，会调用这个实现类的getObject来获取对象。
+
+到这里生成动态代理对象的准备工作就基本做完了，再来总结一下前面做了哪些：根据  `@EnableFeignClients` 注解的配置扫描指定（不指定就默认路径下的）包下所有加了 `@FeignClient` 注解的类，然后每个类都会生成一个BeanDefinition，随后 **遍历每个BeanDefinition** ，然后取出每个 `@FeignClient` 注解的属性，构造class为 `FeignClientFactoryBean` 的新的BeanDefinition，随后注册到spring容器中，同时有配置类（注解上configuration属性）的也会将配置类构件出一个class为 `FeignClientSpecification` 的BeanDefinition注册到spring容器中
+
+
+#### 生成动态代理对象
+
+上面每个 `@FeignClient` 都生成了一个 class为 `FeignClientFactoryBean` 的BeanDefinition，后面就会根据这个BeanDefinition来生成动态代理对象。因为FeignClientFactoryBean实现了FactoryBean接口，所以会调用 `getObject()` 来获取对象：
+
+```java
+@Override
+public Object getObject() {
+    return getTarget();
+}
+
+
+<T> T getTarget() {
+    // FeignClientFactory 里面保存了每个client的配置，也就是FeignClientSpecification（具体可以看FeignAutoConfiguration）
+    FeignClientFactory feignClientFactory = beanFactory != null ? beanFactory.getBean(FeignClientFactory.class)
+            : applicationContext.getBean(FeignClientFactory.class);
+
+    // 获取builder，Feign.Builder对象在FeignClientsConfiguration中配置
+    Feign.Builder builder = feign(feignClientFactory);
+    
+    // 判断是否配置了url属性，url链接直连访问
+    if (!StringUtils.hasText(url) && !isUrlAvailableInConfig(contextId)) {
+
+        if (LOG.isInfoEnabled()) {
+            LOG.info("For '" + name + "' URL not provided. Will try picking an instance via load-balancing.");
+        }
+        if (!name.startsWith("http")) {
+            url = "http://" + name;
+        }
+        else {
+            url = name;
+        }
+        url += cleanPath();
+        // 负载均衡访问
+        return (T) loadBalance(builder, feignClientFactory, new HardCodedTarget<>(type, name, url));
+    }
+    if (StringUtils.hasText(url) && !url.startsWith("http")) {
+        url = "http://" + url;
+    }
+    String url = this.url + cleanPath();
+    Client client = getOptional(feignClientFactory, Client.class);
+    if (client != null) {
+        if (client instanceof FeignBlockingLoadBalancerClient) {
+            // not load balancing because we have a url,
+            // but Spring Cloud LoadBalancer is on the classpath, so unwrap
+            client = ((FeignBlockingLoadBalancerClient) client).getDelegate();
+        }
+        if (client instanceof RetryableFeignBlockingLoadBalancerClient) {
+            // not load balancing because we have a url,
+            // but Spring Cloud LoadBalancer is on the classpath, so unwrap
+            client = ((RetryableFeignBlockingLoadBalancerClient) client).getDelegate();
+        }
+        builder.client(client);
+    }
+
+    applyBuildCustomizers(feignClientFactory, builder);
+
+    Targeter targeter = get(feignClientFactory, Targeter.class);
+    return targeter.target(this, builder, feignClientFactory, resolveTarget(feignClientFactory, contextId, url));
+}
+```
+
+先获取FeignClientFactory，这里保存了每个client的配置，然后获取到一个Feign.Builder，然后调用feign方法。feign方法主要事设置一些默认的组件，如果需要更改上面的这些组件，可以通过 `@FeignClient` 的 `configuration` 属性配置配置类，在配置类里面替换
+
+
+```java
+protected Feign.Builder feign(FeignClientFactory context) {
+    FeignLoggerFactory loggerFactory = get(context, FeignLoggerFactory.class);
+    Logger logger = loggerFactory.create(type);
+
+    Feign.Builder builder = get(context, Feign.Builder.class)
+            // required values
+            .logger(logger)
+            .encoder(get(context, Encoder.class))
+            .decoder(get(context, Decoder.class))
+            .contract(get(context, Contract.class));
+
+    // 从配置文件中读取feign的配置
+    configureFeign(context, builder);
+
+    return builder;
+}
+```
+
+下面就是这段逻辑：
+
+```java
+if (!StringUtils.hasText(url) && !isUrlAvailableInConfig(contextId)) {
+
+    if (LOG.isInfoEnabled()) {
+        LOG.info("For '" + name + "' URL not provided. Will try picking an instance via load-balancing.");
+    }
+    if (!name.startsWith("http")) {
+        url = "http://" + name;
+    }
+    else {
+        url = name;
+    }
+    url += cleanPath();
+    // 负载均衡访问
+    return (T) loadBalance(builder, feignClientFactory, new HardCodedTarget<>(type, name, url));
+}
+```
+
+先判断有没有指定url，也就是在 `@FeignClient` 注解中指定的url属性，如果配置了这个属性，就不通过注册中心，直接访问链接，`isUrlAvailableInConfig()` 也是判断在配置文件中是否配置了url属性 。一般情况下这个是不配置的，因为得从注册中心获取服务的ip和端口列表，然后进行负载均衡访问。所以从这也也可以看出，没有注册中心，feign也是能够跑的，只要配置url属性就行
+
+下面就是拼接url，name就是我们在 `@FeignClient` 配置的value，一般是服务名，这段代码拼出来的结果就类似 `http://ServiceA`，之后就会走loadBalance方法，传入一个HardCodedTarget参数，封装了feign客户端接口的类型、服务的名称、还有刚构建的url
+
+
+```java
+protected <T> T loadBalance(Feign.Builder builder, FeignClientFactory context, HardCodedTarget<T> target) {
+    Client client = getOptional(context, Client.class);
+    if (client != null) {
+        builder.client(client);
+        applyBuildCustomizers(context, builder);
+        Targeter targeter = get(context, Targeter.class);
+        return targeter.target(this, builder, context, target);
+    }
+
+    throw new IllegalStateException(
+            "No Feign Client for loadBalancing defined. Did you forget to include spring-cloud-starter-loadbalancer?");
+}
+```
+
+首先从feign客户端对应的ioc容器中获取一个Client，这个client对象由配置类注册，默认情况下由 `DefaultFeignLoadBalancerConfiguration` 提供，使用了 `spring-cloud-starter-loadbalancer` 组件，可能就由 `FeignRibbonClientAutoConfiguration` 去提供。在旧版本openfeign下使用了开启了ribbon(`spring.cloud.loadbalancer.ribbon.enabled`)的话由 `FeignRibbonClientAutoConfiguration` 提供
+
+获取到Client后，接下来获取到Targeter，Targeter是通过 `FeignAutoConfiguration` 来配置的，默认是DefaultTargeter，如果整合hystrix或sentinel就是FeignCircuitBreakerTargeter（看有没有CircuitBreakerFactory）。然后调用DefaultTargeter的target方法：
+
+```java
+@Override
+public <T> T target(FeignClientFactoryBean factory, Feign.Builder feign, FeignClientFactory context,
+        Target.HardCodedTarget<T> target) {
+    return feign.target(target);
+}
+```
+
+然后调用Feign.Builder的tartget方法：
+
+```java
+public <T> T target(Target<T> target) {
+  return build().newInstance(target);
+}
+
+
+public Feign build() {
+  super.enrich();
+
+  MethodHandler.Factory<Object> synchronousMethodHandlerFactory =
+      new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
+          responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,
+          propagationPolicy, options, decoder, errorDecoder);
+  ParseHandlersByName<Object> handlersByName =
+      new ParseHandlersByName<>(contract, encoder, queryMapEncoder,
+          synchronousMethodHandlerFactory);
+  return new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, () -> null);
+}
+```
+
+
+构建了一个ReflectiveFeign，然后调用ReflectiveFeign的newInstance方法，传入target，也就是前面传入的HardCodedTarget
+
+
+```java
+@SuppressWarnings("unchecked")
+public <T> T newInstance(Target<T> target, C requestContext) {
+TargetSpecificationVerifier.verify(target);
+
+Map<Method, MethodHandler> methodToHandler =
+    targetToHandlersByName.apply(target, requestContext);
+InvocationHandler handler = factory.create(target, methodToHandler);
+T proxy = (T) Proxy.newProxyInstance(target.type().getClassLoader(),
+    new Class<?>[] {target.type()}, handler);
+
+for (MethodHandler methodHandler : methodToHandler.values()) {
+  if (methodHandler instanceof DefaultMethodHandler) {
+    ((DefaultMethodHandler) methodHandler).bindTo(proxy);
+  }
+}
+
+return proxy;
+}
+```
+
+这个方法解释一下做了什么，首先 `targetToHandlersByName.apply` 通过target拿到client接口类型，去遍历接口内所有的方法，然后通过 `Contract` 解析所有方法注解封装成 `MethodMetadata` ，然后根据 `MethodMetadata` 等生成 `MethodHandler` ，返回的map的key就是方法，值为该方法的处理器，处理器里有该方法解析好的 `RequestTemplate` 等
+
+>Contract 主要是用来解析方法上的注解的 默认是 SpringMvcContract，所以能支持MVC的注解
+
+后面就通过 `InvocationHandlerFactory` ，获取到一个InvocationHandler，之后通过jdk的动态代理，生成一个代理对象，InvocationHandler默认是 `ReflectiveFeign.FeignInvocationHandler`，在 `FeignInvocationHandler#invoke` 方法中会根据方法获取对应MethodHandler，具体的请求逻辑就在其invoke方法中，方法处理器有同步/异步请求等
+
+
+```java
+
+@Override
+public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
+  return new ReflectiveFeign.FeignInvocationHandler(target, dispatch);
+}
+
+
+FeignInvocationHandler(Target target, Map<Method, MethodHandler> dispatch) {
+  this.target = checkNotNull(target, "target");
+  this.dispatch = checkNotNull(dispatch, "dispatch for %s", target);
+}
+
+
+FeignInvocationHandler#invoke
+@Override
+public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+  if ("equals".equals(method.getName())) {
+    try {
+      Object otherHandler =
+          args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0]) : null;
+      return equals(otherHandler);
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
+  } else if ("hashCode".equals(method.getName())) {
+    return hashCode();
+  } else if ("toString".equals(method.getName())) {
+    return toString();
+  }
+
+  return dispatch.get(method).invoke(args);
+}
+```
+
+
+走到这里，我们终于看到了feign客户端动态代理的生成，整个构造过程还是很复杂的。这里我总结一下代理对象生成的过程，每个Feign客户端都有对应的一个spring容器，用来解析配置类，根据配置从容器获取到一个Feign.Builder，然后再从容器中获取每个组件，填充到Feign.Builder中，最后通过Feign.Builder的build方法来构造动态代理，构造的过程其实是属于feign包底下的
+
+#### 总结
+
+![](https://ddmcc-1255635056.file.myqcloud.com/060a59aa-6a36-480b-a856-d979f9bd8364.png)
