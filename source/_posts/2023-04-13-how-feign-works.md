@@ -19,8 +19,7 @@ toc: true
 
 ## 调用侧
 
-
-#### 扫描 @FeignClient 注解类
+#### 扫描@FeignClient注解类
 
 为了验证上面的猜想，我们从 `@EnableFeignClients` 入手，看看启动时都做了什么
 
@@ -177,7 +176,6 @@ private void eagerlyRegisterFeignClientBeanDefinition(String className, Map<Stri
 默认情况下会调用 `eagerlyRegisterFeignClientBeanDefinition` ，所以我们来看这个方法做了哪些事。先构建了一个class为 `FeignClientFactoryBean` 的BeanDefinition，这个class实现了FactoryBean接口，spring在生成bean的时候判断BeanDefinition中bean的class如果是FactoryBean的实现的话，会调用这个实现类的getObject来获取对象。
 
 到这里生成动态代理对象的准备工作就基本做完了，再来总结一下前面做了哪些：根据  `@EnableFeignClients` 注解的配置扫描指定（不指定就默认路径下的）包下所有加了 `@FeignClient` 注解的类，然后每个类都会生成一个BeanDefinition，随后 **遍历每个BeanDefinition** ，然后取出每个 `@FeignClient` 注解的属性，构造class为 `FeignClientFactoryBean` 的新的BeanDefinition，随后注册到spring容器中，同时有配置类（注解上configuration属性）的也会将配置类构件出一个class为 `FeignClientSpecification` 的BeanDefinition注册到spring容器中
-
 
 #### 生成动态代理对象
 
@@ -383,6 +381,7 @@ FeignInvocationHandler(Target target, Map<Method, MethodHandler> dispatch) {
 
 
 FeignInvocationHandler#invoke
+
 @Override
 public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
   if ("equals".equals(method.getName())) {
@@ -402,9 +401,6 @@ public Object invoke(Object proxy, Method method, Object[] args) throws Throwabl
   return dispatch.get(method).invoke(args);
 }
 ```
-
-
-走到这里，我们终于看到了feign客户端动态代理的生成，整个构造过程还是很复杂的。这里我总结一下代理对象生成的过程，每个Feign客户端都有对应的一个spring容器，用来解析配置类，根据配置从容器获取到一个Feign.Builder，然后再从容器中获取每个组件，填充到Feign.Builder中，最后通过Feign.Builder的build方法来构造动态代理，构造的过程其实是属于feign包底下的
 
 #### 总结
 
