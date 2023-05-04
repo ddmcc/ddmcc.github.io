@@ -26,3 +26,97 @@ toc: true
 
 组合对象Composite中，通常还会有提供对子列表操作的方法，用于在运行时动态添加或者结合Spring的自动注入子组件，这样的好处就是外部的子组件也可以被添加进来并被执行
 
+## 源码中的例子
+
+在 `Spring Cloud Gateway` 中，除了可以通过配置文件的方式还可以从外部的注册中心动态拉取服务列表，比如网关项目整合了nacos，网关就能将路由到我们注册nacos中的服务，那这是怎么做到的呢？
+
+首先 `Spring Cloud Gateway` 提供了统一获取服务列表的接口 `DiscoveryClient` ，各个服务注册框架都会去适配它，比如nacos中的 `NacosDiscoveryClient` 。那gateway是怎么知道又怎么调用到它的呢？
+
+
+**DiscoveryClient接口：** 
+
+```java
+public interface DiscoveryClient extends Ordered {
+    int DEFAULT_ORDER = 0;
+
+    String description();
+
+    List<ServiceInstance> getInstances(String serviceId);
+
+    List<String> getServices();
+
+    default int getOrder() {
+        return 0;
+    }
+}
+```
+
+#### CompositeDiscoveryClient
+
+gateway定义了一个组合对象 `CompositeDiscoveryClient` 创建时注入了所有的 `DiscoveryClient` ，并且 `CompositeDiscoveryClient` 声明为 `@Primary`，这意味着后面获取 `DiscoveryClient` 时，如果有多个会被优先获取
+
+```java
+@Configuration(proxyBeanMethods = false)
+@AutoConfigureBefore(SimpleDiscoveryClientAutoConfiguration.class)
+public class CompositeDiscoveryClientAutoConfiguration {
+
+	@Bean
+	@Primary
+	public CompositeDiscoveryClient compositeDiscoveryClient(
+			List<DiscoveryClient> discoveryClients) {
+		return new CompositeDiscoveryClient(discoveryClients);
+	}
+
+}
+```
+
+在组合对象的实现逻辑中，实际是去循环调用 `discoveryClients` 列表，`discoveryClients` 也就是创建 `CompositeDiscoveryClient` 时传入的
+
+```java
+public List<ServiceInstance> getInstances(String serviceId) {
+    if (this.discoveryClients != null) {
+        Iterator var2 = this.discoveryClients.iterator();
+
+        while(var2.hasNext()) {
+            DiscoveryClient discoveryClient = (DiscoveryClient)var2.next();
+            List<ServiceInstance> instances = discoveryClient.getInstances(serviceId);
+            if (instances != null && !instances.isEmpty()) {
+                return instances;
+            }
+        }
+    }
+
+    return Collections.emptyList();
+}
+
+public List<String> getServices() {
+    LinkedHashSet<String> services = new LinkedHashSet();
+    if (this.discoveryClients != null) {
+        Iterator var2 = this.discoveryClients.iterator();
+
+        while(var2.hasNext()) {
+            DiscoveryClient discoveryClient = (DiscoveryClient)var2.next();
+            List<String> serviceForClient = discoveryClient.getServices();
+            if (serviceForClient != null) {
+                services.addAll(serviceForClient);
+            }
+        }
+    }
+
+    return new ArrayList(services);
+}
+```
+
+
+通过上面可以看出，gateway使用组合模式来实现获取服务节点列表，并且结合了spring容器注入，所以 `NacosDiscoveryClient` 想要被调用到，还需要注册到spring容器中
+
+```java
+public class NacosDiscoveryClientConfiguration {
+
+	@Bean
+	public DiscoveryClient nacosDiscoveryClient(
+			NacosServiceDiscovery nacosServiceDiscovery) {
+		return new NacosDiscoveryClient(nacosServiceDiscovery);
+	}
+}
+```

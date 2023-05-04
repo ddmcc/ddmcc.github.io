@@ -405,3 +405,10 @@ public Object invoke(Object proxy, Method method, Object[] args) throws Throwabl
 #### 总结
 
 ![](https://ddmcc-1255635056.file.myqcloud.com/060a59aa-6a36-480b-a856-d979f9bd8364.png)
+
+
+
+## 实现侧
+
+
+开头说实现侧和 **普通controller类似，将这些方法封装成一个个handle并注册到handleMapping中，等待被DispatcherServlet调用** ，经过上面对 `@FeignClient` 注解的分析，发现并没有关于接口这块处理。那是怎么被识别为 `Controller` 接口的呢？
