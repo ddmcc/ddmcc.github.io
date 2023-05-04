@@ -412,3 +412,46 @@ public Object invoke(Object proxy, Method method, Object[] args) throws Throwabl
 
 
 开头说实现侧和 **普通controller类似，将这些方法封装成一个个handle并注册到handleMapping中，等待被DispatcherServlet调用** ，经过上面对 `@FeignClient` 注解的分析，发现并没有关于接口这块处理。那是怎么被识别为 `Controller` 接口的呢？
+
+**先来回顾一下怎么定义接口：**
+
+- 首先定义feign接口类
+
+```java
+@FeignClient(value = AppConfig.APP_NAME)
+public interface ICompanyClient {
+
+    String API_PREFIX = "/client/company";
+
+
+    @GetMapping(API_PREFIX + "/find-by-id/{id}")
+    R<CompanyApiVo> findById(@PathVariable String id);
+
+}
+```
+
+一般feign接口会单独放在一个jar包中，接口实现和调用方分别引入该jar包
+
+
+- 实现feign接口
+
+现在接口定义已经被单独放在了一个jar中了，在具体实现的包中引入它，然后编写具体实现：
+
+```java
+@Slf4j
+@RestController
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
+public class CompanyClientImpl implements ICompanyClient {
+
+    private final ICompanyService companyService;
+
+    @Override
+    public R<CompanyApiVo> findById(String id) {
+        final Company company = companyService.findById(id);
+        return R.data(CompanyConverter.INSTANCE.toCompanyApiVo(company));
+    }
+}
+```
+
+
+嗯。。。实际上这些方法能被识别并封装成一个个handle注册到handleMapping中，是因为实现类上加上了 `@RestController` 注解。在解析方法的时候又通过 `findMergedAnnotation` 获取方法的注解，所以标记在父类方法上的 `@xxxMapping` 也能获取到
