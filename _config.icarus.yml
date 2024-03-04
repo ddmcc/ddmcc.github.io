@@ -51,3 +51,7 @@ comment:
 search:
   type: insight
   include_pages: true     # 可选项。设置为false时从搜索结果中排除所有page
+
+footer:
+  links:
+    闽ICP备2023008580号-1: https://beian.miit.gov.cn
