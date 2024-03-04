@@ -37,8 +37,7 @@ ws:
 
 #### 将服务注册到nacos中
 
-注册到` nacos` 主要是利用 `NamingService` 提供的接口 `namingService.registerInstance`。首先注入项目的 `nacos` 配置，创建 `NamingService` ，然后调用 `registerInstance` 注册，包含3个参数
-`name`,`ip`,`port` 。`name` 是服务名，待会我们配置负载均衡或者前端访问会用到，`ip`和`port` 是上面定义端点的时候用的
+注册到` nacos` 主要是利用 `NamingService` 提供的接口 `namingService.registerInstance`。首先注入项目的 `nacos` 配置，创建 `NamingService` ，然后调用 `registerInstance` 注册，包含3个参数`name`,`ip`,`port` 。`name` 是服务名，待会我们配置负载均衡或者前端访问会用到，`ip`和`port` 是上面定义端点的时候用的
 
 
 ```java
