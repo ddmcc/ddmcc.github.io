@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>InnoDB存储引擎中的锁 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="我们都知道事务的4个特性，即 ACID。mysql 数据库使用加锁的方式来实现其中的 I (Isolation隔离性)。对于 InnoDB 存储引擎来说，它 支持行锁和表锁 ，而且行锁是由存储引擎通过给索引记录加锁来实现的，并且 InnoDB 默认是加行锁。好处就是锁定颗粒度小，发生锁冲突的概率低，并发度高"><meta property="og:type" content="article"><meta property="og:title" content="InnoDB存储引擎中的锁"><meta property="og:url" content="http://example.com/2021/04/26/2021-04-26-mysql-innodb-locking/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="我们都知道事务的4个特性，即 ACID。mysql 数据库使用加锁的方式来实现其中的 I (Isolation隔离性)。对于 InnoDB 存储引擎来说，它 支持行锁和表锁 ，而且行锁是由存储引擎通过给索引记录加锁来实现的，并且 InnoDB 默认是加行锁。好处就是锁定颗粒度小，发生锁冲突的概率低，并发度高"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/79cd2235-2d37-45cf-8708-72dbc65aee1b.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/955267a0-f07f-4335-9583-dcaee34290aa.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/4e3f16e6-5a2e-4bb7-b240-bf9c4ab1005b.png"><meta property="article:published_time" content="2021-04-26T08:56:23.000Z"><meta property="article:modified_time" content="2023-04-14T17:51:38.344Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="mysql"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://ddmcc-1255635056.file.myqcloud.com/79cd2235-2d37-45cf-8708-72dbc65aee1b.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2021/04/26/2021-04-26-mysql-innodb-locking/"},"headline":"InnoDB存储引擎中的锁","image":["https://ddmcc-1255635056.file.myqcloud.com/79cd2235-2d37-45cf-8708-72dbc65aee1b.png","https://ddmcc-1255635056.file.myqcloud.com/955267a0-f07f-4335-9583-dcaee34290aa.png","https://ddmcc-1255635056.file.myqcloud.com/4e3f16e6-5a2e-4bb7-b240-bf9c4ab1005b.png"],"datePublished":"2021-04-26T08:56:23.000Z","dateModified":"2023-04-14T17:51:38.344Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"我们都知道事务的4个特性，即 ACID。mysql 数据库使用加锁的方式来实现其中的 I (Isolation隔离性)。对于 InnoDB 存储引擎来说，它 支持行锁和表锁 ，而且行锁是由存储引擎通过给索引记录加锁来实现的，并且 InnoDB 默认是加行锁。好处就是锁定颗粒度小，发生锁冲突的概率低，并发度高"}</script><link rel="canonical" href="http://example.com/2021/04/26/2021-04-26-mysql-innodb-locking/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2021-04-26T08:56:23.000Z" title="2021/4/26 16:56:23">2021-04-26</time>发表</span><span class="level-item"><time dateTime="2023-04-14T17:51:38.344Z" title="2023/4/15 01:51:38">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/mysql/">mysql</a></span></div></div><h1 class="title is-3 is-size-4-mobile">InnoDB存储引擎中的锁</h1><div class="content"><p>我们都知道事务的4个特性，即 <strong>ACID</strong>。mysql 数据库使用加锁的方式来实现其中的 <strong>I</strong> (Isolation隔离性)。对于 InnoDB 存储引擎来说，它 <strong>支持行锁和表锁</strong> ，而且行锁是由存储引擎通过给索引记录加锁来实现的，并且 InnoDB 默认是加行锁。好处就是锁定颗粒度小，发生锁冲突的概率低，并发度高</p>
+<span id="more"></span>
+
+<h2 id="InnoDB存储引擎中的锁"><a href="#InnoDB存储引擎中的锁" class="headerlink" title="InnoDB存储引擎中的锁"></a>InnoDB存储引擎中的锁</h2><p>我们都知道事务的4个特性，即 <strong>ACID</strong>。mysql 数据库使用加锁的方式来实现其中的 <strong>I</strong> (Isolation隔离性)。对于 InnoDB 存储引擎来说，它 <strong>支持行锁和表锁</strong> ，而且行锁是由存储引擎通过给索引记录加锁来实现的，并且 InnoDB 默认是加行锁。好处就是锁定颗粒度小，发生锁冲突的概率低，并发度高</p>
+<h4 id="锁的类型"><a href="#锁的类型" class="headerlink" title="锁的类型"></a><strong>锁的类型</strong></h4><p>InnoDB 实现了两种行级锁：</p>
+<ul>
+<li>共享锁(<strong>S</strong>) : 允许事务读一行数据</li>
+<li>排他锁(<strong>X</strong>)：允许事务删除或更新一行数据</li>
+</ul>
+<p><strong>其中，X 锁与任何的锁都不兼容，而 S 锁仅和 S 锁兼容。</strong>即如果一个事务已经获得了行的 <strong>S锁</strong>，那么另外的事务可以立即获得这行的 <strong>S</strong> 锁，因为读取并没有改变行的数据，称这种情况为锁兼容。 但若有其他的事务想获得行的 <strong>X</strong> 锁，则其必须等待事务释放行上的 <strong>S</strong> 锁</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/79cd2235-2d37-45cf-8708-72dbc65aee1b.png" alt="markdown"></p>
+<p>InnoDB 存储引擎除了行锁以外，还有表锁，通常也称为意向锁，其设计目的主要是为了指示事务稍后对表中的行需要哪种类型的锁（共享或独占）。其支持两种意向锁：</p>
+<ul>
+<li>意向共享锁（IS Lock），事务想要获得一张表中某几行的共享锁</li>
+<li>意向排他锁（IX Lock），事务想要获得一张表中某几行的排他锁</li>
+</ul>
+<p>如果需要对页上的记录 r 进行上 <strong>X</strong> 锁，那么分别需要对数据库、表、页上 <strong>IX</strong>，最后对记录 r 上 <strong>X</strong> 锁。若中间有任何一个部分导致等待，那么该操作需要等待粗粒度锁释放。 举例来说，在对记录 r 加 <strong>X</strong> 锁之前，已经有事务对表进行了 <strong>S</strong> 表锁，那么表上已存在 <strong>S</strong> 锁，之后事务需要对记录 r 在表上加上 <strong>IX</strong>，由于不兼容，所以该事务需要等待表锁操作的完成</p>
+<p><strong>InnoDB 存储引擎中锁的兼容性：</strong></p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/955267a0-f07f-4335-9583-dcaee34290aa.png" alt="markdown"></p>
+<blockquote>
+<p><strong>设计意向锁的目的何在?</strong></p>
+</blockquote>
+<p>假设事务1，用 <strong>X</strong> 锁来锁住了页上的几条记录，那么此时表、页上存在 <strong>IX</strong> 锁，即意向排他锁。此时事务2要进行<code>LOCK TABLE … WRITE</code>的表级别锁的请求或者事务2进行 DML 操作且未使用索引而升级为表锁时，可以直接根据意向锁是否存在而判断是否有锁冲突。如果没有这个意向锁，那么可能需要遍历整个表记录才能知道表是不是有记录被锁</p>
+<h4 id="DML表锁与MDL表锁"><a href="#DML表锁与MDL表锁" class="headerlink" title="DML表锁与MDL表锁"></a><strong>DML表锁与MDL表锁</strong></h4><p>mysql 里面表级别的锁有两种：一种是表锁，一种是元数据锁（metadata lock，MDL)</p>
+<p><strong>表锁</strong></p>
+<p>表锁的语法是 <strong>lock tables … read/write。</strong>可以用 <code>unlock tables</code> 主动释放锁，也可以在客户端断开的时候自动释放，<code>commit</code> 和 <code>rollback</code> 并不会释放锁（准确的说是InnoDB释放了内部表锁，server没释放表锁）</p>
+<p>需要注意，lock tables 语法除了会限制别的线程的读写外，也限定了本线程接下来的写。举个例子，如果在某个线程 A 中执行 lock tables t1 read, t2 write; 这个语句，则其他线程写 t1、读写 t2 的语句都会被阻塞。同时，线程 A 在执行 unlock tables 之前，也只能执行读 t1、读写 t2 的操作。写 t1 并不允许，<strong>也不能读写其他表</strong></p>
+<p><strong>MDL元数据锁(metadata lock)</strong></p>
+<p>MDL 不需要显式使用，在访问一个表的时候会被自动加上。在 <code>MySQL 5.5</code> 版本中引入了 MDL，当对一个表做增删改查操作的时候，加 MDL 读锁；当要对表做结构变更操作的时候，加 MDL 写锁</p>
+<ul>
+<li>MDL 读锁之间不互斥，因此你可以有多个线程同时对一张表增删改查</li>
+<li>读写锁之间、写锁之间是互斥的，用来保证变更表结构操作的安全性。因此，如果有两个线程要同时给一个表加字段，其中一个要等另一个执行完才能开始执行</li>
+</ul>
+<h4 id="外键和锁"><a href="#外键和锁" class="headerlink" title="外键和锁"></a><strong>外键和锁</strong></h4><h4 id="自增长与锁"><a href="#自增长与锁" class="headerlink" title="自增长与锁"></a><strong>自增长与锁</strong></h4><h4 id="锁的算法"><a href="#锁的算法" class="headerlink" title="锁的算法"></a><strong>锁的算法</strong></h4><p>InnoDB 通过给索引项加锁来实现行锁，如果没有索引，则通过隐藏的聚簇索引来对记录加锁。如果操作不通过索引条件检索数据，InnoDB 则对表中的所有记录加锁，实际效果就和表锁一样</p>
+<p>InnoDB 存储引擎有3种行锁的算法，分别是：</p>
+<ul>
+<li>Record Lock: 单个记录上的锁</li>
+<li>Gap Lock: 间隙锁，锁定一个范围，但不包括本记录</li>
+<li>Next-Key Lock: Gap Lock+Record Lock，锁定一个范围，并且锁定记录本身</li>
+</ul>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/4e3f16e6-5a2e-4bb7-b240-bf9c4ab1005b.png" alt="markdown"></p>
+<p>例如一个索引有10，30这两个值，InnoDB 可以根据需要使用 <code>Record Lock</code> 将10，30两个索引锁住；也可以使用 <code>Gap Lock</code> 将(-∞,10)，(10,30)，(30, +∞)三个范围区间锁住；<code>Next-Key Lock</code> 类似于上述两种锁的结合，它可以锁住的区间有为(-∞,10]，(10,30]，(30, +∞)，可以看出它即锁定了一个范围，也会锁定记录本身</p>
+<p>InnoDB 对于行的查询都是默认采用 <code>Next-Key lock</code> 算法。<strong>当条件索引是唯一索引时，InnoDB 存储引擎会进行优化，将其降级为 Record Lock，即锁住索引本身</strong> ，而不是范围，从而提高并发性。若是通过辅助索引查询，<strong>不但会给辅助索引加锁，还会为聚集索引上锁。对于辅助索引加 Next-Key Lock，而聚集索引因为是唯一的，所以只会加 Record Lock</strong></p>
+<p>对于没有显示创建索引的表，则会对 rowId 的聚集索引来加锁。如果操作未使用索引查询，那么会对表中所有记录加锁，实际效果和表锁一样</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a><strong>参考</strong></h2><p><a target="_blank" rel="noopener" href="https://tech.youzan.com/seven-questions-about-the-lock-of-mysql/">Mysql锁：灵魂七拷问</a> </p>
+<p><strong>《MySQL技术内幕InnoDB存储引擎第2版》</strong></p>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/mysql/">mysql</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2021/05/10/2021-05-10-locking-and-isolation-level/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">锁与事务隔离级别</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2021/04/18/2021-04-18-mysql-log-files/"><span class="level-item">mysql日志文件</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "cc45b4cb46c3c2bbd5c23cd999a5bb15",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#InnoDB存储引擎中的锁"><span class="level-left"><span class="level-item">1</span><span class="level-item">InnoDB存储引擎中的锁</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#锁的类型"><span class="level-left"><span class="level-item">1.1</span><span class="level-item">锁的类型</span></span></a></li><li><a class="level is-mobile" href="#DML表锁与MDL表锁"><span class="level-left"><span class="level-item">1.2</span><span class="level-item">DML表锁与MDL表锁</span></span></a></li><li><a class="level is-mobile" href="#外键和锁"><span class="level-left"><span class="level-item">1.3</span><span class="level-item">外键和锁</span></span></a></li><li><a class="level is-mobile" href="#自增长与锁"><span class="level-left"><span class="level-item">1.4</span><span class="level-item">自增长与锁</span></span></a></li><li><a class="level is-mobile" href="#锁的算法"><span class="level-left"><span class="level-item">1.5</span><span class="level-item">锁的算法</span></span></a></li></ul></li><li><a class="level is-mobile" href="#参考"><span class="level-left"><span class="level-item">2</span><span class="level-item">参考</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

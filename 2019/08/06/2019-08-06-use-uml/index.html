@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>使用UML表示类关系 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="在上一篇责任链设计模式中，尝试画UML关系图，发现画错了。所以这里记录下，加深印象。"><meta property="og:type" content="article"><meta property="og:title" content="使用UML表示类关系"><meta property="og:url" content="http://example.com/2019/08/06/2019-08-06-use-uml/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="在上一篇责任链设计模式中，尝试画UML关系图，发现画错了。所以这里记录下，加深印象。"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/92dc55b3-db09-435c-8ce8-78105b5524e3.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/c5ae820e-102e-47b5-b2ea-af1f7905dad5.png"><meta property="og:image" content="https://i.loli.net/2019/08/06/CGuaFLzQ7BekdHs.png"><meta property="og:image" content="https://i.loli.net/2019/08/06/l9U1ZRQsE6TdSvM.png"><meta property="og:image" content="https://i.loli.net/2019/08/06/PyQzZm6UTfXvrOq.png"><meta property="og:image" content="https://i.loli.net/2019/08/06/bXsfUi4BTCkexoL.png"><meta property="og:image" content="https://i.loli.net/2019/08/06/YB6U3Sp95Wgw2vl.png"><meta property="article:published_time" content="2019-08-06T13:06:37.000Z"><meta property="article:modified_time" content="2023-04-15T14:36:24.039Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="UML"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://ddmcc-1255635056.file.myqcloud.com/92dc55b3-db09-435c-8ce8-78105b5524e3.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2019/08/06/2019-08-06-use-uml/"},"headline":"使用UML表示类关系","image":["https://ddmcc-1255635056.file.myqcloud.com/92dc55b3-db09-435c-8ce8-78105b5524e3.png","https://ddmcc-1255635056.file.myqcloud.com/c5ae820e-102e-47b5-b2ea-af1f7905dad5.png","https://i.loli.net/2019/08/06/CGuaFLzQ7BekdHs.png","https://i.loli.net/2019/08/06/l9U1ZRQsE6TdSvM.png","https://i.loli.net/2019/08/06/PyQzZm6UTfXvrOq.png","https://i.loli.net/2019/08/06/bXsfUi4BTCkexoL.png","https://i.loli.net/2019/08/06/YB6U3Sp95Wgw2vl.png"],"datePublished":"2019-08-06T13:06:37.000Z","dateModified":"2023-04-15T14:36:24.039Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"在上一篇责任链设计模式中，尝试画UML关系图，发现画错了。所以这里记录下，加深印象。"}</script><link rel="canonical" href="http://example.com/2019/08/06/2019-08-06-use-uml/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2019-08-06T13:06:37.000Z" title="2019/8/6 21:06:37">2019-08-06</time>发表</span><span class="level-item"><time dateTime="2023-04-15T14:36:24.039Z" title="2023/4/15 22:36:24">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/UML/">UML</a></span></div></div><h1 class="title is-3 is-size-4-mobile">使用UML表示类关系</h1><div class="content"><p>在上一篇责任链设计模式中，尝试画UML关系图，发现画错了。所以这里记录下，加深印象。</p>
+<span id="more"></span>
+
+
+<h2 id="Generalization-继承"><a href="#Generalization-继承" class="headerlink" title="Generalization(继承)"></a>Generalization(继承)</h2><p>UML中用带空心箭头的实线表示Generalization关系，箭头指向父类。</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/92dc55b3-db09-435c-8ce8-78105b5524e3.png" alt="markdown"></p>
+<h2 id="Interface-Realzation-实现"><a href="#Interface-Realzation-实现" class="headerlink" title="Interface Realzation(实现)"></a>Interface Realzation(实现)</h2><p>UML中用空心箭头的虚线表示Interface Realzation关系，箭头指向父接口</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/c5ae820e-102e-47b5-b2ea-af1f7905dad5.png" alt="markdown"></p>
+<h2 id="Dependency-依赖"><a href="#Dependency-依赖" class="headerlink" title="Dependency(依赖)"></a>Dependency(依赖)</h2><p>UML中用带箭头的虚线表示Dependency关系，箭头指向被依赖元素。</p>
+<p><img src="https://i.loli.net/2019/08/06/CGuaFLzQ7BekdHs.png" alt="Class2依赖Class1"></p>
+<p>依赖在代码中主要体现为 <strong>Class2的某个函数的返回值、形参、局部变量或对Class1静态方法的调用</strong>，则表示Class2引用了Class1</p>
+<h2 id="Association-双向关联"><a href="#Association-双向关联" class="headerlink" title="Association(双向关联)"></a>Association(双向关联)</h2><p>UML中用实线表示Association关系。</p>
+<p><img src="https://i.loli.net/2019/08/06/l9U1ZRQsE6TdSvM.png" alt="双向关联"></p>
+<h4 id="依赖与关联的区别"><a href="#依赖与关联的区别" class="headerlink" title="依赖与关联的区别"></a>依赖与关联的区别</h4><ul>
+<li><p>依赖是指其中的一个类作为另一个类的方法的参数或者返回值，或者是某个方法的变量而已。而发生关联关系的两个类，是指类A成为类B的全局属性</p>
+</li>
+<li><p>从关系的生命周期来看，依赖关系是仅当类的方法被调用时而产生，伴随着方法的结束而结束。关联关系当类实例化的时候产生，当类对象销毁的时候关系结束。相比依赖，关联关系的生存期更长</p>
+</li>
+</ul>
+<h2 id="Directed-Association-单向关联"><a href="#Directed-Association-单向关联" class="headerlink" title="Directed Association(单向关联)"></a>Directed Association(单向关联)</h2><p>UML中用带箭头实线表示Directed Association关系。箭头指向被关联类，即Class2拥有Class1的全局变量。</p>
+<p><img src="https://i.loli.net/2019/08/06/PyQzZm6UTfXvrOq.png" alt="Class2关联Class1"></p>
+<h2 id="Aggregation-聚合"><a href="#Aggregation-聚合" class="headerlink" title="Aggregation(聚合)"></a>Aggregation(聚合)</h2><p>UML中用带空心菱形头的实线表示Aggregation关系，菱形头指向整体。聚合关系在代码上与关联关系表现一致</p>
+<p><img src="https://i.loli.net/2019/08/06/bXsfUi4BTCkexoL.png" alt="Classes has-a Student"></p>
+<p>聚合用来表示集体与个体之间的关联关系，即集体和个体是一种has-a的关系，例如班级与学生之间存在聚合关系。</p>
+<h2 id="Composition-组合"><a href="#Composition-组合" class="headerlink" title="Composition(组合)"></a>Composition(组合)</h2><p>UML中用带实心菱形头的实线表示Composition关系，菱形头指向整体。</p>
+<p><img src="https://i.loli.net/2019/08/06/YB6U3Sp95Wgw2vl.png" alt="Student contains-a head"></p>
+<p>组合用来表示整体与个体之间的关联关系，即整体和个体是一种contains-a的关系，例如人和头关系。</p>
+<h4 id="聚合与组合的区别"><a href="#聚合与组合的区别" class="headerlink" title="聚合与组合的区别"></a>聚合与组合的区别</h4><ul>
+<li><p>聚合关系没有组合紧密。学生不会因为班级的解散而无法存在，聚合关系的类具有不同的生命周期，互不相干；而学生如果没有头将无法存活，组合关系的类具有相同的生命周期。</p>
+</li>
+<li><p>在聚合关系中，可以同时了解Classes类和Student类，因为他们是独立的。在组合关系中，只认识Student类，根本不知道Head类的存在，因为头被严密地封装在学生类中。</p>
+</li>
+</ul>
+<p>总来说聚合的成员可独立，组合的成员必须依赖于整体才有意义。</p>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/UML/">UML</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2019/08/07/2019-08-07-command-pattern/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">设计模式之命令模式</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2019/08/03/2019-08-03-decorator-pattern/"><span class="level-item">设计模式之装饰者模式</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "6ccdd8ff9aef1dbbdd0db24e97170183",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#Generalization-继承"><span class="level-left"><span class="level-item">1</span><span class="level-item">Generalization(继承)</span></span></a></li><li><a class="level is-mobile" href="#Interface-Realzation-实现"><span class="level-left"><span class="level-item">2</span><span class="level-item">Interface Realzation(实现)</span></span></a></li><li><a class="level is-mobile" href="#Dependency-依赖"><span class="level-left"><span class="level-item">3</span><span class="level-item">Dependency(依赖)</span></span></a></li><li><a class="level is-mobile" href="#Association-双向关联"><span class="level-left"><span class="level-item">4</span><span class="level-item">Association(双向关联)</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#依赖与关联的区别"><span class="level-left"><span class="level-item">4.1</span><span class="level-item">依赖与关联的区别</span></span></a></li></ul></li><li><a class="level is-mobile" href="#Directed-Association-单向关联"><span class="level-left"><span class="level-item">5</span><span class="level-item">Directed Association(单向关联)</span></span></a></li><li><a class="level is-mobile" href="#Aggregation-聚合"><span class="level-left"><span class="level-item">6</span><span class="level-item">Aggregation(聚合)</span></span></a></li><li><a class="level is-mobile" href="#Composition-组合"><span class="level-left"><span class="level-item">7</span><span class="level-item">Composition(组合)</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#聚合与组合的区别"><span class="level-left"><span class="level-item">7.1</span><span class="level-item">聚合与组合的区别</span></span></a></li></ul></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

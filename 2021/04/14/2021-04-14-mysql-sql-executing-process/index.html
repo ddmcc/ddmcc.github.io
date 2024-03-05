@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>mysql执行过程 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="一条SQL查询语句是如何执行的下面是 mysql 查询的基本执行路径示意图："><meta property="og:type" content="article"><meta property="og:title" content="mysql执行过程"><meta property="og:url" content="http://example.com/2021/04/14/2021-04-14-mysql-sql-executing-process/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="一条SQL查询语句是如何执行的下面是 mysql 查询的基本执行路径示意图："><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/40fd5017-8a29-4da8-bfe7-d3bb19ec0599.png"><meta property="article:published_time" content="2021-04-14T08:56:23.000Z"><meta property="article:modified_time" content="2023-04-15T14:24:21.739Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="mysql"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://ddmcc-1255635056.file.myqcloud.com/40fd5017-8a29-4da8-bfe7-d3bb19ec0599.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2021/04/14/2021-04-14-mysql-sql-executing-process/"},"headline":"mysql执行过程","image":["https://ddmcc-1255635056.file.myqcloud.com/40fd5017-8a29-4da8-bfe7-d3bb19ec0599.png"],"datePublished":"2021-04-14T08:56:23.000Z","dateModified":"2023-04-15T14:24:21.739Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"一条SQL查询语句是如何执行的下面是 mysql 查询的基本执行路径示意图："}</script><link rel="canonical" href="http://example.com/2021/04/14/2021-04-14-mysql-sql-executing-process/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2021-04-14T08:56:23.000Z" title="2021/4/14 16:56:23">2021-04-14</time>发表</span><span class="level-item"><time dateTime="2023-04-15T14:24:21.739Z" title="2023/4/15 22:24:21">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/mysql/">mysql</a></span></div></div><h1 class="title is-3 is-size-4-mobile">mysql执行过程</h1><div class="content"><h2 id="一条SQL查询语句是如何执行的"><a href="#一条SQL查询语句是如何执行的" class="headerlink" title="一条SQL查询语句是如何执行的"></a>一条SQL查询语句是如何执行的</h2><p>下面是 <code>mysql</code> 查询的基本执行路径示意图：</p>
+<span id="more"></span>
+
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/40fd5017-8a29-4da8-bfe7-d3bb19ec0599.png" alt="markdown"></p>
+<p>大体来说，<strong>mysql可以分为 Server 层和存储引擎层两部分：</strong></p>
+<ul>
+<li><p><strong>Server</strong> 层包括：连接器、查询缓存、语法解析器、优化器、执行器等大部分核心服务功能，以及所有的内置函数（如日期、时间、数学加密函数等）。所有跨存储引擎的功能都在这一层实现：如存储过程、触发器、视图等</p>
+</li>
+<li><p><strong>存储引擎</strong> 层负责数据的存储和提取。其架构是插件式的，支持 <code>InnoDB</code> , <code>MyISAM</code> , <code>Memory</code> 等多个存储引擎。从 <code>mysql 5.5.5</code> 版本开始默认引擎为 <code>InnoDB</code></p>
+</li>
+</ul>
+<blockquote>
+<p>插件式的也就意味着存储引擎是可插拔的。我们可以在表 a 使用 InnoDB，在表 b 使用 memory 。不同存储引擎的表数据存取方式不同，支持的功能也不同。我们也可以自定义存储引擎 <a target="_blank" rel="noopener" href="http://www.searchdoc.cn/rdbms/mysql/dev.mysql.com/doc/refman/5.7/en/example-storage-engine.com.coder114.cn.html">15.9示例存储引擎</a></p>
+</blockquote>
+<p>从上面图中可以看出，不同的存储引擎公用一个 <code>Server </code> 层，也就是从 <code>连接器</code> 到 <code>执行器</code> 的部分。接下来看看每个组件都做了什么：</p>
+<h4 id="连接器"><a href="#连接器" class="headerlink" title="连接器"></a><strong>连接器</strong></h4><p>首先需要连接到数据库，这时接待你的就是连接器。连接器负责跟客户端建立连接、校验账号、获取权限、维持和管理连接。每个客户端都会在服务器中拥有一个线程，这个连接的查询只会在这个单独的线程中执行。从 <code>mysql 5.5</code> 开始支持线程池，所以服务器不需要为每一个新建的连接创建或销毁线程</p>
+<p>连接命令一般这么写：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql -h $ip -P $port -u $user -p</span><br></pre></td></tr></table></figure>
+
+
+
+<p>在连接上后，连接器就会对其进行身份认证。认证基于用户名、密码和原始主机信息。如果使用了安全套接字（ssl）的方式连接，还可以使用证书认证。如果用户名、密码不对或主机没有权限，就会收到 <code>Access denied for user &#39;xxx@ip&#39;</code> 的错误。一旦连接成功，连接器会继续查出该连接所拥有的权限（例如：是否允许对 user 库的 t 表执行 select 语句）。<strong>这个连接后续的权限判断都依赖于此时读到的权限，这也就意味着一个用户成功连接后，即使修改了它的权限，也不会受影响，只有重新新建连接才会使用新的权限设置</strong></p>
+<p>连接完成后，如果没有做后续的动作，这个连接就处于空闲的状态，通过 <code>show processlist</code> 命令可以看到 <code>Command</code> 为 sleep 的就是空闲连接。如果空闲一定长的时间，连接器就会自动将它断开。这个时间通过参数 <code>wait_timeout</code> 控制，默认为28800秒=8小时</p>
+<h4 id="查询缓存"><a href="#查询缓存" class="headerlink" title="查询缓存"></a><strong>查询缓存</strong></h4><p>在连接建立完成后，就可以开始执行查询语句了。这时来到第二步：<code>查询缓存</code>，这边所指的“缓存”，指的是完整的查询结果。当接收到一个查询请求后，会先到查询缓存看看，当查询命中缓存，会立刻返回结果，跳过了 <strong>解析、优化、和执行阶段</strong>。如果未命中，就会继续后面执行阶段，执行完成后，执行结果会被存入查询缓存中</p>
+<p>查询缓存以 key-value 的形式被直接缓存在内存中，这个key其实是一个大小写敏感哈希值，这个哈希值包括了语句本身、查询的数据库、参数等一些其它会影响查询结果的信息，即使只有一个字节的不同都会导致缓存不命中。当查询中包含任何用户自定义函数、存储函数、用户变量、临时表、mysq库中的系统表，或者任何包含列级别权限的表，都不会被缓存。</p>
+<p>查询缓存还会跟踪查询中涉及的每个表，如果这些表发生变化，那么和这个表相关的所有缓存数据都将失效，即使数据表变化时对缓存中的结果可能并没有影响。这也就是<strong>大多数情况下会建议不要使用查询缓存</strong>的原因，对于更新频繁的数据库来说，查询缓存命中率会非常低，除非是静态表，很少才有更新数据。mysql团队也意识到查询缓存的问题，自 mysql 5.6（2013 年）以来，查询缓存已被默认禁用，<strong>在 mysql8.0 版本中查询缓存模块直接被移除了</strong> <a target="_blank" rel="noopener" href="https://mysqlserverteam.com/mysql-8-0-retiring-support-for-the-query-cache/">MySQL 8.0：退出查询缓存支持</a></p>
+<h4 id="语法解析器和预处理"><a href="#语法解析器和预处理" class="headerlink" title="语法解析器和预处理"></a><strong>语法解析器和预处理</strong></h4><p>如果没有命中查询缓存，这时就会到解析器，开始真正的执行语句。解析器会先使用 mysql 语法规则验证和解析查询，例如，它会验证是否使用错误的关键字，或者关键字使用顺序问题，再或者引号、括号前后能否正确匹配，之后生成一颗对应的 “解析树”。如果语句不对，就会收到 “You have an error in your SQL syntax” 的错误提醒</p>
+<p>预处理器则根据一些规则进行进一步的检查解析树是否合法，例如检查数据表、数据列是否都存在，解析名字和别名是否有歧义。最后会验证权限</p>
+<h4 id="查询优化器"><a href="#查询优化器" class="headerlink" title="查询优化器"></a><strong>查询优化器</strong></h4><p>现在解析树被认为是合法的了，现在将由优化器将其转化为执行计划。一条语句可以有很多种执行的方式，虽然最后的查询结果都是相同的，优化器的作用就是找到这其中最好的方式</p>
+<p><code>mysql</code> 使用基于成本的优化器，它会 <strong>预测</strong> 一个查询使用某种执行计划时的成本，并选择其中成本最小的一个 <a href="todo">更多关于优化器内容</a></p>
+<h4 id="执行器"><a href="#执行器" class="headerlink" title="执行器"></a><strong>执行器</strong></h4><p>在优化器阶段完成后，查询对应的执行计划就已经生成好了，执行器则根据这个执行计划来完成整个查询。开始执行的时候，会先判断这个表是否有权限，如果没有就直接返回权限错误（上查询缓存阶段，如果命中缓存，在返回缓存结果的时候也会做权限校验。在优化器之前也会做precheck权限校验）。执行器简单的根据执行计划的指令逐步执行，在执行过程中，有大量的操作需要通过调用储存引擎 api 来完成，这些接口被称为 “handler API” 。存储引擎接口有着非常丰富的功能，但是底层接口却只有几十个。例如,有一个査询某个索引的第一行的接口，再有个査询某个索引条目的下一个条目的功能，有了这两个功能我们就可以完成全索引扫描的操作了。这种简单的接口模式，让  mysql 的存储引擎插件式架构成为可能</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> T <span class="keyword">WHERE</span> ID <span class="operator">=</span> <span class="number">10</span>；</span><br></pre></td></tr></table></figure>
+
+
+
+<p>比如我们这个例子中的表 T 中，ID 字段没有索引，那么执行器的执行流程是这样的：</p>
+<ul>
+<li><p>调用 InnoDB引擎取这个表的第一行的接口，判断 ID 值是不是 10，如果不是则跳过，如果是则将这行存在结果集中；</p>
+</li>
+<li><p>调用引擎接口取“下一行”，重复相同的判断逻辑，直到取到这个表的最后一行</p>
+</li>
+<li><p>执行器将上述遍历过程中所有满足条件的行组成的记录集作为结果集返回给客户端</p>
+</li>
+</ul>
+<p>对于有索引的表，执行的逻辑也差不多，第一次调用的是“取满足条件的第一行”这个接口，之后循环取“满足条件的下一行”这个接口，这些接口都是引擎中已经定义好的</p>
+<p>查询最后一步是将结果集返回给客户端，即使查询不需要返回结果集给客户端，mysql 仍然会返回一些查询的信息，如查询影响到的行数。如果查询可以被缓存，那么在这个阶段也会将结果存放到查询缓存中。你会在数据库的慢查询日志中看到一个 rows_examined 的字段，表示这个语句执行过程中扫描了多少行。这个值就是在执行器每次调用引擎获取结果集的时候累加的。在有些场景下，执行器调用一次，在引擎内部则扫描了多行，因此引擎扫描行数跟 rows_examined 并不是完全相同的</p>
+<p>最后 mysql 将结果集返回给客户端是一个增量，逐步返回的过程。 在执行器得到第一条结果时，就可以向客户端逐步返回结果集了。这样的好处是：</p>
+<ul>
+<li>服务端无须存储太多的结果，也就不会因为要返回太多结果而消耗太多内存</li>
+<li>让客户端第一时间获得返回结果</li>
+</ul>
+<p>结果集中的每一行都会以一个满足 mysql 客户端/服务器通信协议的封包发送，再通过TCP协议进行传输，在TCP传输的过程中,可能对。mysql 的封包进行缓存然后批量传输</p>
+<h2 id="一条更新查询语句是如何执行的"><a href="#一条更新查询语句是如何执行的" class="headerlink" title="一条更新查询语句是如何执行的"></a>一条更新查询语句是如何执行的</h2><p>更新语句前面的步骤和查询一致，解析器通过解析知道这是一条更新语句，然后执行器选择最优执行计划去执行</p>
+<ul>
+<li>执行器会先open table，如果该表上有 <code>MDL（X）</code> （元数据排他锁），则等待。如果没有则在该表上加 <code>MDL（S）</code> （元数据共享锁）</li>
+<li>进入到引擎层，首先会去 <code>innodb_buffer_pool</code> 里的 <code>data dictionary</code> (元数据信息，是InnoDB自己管理的表缓存) 得到表信息，通过元数据信息，去 <code>lock info</code> 里查出是否会有相关的锁信息，并把这条update语句需要的锁信息写入到 <code>lock info</code> 里</li>
+<li>然后涉及的旧数据以快照的形式存储到缓冲池中的 <code>undo page</code> 里，并在 redo log 中记录 undo log（undo log持久化）</li>
+<li>对数据页进行修改，并把数据页的物理修改记录到 redo log buffer里。由于一个事务会涉及到多个页面的修改，所以redo log buffer里会有多条页面的修改信息。并且由于 group_commit 的原因，本次事务所产生的redo log buffer可能会跟其它事务一同刷新到磁盘上</li>
+<li>同时修改的信息，会按照 <code>event</code> 的格式，以不同的 event type 记录到 binlog_cache 中，在 <strong>事务 commit 后</strong> dump 线程会从 binlog_cache 里把 event 发送给 slave 的 I/O 线程</li>
+<li>之后把还需要在二级索引上做的修改，写入到 change buffer page，等到下次有读取该二级索引页时，再去与二级索引页做 merge</li>
+<li>commit操作，由于存储引擎层与 server 层之间采用的是内部 XA (保证两个事务的一致性，这里主要保证redo log和binlog的原子性)，所以提交分为prepare阶段与commit阶段<ul>
+<li>引擎将新数据更新到内存中，同时将这个更新操作记录到 redo log 里面，此时 redo log 处于 prepare 状态</li>
+<li>执行器将 binlog_cache 里的日志进行刷新到磁盘，并进行同步操作</li>
+<li>执行器调用引擎的提交事务接口，引擎把刚刚写入的 redo log 改成提交（commit）状态，更新完成</li>
+</ul>
+</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a><strong>参考</strong></h2><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/68319">MYSQL实战 45讲</a> </p>
+<p><strong>《高性能MySQL第3版》</strong></p>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/mysql/">mysql</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2021/04/18/2021-04-18-mysql-log-files/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">mysql日志文件</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2021/03/31/2021-03-31-mysql-index/"><span class="level-item">mysql索引</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "31b1ec50b8172bb6ddf978d7489552a9",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#一条SQL查询语句是如何执行的"><span class="level-left"><span class="level-item">1</span><span class="level-item">一条SQL查询语句是如何执行的</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#连接器"><span class="level-left"><span class="level-item">1.1</span><span class="level-item">连接器</span></span></a></li><li><a class="level is-mobile" href="#查询缓存"><span class="level-left"><span class="level-item">1.2</span><span class="level-item">查询缓存</span></span></a></li><li><a class="level is-mobile" href="#语法解析器和预处理"><span class="level-left"><span class="level-item">1.3</span><span class="level-item">语法解析器和预处理</span></span></a></li><li><a class="level is-mobile" href="#查询优化器"><span class="level-left"><span class="level-item">1.4</span><span class="level-item">查询优化器</span></span></a></li><li><a class="level is-mobile" href="#执行器"><span class="level-left"><span class="level-item">1.5</span><span class="level-item">执行器</span></span></a></li></ul></li><li><a class="level is-mobile" href="#一条更新查询语句是如何执行的"><span class="level-left"><span class="level-item">2</span><span class="level-item">一条更新查询语句是如何执行的</span></span></a></li><li><a class="level is-mobile" href="#参考"><span class="level-left"><span class="level-item">3</span><span class="level-item">参考</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

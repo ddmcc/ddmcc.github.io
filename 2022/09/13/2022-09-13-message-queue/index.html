@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>消息队列基础知识 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="一、消息队列应用场景1. 异步处理 如：秒杀功能"><meta property="og:type" content="article"><meta property="og:title" content="消息队列基础知识"><meta property="og:url" content="http://example.com/2022/09/13/2022-09-13-message-queue/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="一、消息队列应用场景1. 异步处理 如：秒杀功能"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/5fa31af7-7e85-4494-b8ff-4e065f97ea44.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/9b11c194-058b-486c-be94-c7ea9627cdf0.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/b044782c-e168-4c8a-b2aa-f3e8e0f84314.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/fc61be61-173f-4c18-8542-19ef3b055a70.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/7d8091f7-c3de-4d84-8eba-9cdb910f4b60.png"><meta property="og:image" content="https://ddmcc-1255635056.cos.ap-guangzhou.myqcloud.com/WeChata090d8759ea5ceae2e557ed55b98078a.png"><meta property="article:published_time" content="2022-09-13T08:56:23.000Z"><meta property="article:modified_time" content="2023-04-14T19:12:25.640Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="RabbitMQ"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://ddmcc-1255635056.file.myqcloud.com/5fa31af7-7e85-4494-b8ff-4e065f97ea44.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2022/09/13/2022-09-13-message-queue/"},"headline":"消息队列基础知识","image":["https://ddmcc-1255635056.file.myqcloud.com/5fa31af7-7e85-4494-b8ff-4e065f97ea44.png","https://ddmcc-1255635056.file.myqcloud.com/9b11c194-058b-486c-be94-c7ea9627cdf0.png","https://ddmcc-1255635056.file.myqcloud.com/b044782c-e168-4c8a-b2aa-f3e8e0f84314.png","https://ddmcc-1255635056.file.myqcloud.com/fc61be61-173f-4c18-8542-19ef3b055a70.png","https://ddmcc-1255635056.file.myqcloud.com/7d8091f7-c3de-4d84-8eba-9cdb910f4b60.png","https://ddmcc-1255635056.cos.ap-guangzhou.myqcloud.com/WeChata090d8759ea5ceae2e557ed55b98078a.png"],"datePublished":"2022-09-13T08:56:23.000Z","dateModified":"2023-04-14T19:12:25.640Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"一、消息队列应用场景1. 异步处理 如：秒杀功能"}</script><link rel="canonical" href="http://example.com/2022/09/13/2022-09-13-message-queue/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2022-09-13T08:56:23.000Z" title="2022/9/13 16:56:23">2022-09-13</time>发表</span><span class="level-item"><time dateTime="2023-04-14T19:12:25.640Z" title="2023/4/15 03:12:25">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/">消息队列</a></span></div></div><h1 class="title is-3 is-size-4-mobile">消息队列基础知识</h1><div class="content"><h2 id="一、消息队列应用场景"><a href="#一、消息队列应用场景" class="headerlink" title="一、消息队列应用场景"></a>一、消息队列应用场景</h2><h3 id="1-异步处理-如：秒杀功能"><a href="#1-异步处理-如：秒杀功能" class="headerlink" title="1. 异步处理 如：秒杀功能"></a>1. <strong>异步处理</strong> 如：秒杀功能</h3><span id="more"></span>
+
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/5fa31af7-7e85-4494-b8ff-4e065f97ea44.png" alt="markdown"></p>
+<p>通常秒杀功能包括：风险控制、库存锁定、生成订单、短信通知、数据统计等，实际上只要用户请求通过风险控制，并完成库存锁定，就可以返回秒杀结果了，对于后续的生成订单、短信通知等步骤，并不一定要在秒杀请求中完成。可以把请求数据放入请求队列，由队列异步地进行后续的操作</p>
+<h3 id="2-流量控制-达到雪峰填谷的作用"><a href="#2-流量控制-达到雪峰填谷的作用" class="headerlink" title="2. 流量控制 - 达到雪峰填谷的作用"></a>2. <strong>流量控制</strong> - 达到雪峰填谷的作用</h3><p><strong>如何避免过多的请求压垮我们的系统？</strong> 一个健壮的程序应该可以在海量的请求下，在自身能力范围内尽可能地处理请求，拒绝处理不了的请求，而正常的运行。</p>
+<p><strong>有两种方式：</strong></p>
+<ol>
+<li><p><strong>使用消息队列隔离网关和后端服务，以达到流量控制和保护后端服务的目的</strong></p>
+<p>加入消息队列后，整个秒杀流程变为：</p>
+<ul>
+<li><p>网关在收到请求后，将请求放入请求消息队列；</p>
+</li>
+<li><p>后端服务从请求消息队列中获取 APP 请求，完成后续秒杀处理过程，然后返回结果</p>
+</li>
+</ul>
+</li>
+</ol>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/9b11c194-058b-486c-be94-c7ea9627cdf0.png" alt="markdown"></p>
+<p>当大量请求到达网关时，不会直接冲击后端服务，而先堆积在消息队列中，后端服务根据自己最大处理能力，从队列中进行消费请求。对于超时的请求可以直接丢弃，返回调用者失败即可。运维人员还可以随时增加后端服务的实例数量，进行水平扩容，而不需要对其他服务进行更改。</p>
+<p><strong>优点：</strong> 能根据下游的处理能力自动调节流量，达到“削峰填谷”的作用</p>
+<p><strong>缺点：</strong> 增加了系统调用链环节，导致总体的响应时延变长。上下游系统都要将同步调用改为异步消息，增加了系统的复杂度。</p>
+<ol start="2">
+<li><p><strong>令牌桶的方式</strong></p>
+<p><strong>令牌桶的原理是：</strong> 单位时间内只发放固定数量的令牌到令牌桶中，规定服务在处理请求之前必须先从令牌桶中拿出一个令牌，如果令牌桶中没有令牌，则拒绝请求。这样就保证单位时间内，能处理的请求不超过发放令牌的数量，起到了流量控制的作用。</p>
+</li>
+</ol>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/b044782c-e168-4c8a-b2aa-f3e8e0f84314.png" alt="markdown"></p>
+<p>令牌桶可以简单地用一个有固定容量的消息队列加一个“令牌发生器”来实现：令牌发生器按照预估的处理能力，匀速生产令牌并放入令牌队列（如果队列满了则丢弃令牌），网关在收到请求时去令牌队列消费一个令牌，获取到令牌则继续调用后端秒杀服务，如果获取不到令牌则直接返回秒杀失败</p>
+<h3 id="3-服务解耦"><a href="#3-服务解耦" class="headerlink" title="3. 服务解耦"></a>3. 服务解耦</h3><p>在没有使用消息队列时，上游系统需要应对下游系统化的变化，任何一个下游系统变更都需要尚有系统重新上线一次。所以引入消息队列来解决类似系统耦合过于紧密的问题。引入消息队列后，上游系统在变化时发送一条消息到某主题，所有下游系统都订阅该主题，这样每个下游系统都可以获取一份实时完整的数据。</p>
+<p>无论增加、减少或是下游系统需求变化，上游服务都无需做任何更改，实现服务间的解耦</p>
+<h3 id="消息队列带来的问题和局限性"><a href="#消息队列带来的问题和局限性" class="headerlink" title="消息队列带来的问题和局限性"></a>消息队列带来的问题和局限性</h3><ul>
+<li>引入消息队列带来延迟问题</li>
+<li>增加系统的复杂度</li>
+<li>可能产生数据不一致问题</li>
+</ul>
+<h2 id="二、如何选择消息队列"><a href="#二、如何选择消息队列" class="headerlink" title="二、如何选择消息队列"></a>二、如何选择消息队列</h2><h3 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a>RabbitMQ</h3><ul>
+<li><p><strong>优点</strong></p>
+<ul>
+<li>轻量级的消息队列，容易部署和使用</li>
+<li>拥有灵活的路由配置，提供 <code>Exchange</code> 模块，根据配置的路有规则将生产者消息分发到不同的队列中，支持自己实现路有规则，扩展容易</li>
+</ul>
+</li>
+<li><p><strong>缺点</strong></p>
+<ul>
+<li>对消息堆积支持不好，在它设计里面，消息队列是一个管道，<u>当大量消息积压的时候，会导致 <code>RabbitMQ</code> 性能急剧下降</u></li>
+<li><strong>性能相较于其它消息队列是最差的</strong>，大概每秒可以处理几万到十几万消息，如果对性能要求非常高，那就不要选择 <code>RabbitMQ</code></li>
+<li><code>RabbitMQ</code> 使用 <code>Erlang</code> 开发，如果你想基于它做一些扩展和二次开发什么的，建议慎重考虑</li>
+</ul>
+</li>
+</ul>
+<h3 id="RocketMQ"><a href="#RocketMQ" class="headerlink" title="RocketMQ"></a>RocketMQ</h3><ul>
+<li><strong>优点</strong><ul>
+<li><code>RocketMQ</code> 中文社区活跃，大多数问题可以找到中文的答案。另外使用 <code>Java</code> 语言开发，贡献者大多都是中文人，源码比较容易读懂，容易对其进行扩展或二次开发</li>
+<li><u>对响应做了很多优化</u>，大多数情况下可以做到毫秒级响应</li>
+<li>性能要比 <code>RabbitMQ</code> 高一个量级，每秒大概能处理几十万条消息</li>
+</ul>
+</li>
+<li><strong>缺点</strong><ul>
+<li>作为国产消息队列，在国际上还没那么流行，与周边生态系统集成和兼容程度要略逊一筹</li>
+</ul>
+</li>
+</ul>
+<h3 id="Kafka"><a href="#Kafka" class="headerlink" title="Kafka"></a>Kafka</h3><ul>
+<li><strong>优点</strong><ul>
+<li>与周边生态系统的兼容性是做好的，尤其在大数据和流计算领域，几乎所有相关的开源系统都会优先支持 <code>Kafka</code></li>
+<li>设计上大量的使用了批量和异步的思想，使之有着超高的性能。但与 <code>RocketMQ</code> 并没有量级上的差异，大约每秒可以处理几十万条消息</li>
+</ul>
+</li>
+<li><strong>缺点</strong><ul>
+<li>同步收发消息延迟比较高，因为收到一条消息时，<code>Kafka</code> 并不会立即发出去，而是要攒一会，一批一起发送。如果每秒消息数量没那么多，延迟反而会比较高</li>
+</ul>
+</li>
+</ul>
+<h3 id="Pulsar"><a href="#Pulsar" class="headerlink" title="Pulsar"></a>Pulsar</h3><h3 id="如何选择？"><a href="#如何选择？" class="headerlink" title="如何选择？"></a>如何选择？</h3><p>选择中间件的考量维度：<code>可靠性</code>，<code>性能</code>，<code>功能</code>，<code>可运维性</code>，<code>可拓展性</code>，<code>是否开源</code> 及 <code>社区活跃度</code></p>
+<ul>
+<li><p>如果说，消息队列并不是你将要构建系统的主角之一，你对消息队列功能和性能都没有很高的要求，只需要一个开箱即用易于维护的产品，建议你使用 <code>RabbitMQ</code>。</p>
+</li>
+<li><p>如果你的系统使用消息队列主要场景是处理在线业务，比如在交易系统中用消息队列传递订单，那 <code>RocketMQ</code> 的低延迟和金融级的稳定性是你需要的。</p>
+</li>
+<li><p>如果你需要处理海量的消息，像收集日志、监控信息或是前端的埋点这类数据，或是你的应用场景大量使用了大数据、流计算相关的开源产品，那 Kafka 是最适合你的消息队列</p>
+</li>
+</ul>
+<h2 id="三、消息模型"><a href="#三、消息模型" class="headerlink" title="三、消息模型"></a>三、消息模型</h2><h3 id="主题和队列有什么区别？"><a href="#主题和队列有什么区别？" class="headerlink" title="主题和队列有什么区别？"></a>主题和队列有什么区别？</h3><h4 id="队列"><a href="#队列" class="headerlink" title="队列"></a>队列</h4><p>就是按照“队列”的数据结构来设计的。生产者（Producer）发消息就是入队操作，消费者（Consumer）收消息就是出队也就是删除操作。这里面隐含着的一个要求是，在消息入队出队过程中，需要保证这些消息严格有序，按照什么顺序写进队列，必须按照同样的顺序从队列中读出来</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/fc61be61-173f-4c18-8542-19ef3b055a70.png" alt="markdown"></p>
+<ol>
+<li>如果有多个生产者往同一个队列里面发送消息，这个队列中可以消费到的消息，就是这些生产者生产的所有消息的合集。消息的顺序就是这些生产者发送消息的自然顺序。如果有多个消费者接收同一个队列的消息，这些消费者之间实际上是竞争的关系，每个消费者只能收到队列中的一部分消息，也就是说任何一条消息只能被其中的一个消费者收到</li>
+<li>如果需要将一份消息数据分发给多个消费者，要求每个消费者都能收到全量的消息，例如，对于一份订单数据，风控系统、分析系统、支付系统等都需要接收消息。这个时候，单个队列就满足不了需求，一个可行的解决方式是，为每个消费者创建一个单独的队列，让生产者发送多份。显然这是个比较蠢的做法<ol>
+<li>同样的一份消息数据被复制到多个队列中会浪费资源</li>
+<li>更重要的是，生产者必须知道有多少个消费者。为每个消费者单独发送一份消息，这实际上违背了消息队列“解耦”这个设计初衷</li>
+</ol>
+</li>
+</ol>
+<h4 id="主题"><a href="#主题" class="headerlink" title="主题"></a>主题</h4><p>为了解决上述问题，演化出了另外一种消息模型：<strong>发布 - 订阅模型（Publish-Subscribe Pattern）</strong>。消息的发送方称为发布者（<code>Publisher</code>），消息的接收方称为订阅者（<code>Subscriber</code>），服务端存放消息的容器称为主题（<code>Topic</code>）。发布者将消息发送到主题中，订阅者在接收消息之前需要先订阅主题。“订阅”在这里既是一个动作，同时还可以认为是主题在消费时的一个逻辑副本，每份订阅中，订阅者都可以接收到主题的所有消息</p>
+<h4 id="两者的区别"><a href="#两者的区别" class="headerlink" title="两者的区别"></a>两者的区别</h4><p>生产者就是发布者，消费者就是订阅者，队列就是主题，并没有本质的区别。<strong>它们最大的区别其实就是，一份消息数据能不能被消费多次的问题。</strong> 实际上，在这种<code>发布 - 订阅模型</code>中，如果只有一个订阅者，那它和队列模型就基本是一样的了。也就是说，<code>发布 - 订阅模型</code>在功能层面上是可以兼容<code>队列模型</code>的</p>
+<h3 id="RabbitMQ消息模型"><a href="#RabbitMQ消息模型" class="headerlink" title="RabbitMQ消息模型"></a>RabbitMQ消息模型</h3><p><code>RabbitMQ</code> 是坚持使用队列模型的产品之一。在 <code>RabbitMQ</code> 中，有一个 <code>Exchange</code> 模块，位于生产者和队列之间，生产者并不关心将消息发送给哪个队列，而是将消息发送给 <code>Exchange</code>，由 <code>Exchange</code> 上配置的策略来决定将消息投递到哪些队列中</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/7d8091f7-c3de-4d84-8eba-9cdb910f4b60.png" alt="markdown"></p>
+<p>同一份消息如果需要被多个消费者来消费，需要配置 <code>Exchange</code> 将消息发送到多个队列，每个队列中都存放一份完整的消息数据，变相地实现 <strong>发布 - 订阅模型</strong></p>
+<h3 id="RocketMQ消息模型"><a href="#RocketMQ消息模型" class="headerlink" title="RocketMQ消息模型"></a>RocketMQ消息模型</h3><p><code>RocketMQ</code> 使用的消息模型是标准的 <strong>发布 - 订阅模型</strong></p>
+<h4 id="请求-确认机制"><a href="#请求-确认机制" class="headerlink" title="请求 - 确认机制"></a>请求 - 确认机制</h4><ul>
+<li><strong>生产端</strong></li>
+</ul>
+<p>生产者先将消息发送给服务端，也就是 <code>Broker</code>，服务端在收到消息并将消息写入主题或者队列中后，会给生产者发送确认的响应。如果生产者没有收到服务端的确认或者收到失败的响应，则会重新发送消息</p>
+<ul>
+<li><strong>消费端</strong></li>
+</ul>
+<p>消费者在收到消息并完成自己的消费业务逻辑（比如，将数据保存到数据库中）后，也会给服务端发送消费成功的确认，服务端只有收到消费确认后，才认为一条消息被成功消费，否则它会给消费者重新发送这条消息，直到收到对应的消费成功确认</p>
+<h4 id="模型"><a href="#模型" class="headerlink" title="模型"></a>模型</h4><p>这个确认机制很好地保证了消息传递过程中的可靠性，但是，<strong>为了确保消息的有序性，在某一条消息被成功消费之前，下一条消息是不能被消费的，否则就会出现消息空洞，违背了有序性这个原则</strong></p>
+<p>也就是说，每个主题在任意时刻，至多只能有一个消费者实例在进行消费，那就没法通过水平扩展消费者的数量来提升消费端总体的消费性能。为了解决这个问题，<code>RocketMQ</code> 在主题下面增加了队列的概念：<strong>每个主题包含多个队列，通过多个队列来实现多实例并行生产和消费。需要注意的是，RocketMQ 只在队列上保证消息的有序性，主题层面是无法保证消息的严格顺序的</strong></p>
+<p><code>RocketMQ</code> 中，订阅者的概念是通过消费组（Consumer Group）来体现的。<strong>每个消费组都消费主题中一份完整的消息，不同消费组之间消费进度彼此不受影响，也就是说，一条消息被 Consumer Group1 消费过，也会再给 Consumer Group2 消费。消费组中包含多个消费者，同一个组内的消费者是竞争消费的关系，每个消费者负责消费组内的一部分消息。如果一条消息被消费者 Consumer1 消费了，那同组的其他消费者就不会再收到这条消息</strong></p>
+<p>在 Topic 的消费过程中，由于消息需要被不同的组进行多次消费，所以消费完的消息并不会立即被删除，这就需要 RocketMQ 为每个消费组在每个队列上维护一个消费位置（Consumer Offset），这个位置之前的消息都被消费过，之后的消息都没有被消费过，每成功消费一条消息，消费位置就加一</p>
+<h3 id="Kafka消息模型"><a href="#Kafka消息模型" class="headerlink" title="Kafka消息模型"></a>Kafka消息模型</h3><p><code>Kafka</code> 的消息模型和 <code>RocketMQ</code> 是完全一样的，我刚刚讲的所有 <code>RocketMQ</code> 中对应的概念，和生产消费过程中的确认机制，都完全适用于 <code>Kafka</code>。唯一的区别是，在 <code>Kafka</code> 中，队列这个概念的名称不一样，<code>Kafka</code> 中对应的名称是“分区（Partition）”，含义和功能是没有任何区别的</p>
+<h2 id="四、如何确保消息不会丢失"><a href="#四、如何确保消息不会丢失" class="headerlink" title="四、如何确保消息不会丢失"></a>四、如何确保消息不会丢失</h2><p>检测消息是否丢失</p>
+<h4 id="分布式链路追踪"><a href="#分布式链路追踪" class="headerlink" title="分布式链路追踪"></a>分布式链路追踪</h4><p>可以使用此类系统来追踪每一条消息</p>
+<h4 id="利用消息队列的有序性来验证"><a href="#利用消息队列的有序性来验证" class="headerlink" title="利用消息队列的有序性来验证"></a>利用消息队列的有序性来验证</h4><p>在 <code>生产者</code> 端给每个发出的消息加上一个连续递增的序号，在 <code>消费者</code> 端来检查这个序号的连续性</p>
+<p>大多数消息队列都支持 <code>拦截器机制</code>，可以 <strong>在生产者的拦截器中注入消息序号</strong> ， <strong>在消费者的拦截器中检测序号的连续性</strong> ，这样的好处是检测代码不会侵入到业务代码中，系统稳定后也方便关闭或删除</p>
+<h4 id="分布式系统中需要注意的问题"><a href="#分布式系统中需要注意的问题" class="headerlink" title="分布式系统中需要注意的问题"></a>分布式系统中需要注意的问题</h4><ul>
+<li>像 <code>Kafka</code> 和 <code>RocketMQ</code> 这样的消息队列，它不能保证在 <code>Topic</code> 上的严格顺序的，只能保证分区/队列上的消息是有序的，所以我们在发消息的时候必须要指定分区/队列，并且，在每个分区/队列单独检测消息序号的连续性</li>
+<li>如果系统中生产者是多实例，由于并不好协调多个 <code>Producer</code> 之间的发送顺序，所以需要每个 <code>Producer</code> 分别生成各自的序号，在 <code>Consumer</code> 端按照每个 <code>Producer</code> 分别来检测序号的连续性</li>
+<li><code>Consumer</code> 实例的数量最好和分区/队列数量一致，做到 <code>Consumer</code> 和分区/队列一一对应，这样会比较方便地在 <code>Consumer</code> 内检测消息序号的连续性</li>
+</ul>
+<h3 id="2-如何确保消息可靠传递"><a href="#2-如何确保消息可靠传递" class="headerlink" title="2.如何确保消息可靠传递"></a>2.如何确保消息可靠传递</h3><p>消息传递主要分为三个阶段：<code>生产阶段</code>，<code>存储阶段</code>，<code>消费阶段</code></p>
+<p><img src="https://ddmcc-1255635056.cos.ap-guangzhou.myqcloud.com/WeChata090d8759ea5ceae2e557ed55b98078a.png"></p>
+<ul>
+<li><strong>生产阶段：</strong> 消息从 <code>Producer</code> 创建出来，经过网络传输到 <code>Broker</code> 端</li>
+<li><strong>存储阶段：</strong> 消息在 <code>Broker</code> 存储，如果是集群，消息会在这个阶段被复制到其他的副本上</li>
+<li><strong>消费阶段：</strong> 在这个阶段，**<code>Consumer</code> 从 <code>Broker</code> 上拉取消息，经过网络传输到 <code>Consumer</code> 上**</li>
+</ul>
+<h4 id="生产阶段"><a href="#生产阶段" class="headerlink" title="生产阶段"></a>生产阶段</h4><p>在生产阶段，消息队列通过 <strong>请求确认机制</strong> ，来保证消息的可靠传递：当调用发消息方法时，消息队列客户端会将消息发送到 <code>Broker</code> ，<code>Broker</code> 收到消息后，会给客户端返回一个确认的响应，表明消息已经收到了。客户端收到响应后，完成一次正常的消息发送</p>
+<p>只要 <code>Producer</code> 收到了 <code>Broker</code> 的确认响应，就可以保证消息在生产阶段不会丢失。有些消息队列在长时间没收到发送确认响应后，会自动重试，如果重试再失败，就会以返回值或者异常的方式告知用户</p>
+<p><strong>在编写发送消息代码时，正确处理返回值或者捕获异常，就可以保证这个阶段的消息不会丢失</strong></p>
+<h4 id="存储阶段"><a href="#存储阶段" class="headerlink" title="存储阶段"></a>存储阶段</h4><p>在存储阶段正常情况下，只要 <code>Broker</code> 在正常运行，就不会出现丢失消息的问题，但是如果 <code>Broker</code> 出现了故障，比如进程死掉了或者服务器宕机了，还是可能会丢失消息的</p>
+<p><strong>如果对消息的可靠性要求非常高，一般可以通过配置 <code>Broker</code> 参数来避免因为宕机丢消息</strong></p>
+<h5 id="单个节点Broker"><a href="#单个节点Broker" class="headerlink" title="单个节点Broker"></a><strong>单个节点Broker</strong></h5><p>对于单个节点的 <code>Broker</code> ，需要配置刷盘策略，将消息写入磁盘后再给 <code>Producer</code> 返回确认响应，这样即使宕机，由于消息已经写入磁盘，就不会丢失消息，恢复后还可以继续消费</p>
+<blockquote>
+<p>在 <code>RocketMQ</code> 中，将刷盘方式 flushDiskType 配置成 SYNC_FLUSH 同步刷盘</p>
+</blockquote>
+<h5 id="多节点集群Broker"><a href="#多节点集群Broker" class="headerlink" title="多节点集群Broker"></a><strong>多节点集群Broker</strong></h5><p>如果是由多个节点组成的集群，可以将 <code>Broker</code> 集群配置成：至少将消息发送到2个以上的节点，再给客户端恢复确认响应。这样即使某个 <code>Broker</code> 宕机时，其它的 <code>Broker</code> 可以替代宕机的，也不会发生消息丢失</p>
+<h4 id="消费阶段"><a href="#消费阶段" class="headerlink" title="消费阶段"></a>消费阶段</h4><p>消费阶段采用和生产阶段类似的确认机制来保证消息的可靠传递，<strong>客户端从 <code>Broker</code> 拉取消息后，执行业务逻辑，成功后才给 <code>Broker</code> 发送消费确认响应</strong> ，如果没有收到响应下次拉消息的时候还会返回同一条消息，确保消息不会在网络传输过程中丢失，也不会因为客户端在执行消费逻辑中出错导致丢失</p>
+<p><strong>在编写消费代码时，不要在收到消息后就立即发送消费确认，而是应该在执行完所有消费业务逻辑之后，再发送消费确认</strong></p>
+<h3 id="3-总结"><a href="#3-总结" class="headerlink" title="3.总结"></a>3.总结</h3><ul>
+<li>在生产阶段，你需要捕获消息发送的错误，并重发消息</li>
+<li>在存储阶段，你可以通过配置刷盘和复制相关的参数，让消息写入到多个副本的磁盘上，来确保消息不会因为某个 Broker 宕机或者磁盘损坏而丢失</li>
+<li>在消费阶段，你需要在处理完全部消费业务逻辑之后，再发送消费确认</li>
+</ul>
+<h2 id="五、如何处理重复消息"><a href="#五、如何处理重复消息" class="headerlink" title="五、如何处理重复消息"></a>五、如何处理重复消息</h2><p><strong>消息重复的情况必然存在</strong></p>
+<p>在 <code>MQTT</code> 协议中，给出了三种消息传递的标准：</p>
+<ul>
+<li><strong>At most once：至多一次</strong>。 消息至多会被送达一次，换个说法也就是允许消息丢失，但不允许消息重复</li>
+<li><strong>At lease once：至少一次。</strong>  消息至少被送达一次，也就是不允许丢消息，但有可能重复</li>
+</ul>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/RabbitMQ/">RabbitMQ</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2022/10/12/2022-10-12-use-pattern/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">设计模式在工作中的应用</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2021/07/26/2021-07-26-innodb-implementation-of-mvcc/"><span class="level-item">InnoDB对MVCC的实现</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "a7102a19d6fe8c386a9da29a20ff97b4",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#一、消息队列应用场景"><span class="level-left"><span class="level-item">1</span><span class="level-item">一、消息队列应用场景</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#1-异步处理-如：秒杀功能"><span class="level-left"><span class="level-item">1.1</span><span class="level-item">1. 异步处理 如：秒杀功能</span></span></a></li><li><a class="level is-mobile" href="#2-流量控制-达到雪峰填谷的作用"><span class="level-left"><span class="level-item">1.2</span><span class="level-item">2. 流量控制 - 达到雪峰填谷的作用</span></span></a></li><li><a class="level is-mobile" href="#3-服务解耦"><span class="level-left"><span class="level-item">1.3</span><span class="level-item">3. 服务解耦</span></span></a></li><li><a class="level is-mobile" href="#消息队列带来的问题和局限性"><span class="level-left"><span class="level-item">1.4</span><span class="level-item">消息队列带来的问题和局限性</span></span></a></li></ul></li><li><a class="level is-mobile" href="#二、如何选择消息队列"><span class="level-left"><span class="level-item">2</span><span class="level-item">二、如何选择消息队列</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#RabbitMQ"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">RabbitMQ</span></span></a></li><li><a class="level is-mobile" href="#RocketMQ"><span class="level-left"><span class="level-item">2.2</span><span class="level-item">RocketMQ</span></span></a></li><li><a class="level is-mobile" href="#Kafka"><span class="level-left"><span class="level-item">2.3</span><span class="level-item">Kafka</span></span></a></li><li><a class="level is-mobile" href="#Pulsar"><span class="level-left"><span class="level-item">2.4</span><span class="level-item">Pulsar</span></span></a></li><li><a class="level is-mobile" href="#如何选择？"><span class="level-left"><span class="level-item">2.5</span><span class="level-item">如何选择？</span></span></a></li></ul></li><li><a class="level is-mobile" href="#三、消息模型"><span class="level-left"><span class="level-item">3</span><span class="level-item">三、消息模型</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#主题和队列有什么区别？"><span class="level-left"><span class="level-item">3.1</span><span class="level-item">主题和队列有什么区别？</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#队列"><span class="level-left"><span class="level-item">3.1.1</span><span class="level-item">队列</span></span></a></li><li><a class="level is-mobile" href="#主题"><span class="level-left"><span class="level-item">3.1.2</span><span class="level-item">主题</span></span></a></li><li><a class="level is-mobile" href="#两者的区别"><span class="level-left"><span class="level-item">3.1.3</span><span class="level-item">两者的区别</span></span></a></li></ul></li><li><a class="level is-mobile" href="#RabbitMQ消息模型"><span class="level-left"><span class="level-item">3.2</span><span class="level-item">RabbitMQ消息模型</span></span></a></li><li><a class="level is-mobile" href="#RocketMQ消息模型"><span class="level-left"><span class="level-item">3.3</span><span class="level-item">RocketMQ消息模型</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#请求-确认机制"><span class="level-left"><span class="level-item">3.3.1</span><span class="level-item">请求 - 确认机制</span></span></a></li><li><a class="level is-mobile" href="#模型"><span class="level-left"><span class="level-item">3.3.2</span><span class="level-item">模型</span></span></a></li></ul></li><li><a class="level is-mobile" href="#Kafka消息模型"><span class="level-left"><span class="level-item">3.4</span><span class="level-item">Kafka消息模型</span></span></a></li></ul></li><li><a class="level is-mobile" href="#四、如何确保消息不会丢失"><span class="level-left"><span class="level-item">4</span><span class="level-item">四、如何确保消息不会丢失</span></span></a><ul class="menu-list"><ul class="menu-list"><li><a class="level is-mobile" href="#分布式链路追踪"><span class="level-left"><span class="level-item">4.1.1</span><span class="level-item">分布式链路追踪</span></span></a></li><li><a class="level is-mobile" href="#利用消息队列的有序性来验证"><span class="level-left"><span class="level-item">4.1.2</span><span class="level-item">利用消息队列的有序性来验证</span></span></a></li><li><a class="level is-mobile" href="#分布式系统中需要注意的问题"><span class="level-left"><span class="level-item">4.1.3</span><span class="level-item">分布式系统中需要注意的问题</span></span></a></li></ul><li><a class="level is-mobile" href="#2-如何确保消息可靠传递"><span class="level-left"><span class="level-item">4.2</span><span class="level-item">2.如何确保消息可靠传递</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#生产阶段"><span class="level-left"><span class="level-item">4.2.1</span><span class="level-item">生产阶段</span></span></a></li><li><a class="level is-mobile" href="#存储阶段"><span class="level-left"><span class="level-item">4.2.2</span><span class="level-item">存储阶段</span></span></a></li><li><a class="level is-mobile" href="#消费阶段"><span class="level-left"><span class="level-item">4.2.3</span><span class="level-item">消费阶段</span></span></a></li></ul></li><li><a class="level is-mobile" href="#3-总结"><span class="level-left"><span class="level-item">4.3</span><span class="level-item">3.总结</span></span></a></li></ul></li><li><a class="level is-mobile" href="#五、如何处理重复消息"><span class="level-left"><span class="level-item">5</span><span class="level-item">五、如何处理重复消息</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

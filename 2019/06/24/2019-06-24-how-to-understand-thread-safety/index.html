@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>如何理解线程安全 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="线程安全问题都是由全局变量及静态变量引起的。  JVM运行时数据区包括了程序计数器，本地方法栈，jvm栈，堆。在这四个区中，前三个都是线程间隔离的。只有堆内存是线程间共享的。而全局变量放在堆内存中，各线程内jvm栈只保存了对象引用，所以各线程更改的还是一个内存地址的数据。"><meta property="og:type" content="article"><meta property="og:title" content="如何理解线程安全"><meta property="og:url" content="http://example.com/2019/06/24/2019-06-24-how-to-understand-thread-safety/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="线程安全问题都是由全局变量及静态变量引起的。  JVM运行时数据区包括了程序计数器，本地方法栈，jvm栈，堆。在这四个区中，前三个都是线程间隔离的。只有堆内存是线程间共享的。而全局变量放在堆内存中，各线程内jvm栈只保存了对象引用，所以各线程更改的还是一个内存地址的数据。"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://example.com/img/og_image.png"><meta property="article:published_time" content="2019-06-24T15:33:17.000Z"><meta property="article:modified_time" content="2023-04-15T14:39:17.312Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="volatile synchronized"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="http://example.com/img/og_image.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2019/06/24/2019-06-24-how-to-understand-thread-safety/"},"headline":"如何理解线程安全","image":["http://example.com/img/og_image.png"],"datePublished":"2019-06-24T15:33:17.000Z","dateModified":"2023-04-15T14:39:17.312Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"线程安全问题都是由全局变量及静态变量引起的。  JVM运行时数据区包括了程序计数器，本地方法栈，jvm栈，堆。在这四个区中，前三个都是线程间隔离的。只有堆内存是线程间共享的。而全局变量放在堆内存中，各线程内jvm栈只保存了对象引用，所以各线程更改的还是一个内存地址的数据。"}</script><link rel="canonical" href="http://example.com/2019/06/24/2019-06-24-how-to-understand-thread-safety/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2019-06-24T15:33:17.000Z" title="2019/6/24 23:33:17">2019-06-24</time>发表</span><span class="level-item"><time dateTime="2023-04-15T14:39:17.312Z" title="2023/4/15 22:39:17">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></span></div></div><h1 class="title is-3 is-size-4-mobile">如何理解线程安全</h1><div class="content"><blockquote>
+<p>线程安全问题都是由全局变量及静态变量引起的。</p>
+</blockquote>
+<p>JVM运行时数据区包括了程序计数器，本地方法栈，jvm栈，堆。在这四个区中，前三个都是线程间隔离的。<br>只有堆内存是线程间共享的。而全局变量放在堆内存中，各线程内jvm栈只保存了对象引用，所以各线程更改的还是一个<br>内存地址的数据。</p>
+<span id="more"></span>
+
+<p>在JDK1.8中元数据区取代了永久代，元数据区并不在虚拟机中，而在本地内存中。静态变量是保存在元数据区中的。所以对于<br>线程来说，操作的还是同一内存地址上的数据。</p>
+<blockquote>
+<p>若每个线程中对全局变量、静态变量只有读操作，而无写操作，一般来说，这个全局变量是线程安全的；<br>若有多个线程同时执行写操作，一般都需要考虑线程同步，否则的话就可能影响线程安全。</p>
+</blockquote>
+<h3 id="可见性问题"><a href="#可见性问题" class="headerlink" title="可见性问题"></a>可见性问题</h3><p>jvm有一个主内存，每个线程有自己的高速缓存，当运行时每个线程都会在自己的高速缓存中建立一个变量副本，<br>操作完后再把值写入到主内存。在多线程的情况下，有可能当线程A操作完，但值还未写入，这时线程B获取时间片在执行变量值还是未改变的。</p>
+<p><strong>线程A改变了值，线程B没有立即看到线程A修改的值这就是可见性问题。</strong></p>
+<h3 id="原子性问题"><a href="#原子性问题" class="headerlink" title="原子性问题"></a>原子性问题</h3><p><strong>即一个操作或者多个操作 要么全部执行并且执行的过程不会被任何因素打断，要么就都不执行。</strong><br>比如：size += 1 相当于 size = size + 1，这边就有两个操作了，先size+1，再把值赋给size。如果这两个操作不具备原子性，就会造成线程不安全。<br>在多线程情况下，有可能线程A刚做完size+1的操作，这时被线程B抢走了时间片，而B读到的就是错误的数据。</p>
+<h3 id="有序性问题"><a href="#有序性问题" class="headerlink" title="有序性问题"></a>有序性问题</h3><p><strong>即程序执行的顺序按照代码的先后顺序执行</strong> ，但是有时候并不是如此。</p>
+<p>指令重排序：<br><strong>源代码中的顺序与得到的字节码顺序不一样或者字节码顺序与实际的执行顺序不一样</strong><br>在编译的时候静态编译器会.java编译成.class，动态编译器jit会将.class编译成jvm执行的文件，在编译的时候还会对性能进行优化，<br>这时候就有可能改变了代码的顺序，即源代码和执行代码的顺序是不一致的。</p>
+<p><strong>可以在下面的代码中看到一个简单的示例：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Reordering</span> &#123;</span><br><span class="line">  <span class="type">int</span> <span class="variable">x</span> <span class="operator">=</span> <span class="number">0</span>, y = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">writer</span><span class="params">()</span> &#123;</span><br><span class="line">    x = <span class="number">1</span>;</span><br><span class="line">    y = <span class="number">2</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">reader</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">r1</span> <span class="operator">=</span> y; <span class="comment">// y的读取</span></span><br><span class="line">    <span class="type">int</span> <span class="variable">r2</span> <span class="operator">=</span> x;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>假设此代码在两个线程中同时执行，并且y的读取看到值2。由于此写入是在写入x之后发生的，因此程序员可能会假设x的读取必须看到值1。但是，写入可能已重新排序。如果发生这种情况，则可能发生对y的写入，随后是两个变量的读取，然后可能发生对x的写入。结果将是r1的值为2，而r2的值为0。</p>
+<h3 id="如何保证线程安全"><a href="#如何保证线程安全" class="headerlink" title="如何保证线程安全"></a>如何保证线程安全</h3><ul>
+<li>上面说了线程安全是因为全局变量及静态变量引起的。所以把全局变量和静态变量改成局部变量就不会出现线程安全的问题。<br>因为局部变量的值保存在jvm栈内存里。</li>
+<li>用同步锁（synchronized，Lock）可以解决原子性问题，因为线程间是互斥的，所以能保证原子性。</li>
+<li>用同步锁还可以保证可见性问题，在synchronized关键字中，获得锁后会先清除工作内存的变量副本，然后从主内存拷贝变量的最新副本到线程工作内存，<br>执行代码，将更改后的最新的共享变量的值刷新到主内存，释放互斥锁。而Lock，在Java并发编程实战中,有句话是”线程A拿到lock对象对数据进行修改, 线程B拿到lock对象后,<br>对于线程A的修改线程B是可见的, 线程B可以看到线程A的所有操作结果”，也可以保证可见性。<br>volatile变量也可以保证该变量对所有线程可见，但不能保证原子性。</li>
+<li>对于有序性volatile可以保证，在volatile变量前的代码不会再其后面执行，再其后面的代码不会再其前面执行，但不能其中的代码重排序。</li>
+<li>Atomic***即可以保证原子性，又可以保证可见性，底层是通过CAS和volatile实现的</li>
+</ul>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>线程安全是因为全局变量及静态变量引起的，如果有全局变量或静态变量，并且存在多线程对变量的写操作，则要考虑解决可见性，有序性，有序性问题。</p>
+<p>附：</p>
+<ul>
+<li>lock：作用于主内存，把变量标识为线程独占状态。</li>
+<li>unlock：作用于主内存，解除独占状态。</li>
+<li>read：作用主内存，把一个变量的值从主内存传输到线程的工作内存。</li>
+<li>load：作用于工作内存，把read操作传过来的变量值放入工作内存的变量副本中。</li>
+<li>use：作用工作内存，把工作内存当中的一个变量值传给执行引擎。</li>
+<li>assign：作用工作内存，把一个从执行引擎接收到的值赋值给工作内存的变量。</li>
+<li>store：作用于工作内存的变量，把工作内存的一个变量的值传送到主内存中。</li>
+<li>write：作用于主内存的变量，把store操作传来的变量的值放入主内存的变量中</li>
+</ul>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a target="_blank" rel="noopener" href="http://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html">http://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html</a></p>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/volatile-synchronized/">volatile synchronized</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2019/06/26/2019-06-26-deadlock-conditions/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">死锁产生的条件及解决</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2019/06/15/2019-06-15-use-of-ThreadLocal/"><span class="level-item">ThreadLocal的使用与源码</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "f636b74649c76f218e5e1447614cc940",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#可见性问题"><span class="level-left"><span class="level-item">1</span><span class="level-item">可见性问题</span></span></a></li><li><a class="level is-mobile" href="#原子性问题"><span class="level-left"><span class="level-item">2</span><span class="level-item">原子性问题</span></span></a></li><li><a class="level is-mobile" href="#有序性问题"><span class="level-left"><span class="level-item">3</span><span class="level-item">有序性问题</span></span></a></li><li><a class="level is-mobile" href="#如何保证线程安全"><span class="level-left"><span class="level-item">4</span><span class="level-item">如何保证线程安全</span></span></a></li><li><a class="level is-mobile" href="#总结"><span class="level-left"><span class="level-item">5</span><span class="level-item">总结</span></span></a></li><li><a class="level is-mobile" href="#参考"><span class="level-left"><span class="level-item">6</span><span class="level-item">参考</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

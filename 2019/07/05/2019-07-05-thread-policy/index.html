@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>线程池拒绝策略 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="线程池四种拒绝策略在线程池配置文件中配置RejectedExecutionHandler属性，可以为线程池指定拒绝策略。"><meta property="og:type" content="article"><meta property="og:title" content="线程池拒绝策略"><meta property="og:url" content="http://example.com/2019/07/05/2019-07-05-thread-policy/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="线程池四种拒绝策略在线程池配置文件中配置RejectedExecutionHandler属性，可以为线程池指定拒绝策略。"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://example.com/img/og_image.png"><meta property="article:published_time" content="2019-07-05T03:21:00.000Z"><meta property="article:modified_time" content="2023-04-15T14:38:11.544Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="线程池"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="http://example.com/img/og_image.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2019/07/05/2019-07-05-thread-policy/"},"headline":"线程池拒绝策略","image":["http://example.com/img/og_image.png"],"datePublished":"2019-07-05T03:21:00.000Z","dateModified":"2023-04-15T14:38:11.544Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"线程池四种拒绝策略在线程池配置文件中配置RejectedExecutionHandler属性，可以为线程池指定拒绝策略。"}</script><link rel="canonical" href="http://example.com/2019/07/05/2019-07-05-thread-policy/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2019-07-05T03:21:00.000Z" title="2019/7/5 11:21:00">2019-07-05</time>发表</span><span class="level-item"><time dateTime="2023-04-15T14:38:11.544Z" title="2023/4/15 22:38:11">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></span></div></div><h1 class="title is-3 is-size-4-mobile">线程池拒绝策略</h1><div class="content"><h2 id="线程池四种拒绝策略"><a href="#线程池四种拒绝策略" class="headerlink" title="线程池四种拒绝策略"></a>线程池四种拒绝策略</h2><p>在线程池配置文件中配置RejectedExecutionHandler属性，可以为线程池指定拒绝策略。</p>
+<span id="more"></span>
+
+<p>在ThreadPoolExecutor类中，有四个内部类为JDK自带的四种拒绝策略。CallerRunsPolicy，AbortPolicy，DiscardPolicy，DiscardOldestPolicy。<br>也可以自定义拒绝策略，实现RejectedExecutionHandler的rejectedExecution方法。</p>
+<h4 id="CallerRunsPolicy"><a href="#CallerRunsPolicy" class="headerlink" title="CallerRunsPolicy"></a>CallerRunsPolicy</h4><pre><code>public static class CallerRunsPolicy implements RejectedExecutionHandler &#123;
+    /**
+     * Creates a &#123;@code CallerRunsPolicy&#125;.
+     */
+    public CallerRunsPolicy() &#123; &#125;
+
+    /**
+     * Executes task r in the caller&#39;s thread, unless the executor
+     * has been shut down, in which case the task is discarded.
+     *
+     * @param r the runnable task requested to be executed
+     * @param e the executor attempting to execute this task
+     */
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor e) &#123;
+        if (!e.isShutdown()) &#123;
+            r.run();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>从源码上可以看出直接在 execute 方法中同步调用被拒绝的任务。</p>
+<h4 id="AbortPolicy"><a href="#AbortPolicy" class="headerlink" title="AbortPolicy"></a>AbortPolicy</h4><pre><code>public static class AbortPolicy implements RejectedExecutionHandler &#123;
+    /**
+     * Creates an &#123;@code AbortPolicy&#125;.
+     */
+    public AbortPolicy() &#123; &#125;
+
+    /**
+     * Always throws RejectedExecutionException.
+     *
+     * @param r the runnable task requested to be executed
+     * @param e the executor attempting to execute this task
+     * @throws RejectedExecutionException always
+     */
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor e) &#123;
+        throw new RejectedExecutionException(&quot;Task &quot; + r.toString() +
+                                             &quot; rejected from &quot; +
+                                             e.toString());
+    &#125;
+&#125;
+</code></pre>
+<p>直接抛出异常RejectedExecutionException，丢弃任务。（jdk默认策略，队列满并线程满时直接拒绝添加新任务，并抛出异常）</p>
+<h4 id="DiscardPolicy"><a href="#DiscardPolicy" class="headerlink" title="DiscardPolicy"></a>DiscardPolicy</h4><pre><code>public static class DiscardPolicy implements RejectedExecutionHandler &#123;
+    /**
+     * Creates a &#123;@code DiscardPolicy&#125;.
+     */
+    public DiscardPolicy() &#123; &#125;
+
+    /**
+     * Does nothing, which has the effect of discarding task r.
+     *
+     * @param r the runnable task requested to be executed
+     * @param e the executor attempting to execute this task
+     */
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor e) &#123;
+    &#125;
+&#125;
+</code></pre>
+<p>可以看出这种策略什么都没做，直接丢弃任务。</p>
+<h4 id="DiscardOldestPolicy"><a href="#DiscardOldestPolicy" class="headerlink" title="DiscardOldestPolicy"></a>DiscardOldestPolicy</h4><pre><code>public static class DiscardOldestPolicy implements RejectedExecutionHandler &#123;
+    /**
+     * Creates a &#123;@code DiscardOldestPolicy&#125; for the given executor.
+     */
+    public DiscardOldestPolicy() &#123; &#125;
+
+    /**
+     * Obtains and ignores the next task that the executor
+     * would otherwise execute, if one is immediately available,
+     * and then retries execution of task r, unless the executor
+     * is shut down, in which case task r is instead discarded.
+     *
+     * @param r the runnable task requested to be executed
+     * @param e the executor attempting to execute this task
+     */
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor e) &#123;
+        if (!e.isShutdown()) &#123;
+            e.getQueue().poll();
+            e.execute(r);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>获取当前线程池的队列并调用poll()方法删除队列头的任务（即下一个执行的任务），然后添加该任务。</p>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2019/07/17/2019-07-17-singleton-pattern/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">设计模式之单例模式</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2019/06/26/2019-06-26-deadlock-conditions/"><span class="level-item">死锁产生的条件及解决</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "db68bab07451cf91515fafac83080d60",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#线程池四种拒绝策略"><span class="level-left"><span class="level-item">1</span><span class="level-item">线程池四种拒绝策略</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#CallerRunsPolicy"><span class="level-left"><span class="level-item">1.1</span><span class="level-item">CallerRunsPolicy</span></span></a></li><li><a class="level is-mobile" href="#AbortPolicy"><span class="level-left"><span class="level-item">1.2</span><span class="level-item">AbortPolicy</span></span></a></li><li><a class="level is-mobile" href="#DiscardPolicy"><span class="level-left"><span class="level-item">1.3</span><span class="level-item">DiscardPolicy</span></span></a></li><li><a class="level is-mobile" href="#DiscardOldestPolicy"><span class="level-left"><span class="level-item">1.4</span><span class="level-item">DiscardOldestPolicy</span></span></a></li></ul></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

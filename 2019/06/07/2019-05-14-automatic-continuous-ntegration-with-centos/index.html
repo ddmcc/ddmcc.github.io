@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>github+jenkins自动化持续部署 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="工作流程 提交代码到github触发webhooks通知jenkins jenkins拉取代码构建，发布"><meta property="og:type" content="article"><meta property="og:title" content="github+jenkins自动化持续部署"><meta property="og:url" content="http://example.com/2019/06/07/2019-05-14-automatic-continuous-ntegration-with-centos/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="工作流程 提交代码到github触发webhooks通知jenkins jenkins拉取代码构建，发布"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/651e4a3c-0ecc-4a98-a96e-487f84716d13.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/1fc64d92-af48-4ebd-95f6-c9a82b5f935b.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/93b9a16e-f0f1-44f7-8045-21177354abf9.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/93b9a16e-f0f1-44f7-8045-21177354abf9.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/291d90ff-e8e7-4ae2-bf89-9c8f11d270c2.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/b52f5b68-1376-4109-bb41-04848cffaca2.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/09134806-431f-47fa-b92a-65f898e503b2.png"><meta property="article:published_time" content="2019-06-07T13:36:17.000Z"><meta property="article:modified_time" content="2023-04-15T14:42:04.084Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="jenkins"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://ddmcc-1255635056.file.myqcloud.com/651e4a3c-0ecc-4a98-a96e-487f84716d13.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2019/06/07/2019-05-14-automatic-continuous-ntegration-with-centos/"},"headline":"github+jenkins自动化持续部署","image":["https://ddmcc-1255635056.file.myqcloud.com/651e4a3c-0ecc-4a98-a96e-487f84716d13.png","https://ddmcc-1255635056.file.myqcloud.com/1fc64d92-af48-4ebd-95f6-c9a82b5f935b.png","https://ddmcc-1255635056.file.myqcloud.com/93b9a16e-f0f1-44f7-8045-21177354abf9.png","https://ddmcc-1255635056.file.myqcloud.com/93b9a16e-f0f1-44f7-8045-21177354abf9.png","https://ddmcc-1255635056.file.myqcloud.com/291d90ff-e8e7-4ae2-bf89-9c8f11d270c2.png","https://ddmcc-1255635056.file.myqcloud.com/b52f5b68-1376-4109-bb41-04848cffaca2.png","https://ddmcc-1255635056.file.myqcloud.com/09134806-431f-47fa-b92a-65f898e503b2.png"],"datePublished":"2019-06-07T13:36:17.000Z","dateModified":"2023-04-15T14:42:04.084Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"工作流程 提交代码到github触发webhooks通知jenkins jenkins拉取代码构建，发布"}</script><link rel="canonical" href="http://example.com/2019/06/07/2019-05-14-automatic-continuous-ntegration-with-centos/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2019-06-07T13:36:17.000Z" title="2019/6/7 21:36:17">2019-06-07</time>发表</span><span class="level-item"><time dateTime="2023-04-15T14:42:04.084Z" title="2023/4/15 22:42:04">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E9%83%A8%E7%BD%B2/">自动化部署</a></span></div></div><h1 class="title is-3 is-size-4-mobile">github+jenkins自动化持续部署</h1><div class="content"><h2 id="工作流程"><a href="#工作流程" class="headerlink" title="工作流程"></a>工作流程</h2><ul>
+<li>提交代码到github触发webhooks通知jenkins</li>
+<li>jenkins拉取代码构建，发布</li>
+</ul>
+<span id="more"></span>
+
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><h3 id="github仓库"><a href="#github仓库" class="headerlink" title="github仓库"></a>github仓库</h3><ul>
+<li>新建代码仓库<br><img src="https://ddmcc-1255635056.file.myqcloud.com/651e4a3c-0ecc-4a98-a96e-487f84716d13.png" alt="markdown"></li>
+</ul>
+<h3 id="添加webhook"><a href="#添加webhook" class="headerlink" title="添加webhook"></a>添加webhook</h3><p><img src="https://ddmcc-1255635056.file.myqcloud.com/1fc64d92-af48-4ebd-95f6-c9a82b5f935b.png" alt="markdown"></p>
+<h3 id="创建github-access-tokens"><a href="#创建github-access-tokens" class="headerlink" title="创建github access tokens"></a>创建github access tokens</h3><p><code>用户</code> -&gt; <code>Settings</code> -&gt; <code>Developer settings</code> -&gt; <code>Personal access tokens</code> -&gt; <code>Generate new token</code></p>
+<p>新建后复制token,离开页面后就看不到了</p>
+<h3 id="jenkins上添加github-token"><a href="#jenkins上添加github-token" class="headerlink" title="jenkins上添加github token"></a>jenkins上添加github token</h3><p><code>管理jenkins</code> -&gt; <code>系统管理</code> -&gt; 找到 <code>Github 服务器</code></p>
+<p>没有的话先安装 <code>Github Plugin</code> 插件</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/93b9a16e-f0f1-44f7-8045-21177354abf9.png" alt="markdown"></p>
+<p>Secret 就是刚刚生成的token</p>
+<p>添加后可以点击连接测试，成功会显示github的用户名。</p>
+<h3 id="新建任务"><a href="#新建任务" class="headerlink" title="新建任务"></a>新建任务</h3><h4 id="构建一个Maven项目"><a href="#构建一个Maven项目" class="headerlink" title="构建一个Maven项目"></a>构建一个Maven项目</h4><p>新建任务 -&gt; 构建一个Maven项目</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/93b9a16e-f0f1-44f7-8045-21177354abf9.png" alt="markdown"></p>
+<h4 id="填入项目地址"><a href="#填入项目地址" class="headerlink" title="填入项目地址"></a>填入项目地址</h4><p>github项目 -&gt; 填入项目地址</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/291d90ff-e8e7-4ae2-bf89-9c8f11d270c2.png" alt="markdown"></p>
+<h4 id="Git-gt-填入项目地址"><a href="#Git-gt-填入项目地址" class="headerlink" title="Git -&gt; 填入项目地址"></a>Git -&gt; 填入项目地址</h4><p>Source Code Management -&gt; Git -&gt; 填入项目地址</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/b52f5b68-1376-4109-bb41-04848cffaca2.png" alt="markdown"></p>
+<h4 id="勾选触发器"><a href="#勾选触发器" class="headerlink" title="勾选触发器"></a>勾选触发器</h4><p>Build Triggers -&gt; 勾选 GitHub hook trigger for GITScm polling</p>
+<h4 id="编写脚本"><a href="#编写脚本" class="headerlink" title="编写脚本"></a>编写脚本</h4><p>Post Steps -&gt; Execute shell -&gt; 填入脚本</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/09134806-431f-47fa-b92a-65f898e503b2.png" alt="markdown"></p>
+<p>start.sh:</p>
+<pre><code>export ZIPKIN=itoken-zipkin-1.0.0-SNAPSHOT.jar
+
+export PORT=9411
+
+case &quot;$1&quot; in
+
+start)
+    ## 启动ZIPKIN
+    echo &quot;--------ZIPKIN 开始启动--------------&quot;
+    BUILD_ID=DONTKILLME
+    nohup java -jar $ZIPKIN --server.port=$PORT --spring.profiles.active=prod &gt;/dev/null 2&gt;log &amp;
+    ZIPKIN_PID=`lsof -i:$PORT|grep &quot;LISTEN&quot;|awk &#39;&#123;print $2&#125;&#39;`
+    until [ -n &quot;$ZIPKIN_PID&quot; ]
+        do
+          ZIPKIN_PID=`lsof -i:$PORT|grep &quot;LISTEN&quot;|awk &#39;&#123;print $2&#125;&#39;`  
+        done
+    echo &quot;ZIPKIN_PID is $ZIPKIN_PID&quot; 
+    echo &quot;--------ZIPKIN 启动成功--------------&quot;
+    ;;
+
+ stop)
+    P_ID=`ps -ef | grep -w $ZIPKIN | grep -v &quot;grep&quot; | awk &#39;&#123;print $2&#125;&#39;`
+    if [ &quot;$P_ID&quot; == &quot;&quot; ]; then
+        echo &quot;===ZIPKIN process not exists or stop success&quot;
+    else
+        kill $P_ID
+        echo &quot;ZIPKIN killed success&quot;
+    fi
+    echo &quot;===stop success===&quot;
+    ;;   
+
+restart)
+    $0 stop
+    sleep 5
+    $0 start
+    echo &quot;===restart success===&quot;
+    ;;   
+esac    
+exit 0
+</code></pre>
+<h2 id="工作"><a href="#工作" class="headerlink" title="工作"></a>工作</h2><p>git提交代码或直接github上修改代码触发。</p>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/jenkins/">jenkins</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2019/06/15/2019-06-15-use-of-ThreadLocal/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">ThreadLocal的使用与源码</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2019/05/29/2019-05-29-installing-maven-in-linux/"><span class="level-item">阿里云服务器中安装Maven</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "ecfb0c4740ff913d3688fe16b4de8177",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#工作流程"><span class="level-left"><span class="level-item">1</span><span class="level-item">工作流程</span></span></a></li><li><a class="level is-mobile" href="#准备工作"><span class="level-left"><span class="level-item">2</span><span class="level-item">准备工作</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#github仓库"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">github仓库</span></span></a></li><li><a class="level is-mobile" href="#添加webhook"><span class="level-left"><span class="level-item">2.2</span><span class="level-item">添加webhook</span></span></a></li><li><a class="level is-mobile" href="#创建github-access-tokens"><span class="level-left"><span class="level-item">2.3</span><span class="level-item">创建github access tokens</span></span></a></li><li><a class="level is-mobile" href="#jenkins上添加github-token"><span class="level-left"><span class="level-item">2.4</span><span class="level-item">jenkins上添加github token</span></span></a></li><li><a class="level is-mobile" href="#新建任务"><span class="level-left"><span class="level-item">2.5</span><span class="level-item">新建任务</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#构建一个Maven项目"><span class="level-left"><span class="level-item">2.5.1</span><span class="level-item">构建一个Maven项目</span></span></a></li><li><a class="level is-mobile" href="#填入项目地址"><span class="level-left"><span class="level-item">2.5.2</span><span class="level-item">填入项目地址</span></span></a></li><li><a class="level is-mobile" href="#Git-gt-填入项目地址"><span class="level-left"><span class="level-item">2.5.3</span><span class="level-item">Git -&gt; 填入项目地址</span></span></a></li><li><a class="level is-mobile" href="#勾选触发器"><span class="level-left"><span class="level-item">2.5.4</span><span class="level-item">勾选触发器</span></span></a></li><li><a class="level is-mobile" href="#编写脚本"><span class="level-left"><span class="level-item">2.5.5</span><span class="level-item">编写脚本</span></span></a></li></ul></li></ul></li><li><a class="level is-mobile" href="#工作"><span class="level-left"><span class="level-item">3</span><span class="level-item">工作</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

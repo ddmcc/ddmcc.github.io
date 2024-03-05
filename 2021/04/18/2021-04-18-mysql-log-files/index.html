@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>mysql日志文件 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="bin log二进制日志 ( binary log) 是 Server 层的日志，记录了对 mysql 数据库执行更改的所有操作，但是不包括 SELECT和SHOW这类操作，因为这类操作对数据本身并没有修改。然而，若操作本身并没有导致数据库发生变化，那么该操作可能也会写入二进制日志。例如执行下列未更改的sql："><meta property="og:type" content="article"><meta property="og:title" content="mysql日志文件"><meta property="og:url" content="http://example.com/2021/04/18/2021-04-18-mysql-log-files/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="bin log二进制日志 ( binary log) 是 Server 层的日志，记录了对 mysql 数据库执行更改的所有操作，但是不包括 SELECT和SHOW这类操作，因为这类操作对数据本身并没有修改。然而，若操作本身并没有导致数据库发生变化，那么该操作可能也会写入二进制日志。例如执行下列未更改的sql："><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/50f38b45-d325-4378-84b0-ffc5c386720a.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/7ee0475d-a45c-42c2-89dd-d63f0df66b1a.png"><meta property="article:published_time" content="2021-04-18T08:56:23.000Z"><meta property="article:modified_time" content="2023-04-15T14:24:32.006Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="mysql"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://ddmcc-1255635056.file.myqcloud.com/50f38b45-d325-4378-84b0-ffc5c386720a.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2021/04/18/2021-04-18-mysql-log-files/"},"headline":"mysql日志文件","image":["https://ddmcc-1255635056.file.myqcloud.com/50f38b45-d325-4378-84b0-ffc5c386720a.png","https://ddmcc-1255635056.file.myqcloud.com/7ee0475d-a45c-42c2-89dd-d63f0df66b1a.png"],"datePublished":"2021-04-18T08:56:23.000Z","dateModified":"2023-04-15T14:24:32.006Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"bin log二进制日志 ( binary log) 是 Server 层的日志，记录了对 mysql 数据库执行更改的所有操作，但是不包括 SELECT和SHOW这类操作，因为这类操作对数据本身并没有修改。然而，若操作本身并没有导致数据库发生变化，那么该操作可能也会写入二进制日志。例如执行下列未更改的sql："}</script><link rel="canonical" href="http://example.com/2021/04/18/2021-04-18-mysql-log-files/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2021-04-18T08:56:23.000Z" title="2021/4/18 16:56:23">2021-04-18</time>发表</span><span class="level-item"><time dateTime="2023-04-15T14:24:32.006Z" title="2023/4/15 22:24:32">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/mysql/">mysql</a></span></div></div><h1 class="title is-3 is-size-4-mobile">mysql日志文件</h1><div class="content"><h2 id="bin-log"><a href="#bin-log" class="headerlink" title="bin log"></a>bin log</h2><p>二进制日志 ( binary log) 是 <code>Server</code> 层的日志，<strong>记录了对 mysql 数据库执行更改的所有操作</strong>，但是不包括 SELECT和SHOW这类操作，因为这类操作对数据本身并没有修改。然而，若操作本身并没有导致数据库发生变化，那么该操作可能也会写入二进制日志。例如执行下列未更改的sql：</p>
+<span id="more"></span>
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">UPDATE</span> t <span class="keyword">SET</span> b <span class="operator">=</span> <span class="number">2</span> <span class="keyword">WHERE</span> a <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line">Query OK, <span class="number">0</span> <span class="keyword">rows</span> affected (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="keyword">Rows</span> matched: <span class="number">0</span>  Changed: <span class="number">0</span>  Warnings: <span class="number">0</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>Changed：0</code> 说明没有数据被修改。但通过 <code>show master status</code> 查看binlog日志文件和 <code>SHOW BINLOG EVENTS IN &#39;mysql-bin.000006&#39;</code> 查看日志内容可以看到在 <code>binlog</code> 中的确进行了记录</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">mysql&gt; </span><span class="language-bash">show master status\G;</span></span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">             File: mysql-bin.000006</span><br><span class="line">         Position: 482</span><br><span class="line">     Binlog_Do_DB: </span><br><span class="line"> Binlog_Ignore_DB: </span><br><span class="line">Executed_Gtid_Set: </span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">mysql&gt; </span><span class="language-bash">SHOW BINLOG EVENTS IN <span class="string">&#x27;mysql-bin.000006&#x27;</span>\G</span></span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">   Log_name: mysql-bin.000006</span><br><span class="line">        Pos: 4</span><br><span class="line"> Event_type: Format_desc</span><br><span class="line">  Server_id: 123456</span><br><span class="line">End_log_pos: 123</span><br><span class="line">       Info: Server ver: 5.7.31-log, Binlog ver: 4</span><br><span class="line">*************************** 2. row ***************************</span><br><span class="line">   Log_name: mysql-bin.000006</span><br><span class="line">        Pos: 123</span><br><span class="line"> Event_type: Previous_gtids</span><br><span class="line">  Server_id: 123456</span><br><span class="line">End_log_pos: 154</span><br><span class="line">       Info: </span><br><span class="line">*************************** 3. row ***************************</span><br><span class="line">   Log_name: mysql-bin.000006</span><br><span class="line">        Pos: 154</span><br><span class="line"> Event_type: Anonymous_Gtid</span><br><span class="line">  Server_id: 123456</span><br><span class="line">End_log_pos: 219</span><br><span class="line">       Info: SET @@SESSION.GTID_NEXT= &#x27;ANONYMOUS&#x27;</span><br><span class="line">*************************** 4. row ***************************</span><br><span class="line">   Log_name: mysql-bin.000006</span><br><span class="line">        Pos: 219</span><br><span class="line"> Event_type: Query</span><br><span class="line">  Server_id: 123456</span><br><span class="line">End_log_pos: 298</span><br><span class="line">       Info: BEGIN</span><br><span class="line">*************************** 5. row ***************************</span><br><span class="line">   Log_name: mysql-bin.000006</span><br><span class="line">        Pos: 298</span><br><span class="line"> Event_type: Query</span><br><span class="line">  Server_id: 123456</span><br><span class="line">End_log_pos: 402</span><br><span class="line">       Info: use `user`; UPDATE t SET b = 2 WHERE a = 1</span><br><span class="line">*************************** 6. row ***************************</span><br><span class="line">   Log_name: mysql-bin.000006</span><br><span class="line">        Pos: 402</span><br><span class="line"> Event_type: Query</span><br><span class="line">  Server_id: 123456</span><br><span class="line">End_log_pos: 482</span><br><span class="line">       Info: COMMIT</span><br><span class="line">6 rows in set (0.01 sec)</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>binlog</code> 日志文件默认并没有开启，需要手动指定参数来启动。通过 **log-bin=filename **可以启动日志，如果不指定filename，则默认日志文件名为主机名</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">log_bin=/var/lib/mysql/mysql-bin</span><br><span class="line">binlog_format=mixed # 选择 ROW 模式</span><br><span class="line">server_id=123456 </span><br></pre></td></tr></table></figure>
+
+
+
+<p>据官方手册中的测试表明，开启binlog会使数据库性能下降1%。下面为binlog相关配置参数：</p>
+<ul>
+<li> max_binlog_size：单个日志文件最大值（默认1g），如果超过会产生新的文件，后缀名 + 1</li>
+<li>binlog_cache_size：未提交的事务日志会被记录到一个缓存中，等该事务提交时直接将缓存中的日志写入到日志文件，该缓存大小就由该配置控制，默认32k。这个缓存是基于会话（session）的，因此当开始一个事务时，会自动为其分配一个配置大小的缓存</li>
+<li>sync_binlog：<code>sync_binlog=N</code> 表示写缓冲多少次就同步磁盘。如果设为1，即同步写磁盘的方式来写日志。但是，即使将sync_ binlog设为1，还是会有一种情况导致问题的发生。当一个事务发出 <code>COMMIT</code> 动作之前，因为同步写，因此会将日志立即写人磁盘。如果这时已经写人了日志，但是提交还没有发生，并且此时发生了宕机，那么在数据库下次启动时，由于 <code>COMMIT</code> 操作并没有发生，这个事务会被回滚掉。但是日志已经记录了该事务信息，不能被回滚。 这个问题可以通过将参数 innodb_ support_xa设为1来解决，虽然 innodb_ support_xa与XA事务有关，<strong>但它同时也确保了binlog和 INNODB存储引擎数据文件的同步</strong></li>
+<li>binlog-do-db：表示需要写入哪些库日志，默认全部</li>
+<li>binlog-ignore-db：表示需要忽略哪些库日志，默认无</li>
+<li>log-slave-update ：</li>
+<li>binlog_format：日志记录格式STATEMENT,ROW,MIXED</li>
+</ul>
+<h4 id="文件格式"><a href="#文件格式" class="headerlink" title="文件格式"></a><strong>文件格式</strong></h4><p>binlog记录的是 <strong>逻辑日志</strong>，格式分为 <code>statement</code>，<code>row</code> 以及 <code>mixed</code> 三种。在主从同步种一般不建议使用statement，因为有些语句不支持如uuid函数。一般使用 row 模式</p>
+<ul>
+<li>statement：记录具体的执行sql，某些语句和函数如UUID, LOAD DATA INFILE等在复制过程可能导致数据不一致甚至出错</li>
+<li>row：基于行的模式，记录的是行每个字段的变化，以及事件类型等，大小会比其他两种模式大很多</li>
+<li>mixed：混合模式，根据语句来选用是statement还是row模式</li>
+</ul>
+<h4 id="作用"><a href="#作用" class="headerlink" title="作用"></a><strong>作用</strong></h4><p>binlog主要用来point-in-time恢复和主/从复制同步，从这里就可以衍生出许多应用场景</p>
+<ul>
+<li><p><strong>1.读写分离</strong></p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/50f38b45-d325-4378-84b0-ffc5c386720a.png" alt="markdown"></p>
+<ul>
+<li><p>有一个主库Master，所有的更新操作都在master上进行</p>
+</li>
+<li><p>同时会有多个Slave，每个Slave都连接到Master上，获取binlog在本地回放，实现数据复制。</p>
+</li>
+<li><p>在应用层面，需要对执行的sql进行判断。所有的更新操作都通过Master(Insert、Update、Delete等)，而查询操作(Select等)都在Slave上进行。由于存在多个slave，所以我们可以在slave之间做负载均衡。通常业务都会借助一些数据库中间件，如tddl、sharding-jdbc等来完成读写分离功能</p>
+</li>
+</ul>
+</li>
+<li><p><strong>2.数据恢复</strong></p>
+<p>如果数据误删，或需要恢复到某个时间点，则可以通过较旧时间点的版本+binlog来恢复，或通过全量binlog</p>
+</li>
+<li><p><strong>3.数据最终一致性</strong></p>
+<p>在实际开发中，我们经常会遇到一些需求，在数据库操作成功后，需要进行一些其他操作，如：更新缓存或者更新搜索引擎中的索引等</p>
+<p><strong>如何保证数据库操作与这些行为的一致性，就成为一个难题</strong>。以数据库与redis缓存的一致性为例：操作数据库成功了，可能会更新redis失败；反之亦然。很难保证二者的完全一致</p>
+<p>这时我们就可以利用binlog。如果数据库操作成功，必然会产生binlog。之后，我们通过一个组件（canal等），来模拟的mysql的slave，拉取并解析binlog中的信息。<strong>通过解析binlog的信息，去异步的更新缓存、索引或者发送MQ消息，保证数据库与其他组件中数据的最终一致</strong></p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/7ee0475d-a45c-42c2-89dd-d63f0df66b1a.png" alt="markdown"></p>
+</li>
+<li><p><strong>4.异地多活，数据同步</strong></p>
+</li>
+</ul>
+<h4 id="写入时机"><a href="#写入时机" class="headerlink" title="写入时机"></a><strong>写入时机</strong></h4><p>binlog只在 <strong>事务提交前</strong> 进行一次写入。什么时候从缓存刷新到磁盘跟参数<code>sync_binlog</code>相关</p>
+<p>// todo</p>
+<h2 id="redo-log"><a href="#redo-log" class="headerlink" title="redo log"></a><strong>redo log</strong></h2><p>重做日志用来实现事务</p>
+<p>// todo</p>
+<h4 id="文件格式-1"><a href="#文件格式-1" class="headerlink" title="文件格式"></a><strong>文件格式</strong></h4><h4 id="作用-1"><a href="#作用-1" class="headerlink" title="作用"></a><strong>作用</strong></h4><p><strong>重做日志用来保证事务的持久性。</strong>为了更好的性能，InnoDB会将数据缓存在内存中（Buffer Pool），对数据的修改也是先修改缓存中的，所以磁盘数据会落后于内存，这时如果进程或机器奔溃，会导致内存数据丢失。为了维护数据库本身的一致性和持久性，InnoDB维护了redo log，修改 <code>page</code> 之前需要先将修改的内容记录到redo log中，并保证 redo log早于对应的page落盘，也就是通常说的WAL（Write Ahead Log）。当故障发生导致内存数据丢失后，InnoDB会在重启时，通过重放redo，将page数据恢复到奔溃前的状态</p>
+<h4 id="写入时机-1"><a href="#写入时机-1" class="headerlink" title="写入时机"></a>写入时机</h4><h2 id="bin-log与redo-log区别"><a href="#bin-log与redo-log区别" class="headerlink" title="bin log与redo log区别"></a>bin log与redo log区别</h2><p><strong>1.</strong> redo log是InnoDB引擎特有的；binlog 是 mysql 的 Server 层实现的，所有引擎</p>
+<h2 id="undo-log"><a href="#undo-log" class="headerlink" title="undo log"></a>undo log</h2><p>// todo</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a><strong>参考</strong></h2><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/68319">MYSQL实战 45讲</a> </p>
+<p><strong>《高性能MySQL第3版》</strong></p>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/mysql/">mysql</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2021/04/26/2021-04-26-mysql-innodb-locking/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">InnoDB存储引擎中的锁</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2021/04/14/2021-04-14-mysql-sql-executing-process/"><span class="level-item">mysql执行过程</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "c1896c80323428064d928897ae387691",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#bin-log"><span class="level-left"><span class="level-item">1</span><span class="level-item">bin log</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#文件格式"><span class="level-left"><span class="level-item">1.1</span><span class="level-item">文件格式</span></span></a></li><li><a class="level is-mobile" href="#作用"><span class="level-left"><span class="level-item">1.2</span><span class="level-item">作用</span></span></a></li><li><a class="level is-mobile" href="#写入时机"><span class="level-left"><span class="level-item">1.3</span><span class="level-item">写入时机</span></span></a></li></ul></li><li><a class="level is-mobile" href="#redo-log"><span class="level-left"><span class="level-item">2</span><span class="level-item">redo log</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#文件格式-1"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">文件格式</span></span></a></li><li><a class="level is-mobile" href="#作用-1"><span class="level-left"><span class="level-item">2.2</span><span class="level-item">作用</span></span></a></li><li><a class="level is-mobile" href="#写入时机-1"><span class="level-left"><span class="level-item">2.3</span><span class="level-item">写入时机</span></span></a></li></ul></li><li><a class="level is-mobile" href="#bin-log与redo-log区别"><span class="level-left"><span class="level-item">3</span><span class="level-item">bin log与redo log区别</span></span></a></li><li><a class="level is-mobile" href="#undo-log"><span class="level-left"><span class="level-item">4</span><span class="level-item">undo log</span></span></a></li><li><a class="level is-mobile" href="#参考"><span class="level-left"><span class="level-item">5</span><span class="level-item">参考</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>ConcurrentHashMap - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="JDK1.8之前ConcurrentHashMap concurrentHashMap在JDK1.5出现的，为了解决HashMap线程不安全问题和Hashtable使用synchronized导致并发性能低问题。"><meta property="og:type" content="article"><meta property="og:title" content="ConcurrentHashMap"><meta property="og:url" content="http://example.com/2019/05/27/2019-05-27-concurrentHashMap/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="JDK1.8之前ConcurrentHashMap concurrentHashMap在JDK1.5出现的，为了解决HashMap线程不安全问题和Hashtable使用synchronized导致并发性能低问题。"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/8ffe3172-cbba-4ad1-beec-521c751dddc7.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/942e870e-f79b-4d6a-a71e-15b54290521c.png"><meta property="article:published_time" content="2019-05-27T12:11:52.000Z"><meta property="article:modified_time" content="2023-04-15T14:39:51.577Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="ConcurrentHashMap"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://ddmcc-1255635056.file.myqcloud.com/8ffe3172-cbba-4ad1-beec-521c751dddc7.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2019/05/27/2019-05-27-concurrentHashMap/"},"headline":"ConcurrentHashMap","image":["https://ddmcc-1255635056.file.myqcloud.com/8ffe3172-cbba-4ad1-beec-521c751dddc7.png","https://ddmcc-1255635056.file.myqcloud.com/942e870e-f79b-4d6a-a71e-15b54290521c.png"],"datePublished":"2019-05-27T12:11:52.000Z","dateModified":"2023-04-15T14:39:51.577Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"JDK1.8之前ConcurrentHashMap concurrentHashMap在JDK1.5出现的，为了解决HashMap线程不安全问题和Hashtable使用synchronized导致并发性能低问题。"}</script><link rel="canonical" href="http://example.com/2019/05/27/2019-05-27-concurrentHashMap/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2019-05-27T12:11:52.000Z" title="2019/5/27 20:11:52">2019-05-27</time>发表</span><span class="level-item"><time dateTime="2023-04-15T14:39:51.577Z" title="2023/4/15 22:39:51">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></span></div></div><h1 class="title is-3 is-size-4-mobile">ConcurrentHashMap</h1><div class="content"><h2 id="JDK1-8之前ConcurrentHashMap"><a href="#JDK1-8之前ConcurrentHashMap" class="headerlink" title="JDK1.8之前ConcurrentHashMap"></a>JDK1.8之前ConcurrentHashMap</h2><ul>
+<li>concurrentHashMap在JDK1.5出现的，为了解决HashMap线程不安全问题和Hashtable使用synchronized导致并发性能低问题。</li>
+</ul>
+<span id="more"></span>
+
+<ul>
+<li><p>在1.7中使用分段锁来提升map的并发性能。在 <code>ConcurrentHashMap</code> 有一个 <strong>Segment</strong> 数组，<br>(<strong>Segment&lt;K,V&gt; 是ConcurrentHashMap内部类</strong>)，将HashMap分成多个段(<strong>默认分成16个Segment，通过hash来定位Segment的位置</strong>),将锁的颗粒度降低至一个段(即一个Segment数组)。</p>
+</li>
+<li><p><strong>Segment</strong> 继承了 <strong>ReentrantLock</strong> 表示Segment是一个可重入锁,ConcurrentHashMap通过可重入锁来实现分段锁机制。</p>
+</li>
+<li><p>在Segment类中有一个volatile HashEntry&lt;K,V&gt;[] table桶数组(HashEntry也是ConcurrentHashMap的一个内部类,用作储存键值数据的节点代表一个桶),而每个桶又是一个单向链表。</p>
+</li>
+</ul>
+<p>结构如图:</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/8ffe3172-cbba-4ad1-beec-521c751dddc7.png" alt="markdown"></p>
+<p>   源码如下:</p>
+<pre><code>public class ConcurrentHashMap&lt;K, V&gt; extends AbstractMap&lt;K, V&gt;
+        implements ConcurrentMap&lt;K, V&gt;, Serializable &#123;
+
+    final Segment&lt;K,V&gt;[] segments;
+    static final class Segment&lt;K,V&gt; extends ReentrantLock implements Serializable &#123;
+        transient volatile HashEntry&lt;K,V&gt;[] table;
+        transient int count;
+    &#125;
+   
+    // 桶
+    static final class HashEntry&lt;K,V&gt; &#123;
+        final int hash;
+        final K key;
+        volatile V value;
+        volatile HashEntry&lt;K,V&gt; next;
+    &#125;
+&#125;
+</code></pre>
+<h2 id="JDK1-8的ConcurrentHashMap"><a href="#JDK1-8的ConcurrentHashMap" class="headerlink" title="JDK1.8的ConcurrentHashMap"></a>JDK1.8的ConcurrentHashMap</h2><h3 id="1-8中主要有两点不同"><a href="#1-8中主要有两点不同" class="headerlink" title="1.8中主要有两点不同"></a>1.8中主要有两点不同</h3><ul>
+<li><p>抛弃了分段锁,利用数组+链表+红黑树来实现,对数组的每个元素来加锁,将锁的颗粒度降至每个节点(即每个桶)。ConcurrentHashMap中有一个volatile Node&lt;K,V&gt;[] table数组,Node&lt;K,V&gt;是ConcurrentHashMap的一个内部类,继承Map.Entry&lt;K,V&gt;。</p>
+</li>
+<li><p>增加了红黑树来保存数据。尽管好的hash算法能降低冲突,但在大的扩容因子和大数据量下,也会提高冲突的几率(扩容因子小会影响性能,因为扩容很消耗性能),<br>当每个桶的Node节点大于等于8时,将单向链表转为红黑树来提高查询效率(如果数组长度&gt;64才会转),单向链表查询的复杂度为O(n),红黑树的查询复杂度为O(logn),<br>所以能提高查询的效率。</p>
+</li>
+<li><p>当删除红黑树时,如果数量&lt;=6,则会转回单向链表。</p>
+</li>
+</ul>
+<h3 id="结构"><a href="#结构" class="headerlink" title="结构:"></a>结构:</h3><p><img src="https://ddmcc-1255635056.file.myqcloud.com/942e870e-f79b-4d6a-a71e-15b54290521c.png" alt="markdown"></p>
+<h3 id="链表转为红黑树"><a href="#链表转为红黑树" class="headerlink" title="链表转为红黑树"></a>链表转为红黑树</h3><pre><code>private final void treeifyBin(Node&lt;K,V&gt;[] tab, int index) &#123;
+    Node&lt;K,V&gt; b; int n, sc;
+    if (tab != null) &#123;
+    // 如果table &lt; MIN_TREEIFY_CAPACITY,则不转,直接扩容,MIN_TREEIFY_CAPACITY默认为64
+        if ((n = tab.length) &lt; MIN_TREEIFY_CAPACITY)
+            tryPresize(n &lt;&lt; 1);
+
+        // 通过CAS得到指定位置Node节点,加锁转换
+        else if ((b = tabAt(tab, index)) != null &amp;&amp; b.hash &gt;= 0) &#123;
+            synchronized (b) &#123;
+                if (tabAt(tab, index) == b) &#123;
+                    TreeNode&lt;K,V&gt; hd = null, tl = null;
+                    for (Node&lt;K,V&gt; e = b; e != null; e = e.next) &#123;
+                        TreeNode&lt;K,V&gt; p =
+                                new TreeNode&lt;K,V&gt;(e.hash, e.key, e.val,
+                                        null, null);
+                        if ((p.prev = tl) == null)
+                            hd = p;
+                        else
+                            tl.next = p;
+                        tl = p;
+                    &#125;
+                    setTabAt(tab, index, new TreeBin&lt;K,V&gt;(hd));
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="红黑树转为链表"><a href="#红黑树转为链表" class="headerlink" title="红黑树转为链表"></a>红黑树转为链表</h3><pre><code>static &lt;K,V&gt; Node&lt;K,V&gt; untreeify(Node&lt;K,V&gt; b) &#123;
+    Node&lt;K,V&gt; hd = null, tl = null;
+    for (Node&lt;K,V&gt; q = b; q != null; q = q.next) &#123;
+        Node&lt;K,V&gt; p = new Node&lt;K,V&gt;(q.hash, q.key, q.val, null);
+        if (tl == null)
+            hd = p;
+        else
+            tl.next = p;
+        tl = p;
+    &#125;
+    return hd;
+&#125;
+</code></pre>
+<h2 id="常用方法"><a href="#常用方法" class="headerlink" title="常用方法"></a>常用方法</h2><h3 id="get方法"><a href="#get方法" class="headerlink" title="get方法"></a>get方法</h3><pre><code>public V get(Object key) &#123;
+    Node&lt;K,V&gt;[] tab; Node&lt;K,V&gt; e, p; int n, eh; K ek;
+    int h = spread(key.hashCode());
+    if ((tab = table) != null &amp;&amp; (n = tab.length) &gt; 0 &amp;&amp;
+        (e = tabAt(tab, (n - 1) &amp; h)) != null) &#123;
+        if ((eh = e.hash) == h) &#123;
+            if ((ek = e.key) == key || (ek != null &amp;&amp; key.equals(ek)))
+                return e.val;
+        &#125;
+        else if (eh &lt; 0)
+            return (p = e.find(h, key)) != null ? p.val : null;
+        while ((e = e.next) != null) &#123;
+            if (e.hash == h &amp;&amp;
+                ((ek = e.key) == key || (ek != null &amp;&amp; key.equals(ek))))
+                return e.val;
+        &#125;
+    &#125;
+    return null;
+&#125;
+</code></pre>
+<p>获取key的hash值,再通过 <code>speed()</code> 方法,对高位也进行hash,然后在查询对应的桶。</p>
+<pre><code>static final int spread(int h) &#123;
+    return (h ^ (h &gt;&gt;&gt; 16)) &amp; HASH_BITS;
+&#125;
+</code></pre>
+<p>然后通过tabAt()放法获取链表或红黑树的第一个节点,然后遍历通过key的hash值查询相应的value。<br>tabAt()方式是通过Unsafe类的getObjectVolatile方法来获取值,volatile可以保证值的可见性,从而保证读到的值是最新的。</p>
+<h3 id="put方法"><a href="#put方法" class="headerlink" title="put方法"></a>put方法</h3><pre><code>final V putVal(K key, V value, boolean onlyIfAbsent) &#123;
+    if (key == null || value == null) throw new NullPointerException();
+    int hash = spread(key.hashCode());
+    int binCount = 0;
+    for (Node&lt;K,V&gt;[] tab = table;;) &#123;
+        Node&lt;K,V&gt; f; int n, i, fh;
+        if (tab == null || (n = tab.length) == 0)
+            tab = initTable();
+        else if ((f = tabAt(tab, i = (n - 1) &amp; hash)) == null) &#123;
+            if (casTabAt(tab, i, null,
+                         new Node&lt;K,V&gt;(hash, key, value, null)))
+                break;                   // no lock when adding to empty bin
+        &#125;
+        else if ((fh = f.hash) == MOVED)
+            tab = helpTransfer(tab, f);
+        else &#123;
+            V oldVal = null;
+            synchronized (f) &#123;
+                if (tabAt(tab, i) == f) &#123;
+                    if (fh &gt;= 0) &#123;
+                        binCount = 1;
+                        for (Node&lt;K,V&gt; e = f;; ++binCount) &#123;
+                            K ek;
+                            if (e.hash == hash &amp;&amp;
+                                ((ek = e.key) == key ||
+                                 (ek != null &amp;&amp; key.equals(ek)))) &#123;
+                                oldVal = e.val;
+                                if (!onlyIfAbsent)
+                                    e.val = value;
+                                break;
+                            &#125;
+                            Node&lt;K,V&gt; pred = e;
+                            if ((e = e.next) == null) &#123;
+                                pred.next = new Node&lt;K,V&gt;(hash, key,
+                                                          value, null);
+                                break;
+                            &#125;
+                        &#125;
+                    &#125;
+                    else if (f instanceof TreeBin) &#123;
+                        Node&lt;K,V&gt; p;
+                        binCount = 2;
+                        if ((p = ((TreeBin&lt;K,V&gt;)f).putTreeVal(hash, key,
+                                                       value)) != null) &#123;
+                            oldVal = p.val;
+                            if (!onlyIfAbsent)
+                                p.val = value;
+                        &#125;
+                    &#125;
+                &#125;
+            &#125;
+            if (binCount != 0) &#123;
+                if (binCount &gt;= TREEIFY_THRESHOLD)
+                    treeifyBin(tab, i);
+                if (oldVal != null)
+                    return oldVal;
+                break;
+            &#125;
+        &#125;
+    &#125;
+    addCount(1L, binCount);
+    return null;
+&#125;
+</code></pre>
+<ul>
+<li><p>1,数组为空,是否有数据,为空则先初始化table数组,然后再次进入循环。</p>
+</li>
+<li><p>2,判断目标桶上首节点是否为空,为空则直接不加锁新增节点。</p>
+</li>
+<li><p>3,判断目标桶是否在扩容操作(MOVED为正在转移的节点的hash值，值为-1),返回扩容后的table数组,重新进入循环。</p>
+</li>
+<li><p>4,对桶进行加锁(即对单向链表或红黑树),判断链表或红黑树进行新增Node节点,当onlyIfAbsent为false时会替换原来的值。</p>
+</li>
+<li><p>5,新增后判断binCount是否需要转换结构,oldVal不为空直接返回oldVal,oldVal不为空一种可能是本来就是红黑树结构了,还有就是链表结构,但是没有新增节点。</p>
+</li>
+<li><p>6,调用addCount增加table中Node的数量,有可能会触发扩容操作。</p>
+</li>
+</ul>
+<h3 id="size方法"><a href="#size方法" class="headerlink" title="size方法"></a>size方法</h3><p>有size()和mappingCount()两个方法能获取元素的个数。在添加和删除元素时，会通过CAS操作更新ConcurrentHashMap的baseCount属性值来统计元素个数。但是CAS操作可能会失败，因此，ConcurrentHashMap又定义了一个CounterCell数组来记录CAS操作失败时的元素个数</p>
+<pre><code>final long sumCount() &#123;
+    CounterCell[] as = counterCells; CounterCell a;
+    long sum = baseCount;
+    if (as != null) &#123;
+        for (int i = 0; i &lt; as.length; ++i) &#123;
+            if ((a = as[i]) != null)
+                sum += a.value;
+        &#125;
+    &#125;
+    return sum;
+&#125;
+
+// 只返回int个数
+public int size() &#123;
+    long n = sumCount();
+    return ((n &lt; 0L) ? 0 :
+            (n &gt; (long)Integer.MAX_VALUE) ? Integer.MAX_VALUE :
+            (int)n);
+&#125;
+
+
+public long mappingCount() &#123;
+    long n = sumCount();
+    return (n &lt; 0L) ? 0L : n; // ignore transient negative values
+&#125;
+</code></pre>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/ConcurrentHashMap/">ConcurrentHashMap</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2019/05/29/2019-05-29-installing-java-in-linux/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">阿里云服务器中安装Java</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2019/05/21/2019-05-21-factory-method-pattern/"><span class="level-item">设计模式之工厂方法模式</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "c9bf56c6ffa2d40014a44585e14e9784",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#JDK1-8之前ConcurrentHashMap"><span class="level-left"><span class="level-item">1</span><span class="level-item">JDK1.8之前ConcurrentHashMap</span></span></a></li><li><a class="level is-mobile" href="#JDK1-8的ConcurrentHashMap"><span class="level-left"><span class="level-item">2</span><span class="level-item">JDK1.8的ConcurrentHashMap</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#1-8中主要有两点不同"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">1.8中主要有两点不同</span></span></a></li><li><a class="level is-mobile" href="#结构"><span class="level-left"><span class="level-item">2.2</span><span class="level-item">结构:</span></span></a></li><li><a class="level is-mobile" href="#链表转为红黑树"><span class="level-left"><span class="level-item">2.3</span><span class="level-item">链表转为红黑树</span></span></a></li><li><a class="level is-mobile" href="#红黑树转为链表"><span class="level-left"><span class="level-item">2.4</span><span class="level-item">红黑树转为链表</span></span></a></li></ul></li><li><a class="level is-mobile" href="#常用方法"><span class="level-left"><span class="level-item">3</span><span class="level-item">常用方法</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#get方法"><span class="level-left"><span class="level-item">3.1</span><span class="level-item">get方法</span></span></a></li><li><a class="level is-mobile" href="#put方法"><span class="level-left"><span class="level-item">3.2</span><span class="level-item">put方法</span></span></a></li><li><a class="level is-mobile" href="#size方法"><span class="level-left"><span class="level-item">3.3</span><span class="level-item">size方法</span></span></a></li></ul></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

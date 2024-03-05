@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>高速缓存，写缓冲器和无效队列 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="高速缓存由于处理器的运行速度远远大于内存的读写速度，为了提高性能，所以硬件设计者引入了高速缓存的概念。高速缓存是一种速度比内存快，但大小远远比内存小的存储部件。有了它之后，处理器不再与内存发生直接的操作，而是读写高速缓存里的数据，高速缓存在与内存发生读写操作。"><meta property="og:type" content="article"><meta property="og:title" content="高速缓存，写缓冲器和无效队列"><meta property="og:url" content="http://example.com/2019/07/22/2019-07-22-cache-write-buffer-and-invalidate-queue/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="高速缓存由于处理器的运行速度远远大于内存的读写速度，为了提高性能，所以硬件设计者引入了高速缓存的概念。高速缓存是一种速度比内存快，但大小远远比内存小的存储部件。有了它之后，处理器不再与内存发生直接的操作，而是读写高速缓存里的数据，高速缓存在与内存发生读写操作。"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://example.com/img/og_image.png"><meta property="article:published_time" content="2019-07-22T06:13:37.000Z"><meta property="article:modified_time" content="2023-04-15T14:37:22.516Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="并发编程"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="http://example.com/img/og_image.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2019/07/22/2019-07-22-cache-write-buffer-and-invalidate-queue/"},"headline":"高速缓存，写缓冲器和无效队列","image":["http://example.com/img/og_image.png"],"datePublished":"2019-07-22T06:13:37.000Z","dateModified":"2023-04-15T14:37:22.516Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"高速缓存由于处理器的运行速度远远大于内存的读写速度，为了提高性能，所以硬件设计者引入了高速缓存的概念。高速缓存是一种速度比内存快，但大小远远比内存小的存储部件。有了它之后，处理器不再与内存发生直接的操作，而是读写高速缓存里的数据，高速缓存在与内存发生读写操作。"}</script><link rel="canonical" href="http://example.com/2019/07/22/2019-07-22-cache-write-buffer-and-invalidate-queue/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2019-07-22T06:13:37.000Z" title="2019/7/22 14:13:37">2019-07-22</time>发表</span><span class="level-item"><time dateTime="2023-04-15T14:37:22.516Z" title="2023/4/15 22:37:22">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></span></div></div><h1 class="title is-3 is-size-4-mobile">高速缓存，写缓冲器和无效队列</h1><div class="content"><h2 id="高速缓存"><a href="#高速缓存" class="headerlink" title="高速缓存"></a>高速缓存</h2><p>由于处理器的运行速度远远大于内存的读写速度，为了提高性能，所以硬件设计者引入了高速缓存的概念。<br>高速缓存是一种速度比内存快，但大小远远比内存小的存储部件。有了它之后，处理器不再与内存发生直接的操作，而是读写高速缓存里的数据，高速缓存在与内存发生读写操作。</p>
+<span id="more"></span>
+
+
+<h3 id="缓存的结构"><a href="#缓存的结构" class="headerlink" title="缓存的结构"></a>缓存的结构</h3><p>缓存的结构类似HashMap，是<strong>链表散列结构</strong>的。有若干个通，每个桶里面都是一个链表。<br>每个链表节点就是一个缓存条目（Cache Line），缓存条目由三部分组成：<strong>Tag，Data Block，Flag</strong></p>
+<ul>
+<li>Tag：包含缓存行中数据的位置信息</li>
+<li>Data Block（缓存行）：存储从主内存中读取的数据以及准备写入主内存的数据，一个缓存行可存储多个变量</li>
+<li>Flag：缓存行的状态信息</li>
+</ul>
+<p>CPU访问内存时，会通过内存地址解码的三个数据：index（桶编号）、tag（缓存条目的相对编号）、offset（变量在缓存条目中的位置偏移）来获取高速缓存中对应的数据。</p>
+<h3 id="缓存一致性协议（MESI）"><a href="#缓存一致性协议（MESI）" class="headerlink" title="缓存一致性协议（MESI）"></a>缓存一致性协议（MESI）</h3><p>由于每个处理器都有自己的缓存，当多线程并发访问同一共享变量时，就会出现这些线程所在的处理器都会有一份该变量的副本。<br>当一个线程对副本进行修改后，副本间的数据如何同步呢？这时就要靠<strong>缓存一致性协议</strong></p>
+<h4 id="MESI定义"><a href="#MESI定义" class="headerlink" title="MESI定义"></a>MESI定义</h4><ul>
+<li>Modified</li>
+</ul>
+<p>该缓存条目的数据是被修改过的，且与主存的数据不一致（还未写回主存）。在任一时刻，多个处理器的高速缓存，相同tag的缓存条目只有一个能处于<br>该状态。</p>
+<p>如果其它处理器要读取同一tag的缓存条目数据之前，要先等数据写回主存。在数据写回主存之后，该缓存条目的状态变为<strong>独享的</strong>。</p>
+<ul>
+<li>Exclusive</li>
+</ul>
+<p>已独占的方法保存着副本数据，其它高速缓存的变量副本都是无效的。<strong>该缓存条目的数据与主存数据一致。</strong></p>
+<p>当有其它处理器读取该数据时，该缓存条目的状态变为共享的。如果有处理器修改了该缓存条目的数据，状态则变为修改的。</p>
+<ul>
+<li>Shared</li>
+</ul>
+<p>该缓存条目被多个高速缓存同时缓存。且它们的数据都与主存中的一致。</p>
+<p>当有缓存对该缓存行的数据进行修改时，改缓存行的状态变为无效的。</p>
+<ul>
+<li>Invalid</li>
+</ul>
+<p>该缓存行是无效的，不包含任何内存地址对应的有效副本数据。该状态是缓存条目的初始状态。</p>
+<h4 id="MESI消息"><a href="#MESI消息" class="headerlink" title="MESI消息"></a>MESI消息</h4><table>
+<thead>
+<tr>
+<th>请求消息</th>
+<th align="center">描述</th>
+<th align="center">返回消息</th>
+<th align="center">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Read</td>
+<td align="center">通知其他处理器，主内存正准备读取某个数据。该消息包含待读取数据的内存地址</td>
+<td align="center">Read Response</td>
+<td align="center">返回请求读取的数据，该消息可能是主内存返回的，也可能是其他高速缓存返回。</td>
+</tr>
+<tr>
+<td>Invalidate</td>
+<td align="center">通知其他处理器将高速缓存中指定内存地址对应的缓存条目状态置为I（无效），即通知这些处理器删除指定内存地址的副本数据</td>
+<td align="center">Invalidate Acknowledge</td>
+<td align="center">接收Invalidate消息必须回复该消息，表示已经删除其高速缓存上面的数据</td>
+</tr>
+<tr>
+<td>Read Invalidate</td>
+<td align="center">由Read和Invalidate组合而成的复合消息。作用在于通知其他处理器，当前处理器准备更新（Read-Modify-Write）一个数据，请求其他处理器删除自己高速缓存中的副本数据。</td>
+<td align="center">Read Response与Invalidate Acknowledge</td>
+<td align="center">接收到请求的处理器必须返回这两个消息</td>
+</tr>
+<tr>
+<td>Writeback</td>
+<td align="center">该消息包含需要写入主内存的数据及其对应的内存地址</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<p>处理器在执行内存读写操作时，在有必要的情况下会往总线发送特定的请求消息，同时每个处理器还会嗅探（也称拦截）总线中由其他处理器发出的请求消息并在一定条件下往总线回复相应的响应消息。</p>
+<h4 id="MESI总结"><a href="#MESI总结" class="headerlink" title="MESI总结"></a>MESI总结</h4><p><strong>从上面可以看出，MESI协议对内存数据的访问控制类似于读写锁。多个高速缓存同时对同一变量副本进行读的操作是并发的，而写的操作是独占的。</strong></p>
+<h5 id="并发读"><a href="#并发读" class="headerlink" title="并发读"></a>并发读</h5><p>当处理器Processor 0要读取缓存中的数据A时，如果发现A所在的缓存条目状态为M、E或S，那么处理器可直接读取数据。</p>
+<p>如果A所在的缓存条目状态状态为  I，说明Processor 0的缓存中不包含A的有效数据。这时，Processor 0会往总线发送一条Read消息来读取A的有效数据，而缓存状态不为 I 的其他处理器（如Process 1）或主内存（其他处理器缓存条目状都为 I 时从主内存读）收到消息后需要回复Read Response，来将有效的A数据返回给发送者。</p>
+<p>需要注意的是，<strong>返回有效数据的其他处理器（如Process 1），如果状态为M，则会先将数据写入主内存，此时状态为E，然后在返回Read Response后，再将状态更新为S。</strong><br>这样，Processor 0读取的永远是最新的数据，即使其他处理器对这个数据做了更改，也会获取到其他处理器最新的修改信息。</p>
+<h5 id="互斥写"><a href="#互斥写" class="headerlink" title="互斥写"></a>互斥写</h5><p>处理器Processor 0要对缓存中的数据A时进行写操作时，如果发现A所在的缓存条目状态为M、E，那么处理器可直接对数据进行写的操作。完成后再把缓存条目的状态改为M</p>
+<p>如果缓存条目状态为 S 则会先向总线发送Invalidate消息，来通知其他高速缓存该缓存条目无效，获得该缓存条目的独占权。当收到拥有该数据副本的处理器返回的Invalidate Acknowledge，<br>才确认已获得该缓存条目的独占权，再将数据A写入，并把缓存条目的状态改成M。</p>
+<p>如果缓存条目状态为 I 则会先发送Read Invalidate消息，先获取最新的数据，再通过 Invalidate来获取独占权。</p>
+<p>需要注意的是，如果接收到Invalidate消息的其他其他处理器，缓存条目状态为M，则该处理器会先将数据写入主内存（以方便发送Read Invalidate指令的处理器读到最新值），然后再将状态改为I</p>
+<h2 id="写缓冲器和无效化队列"><a href="#写缓冲器和无效化队列" class="headerlink" title="写缓冲器和无效化队列"></a>写缓冲器和无效化队列</h2><blockquote>
+<p>根据缓存一致性协议，实现了对数据的共享读和互斥写，按理说已经解决了数据的一致性问题，那么又为什么还会出现”可见性”这样的问题呢？</p>
+</blockquote>
+<p>原因在于写缓冲器和无效化队列的引入。MESI协议虽然解决了缓存一致性问题，但其本身有一个性能缺陷：处理器每次写数据时，都得等待其他所有处理器将其高速缓存中对应的数据删除，<br>并接收到它们返回的Read Response与Invalidate Acknowledge消息后才执行写操作。这个过程无疑是很消耗时间的。</p>
+<h4 id="写缓冲器"><a href="#写缓冲器" class="headerlink" title="写缓冲器"></a>写缓冲器</h4><p>写缓冲器是处理器内部一个容量比高速缓存还小的高速存储部件，每个处理器都有自身的写缓冲器，且一个处理器无法读取另一个处理器上的写缓冲器内容。<br>写缓冲器的引入主要是为了解决上面提到的MESI的写性能问题。</p>
+<p><strong>写操作</strong></p>
+<p>如果相应的缓存条目状态为 E、M，则直接写入</p>
+<p>如果相应的缓存条目状态为 S， 处理器会将<strong>写操作相关信息存入写缓冲器，并发送Invalidate消息。（不再等待响应消息）</strong></p>
+<p>如果相应的缓存条目状态为 I，<strong>将写操作相关信息存入写缓冲器，并发送Read Invalidate消息。（不再等待响应消息）</strong></p>
+<p>当处理器将写操作写入写缓冲器后，则认为写操作已经完成。而实际上，当处理器收到其他所有处理器回应的Read Response、Invalidate Acknowledge消息后，处理器才会将写缓冲器中对应的写操作写入相应的缓存行，这个时候，写操作才算真正完成。</p>
+<p>写缓冲器让处理器在执行写操作时不需要再额外的等待，减少了写操作的等待，提高了处理器的指令执行效率。</p>
+<p><strong>读操作</strong></p>
+<p>引入写缓存器后，处理器读取数据时，由于该数据的更新结果可能仍然停留在写缓冲器中，所以处理器会先从写缓冲器中找寻数据，没有找到时，才从高速缓存中找。</p>
+<p>这种处理器直接从写缓冲器中读取数据的技术被称为：存储转发</p>
+<h4 id="无效化队列"><a href="#无效化队列" class="headerlink" title="无效化队列"></a>无效化队列</h4><p>处理器在接收到Invalidate消息后，并不马上删除消息中指定地址对应的副本数据，而是将消息存入无效化队列之后就回复Invalidate Acknowledge消息，从而减少了执行写操作的处理器的等待时间。</p>
+<p>需要注意的是，有些处理器（如X86）可能并没有使用无效化队列</p>
+<h4 id="新问题"><a href="#新问题" class="headerlink" title="新问题"></a>新问题</h4><p>写缓冲器和无效化队列的引入带来了性能的提高，同时又带来了新的两个问题：内存重排序与可见性</p>
+<p><strong>内存重排序</strong></p>
+<p>如下表，变量data初始值为0，变量ready初始值为false。两个处理器Processor 1和Processor 2在各自的线程上执行上述代码。执行的绝对时间顺序为 S1——&gt;S2——&gt;L3——&gt;L4</p>
+<table>
+<thead>
+<tr>
+<th>Processor 1</th>
+<th align="center">Processor 2</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data = 1; // S1</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td>ready = true; // S2</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td></td>
+<td align="center">while(!ready) continue; //L3</td>
+</tr>
+<tr>
+<td></td>
+<td align="center">system.out.println(data); //L4</td>
+</tr>
+</tbody></table>
+<ul>
+<li>以StoreStore（写又写）操作为例，看写缓冲造成的重排序。如果S1步data值的写操作被写入写缓冲器、还没真正的写到高速缓存中，而S2步的ready值的写操作已经写入到了高速缓存。那在L3步读取ready值时，根据MESI协议，会读到正确的ready值：true；但在L4步读取data时，会读到data的初始值0，而不是在另外一个处理器写缓冲器中的值：修改值1。在处理器Processor 2看来，S1和S2的执行顺序就好像反了一样，即发生了重排序。</li>
+<li>以LoadLoad（读又读）为例，看无效化队列造成的重排序。同上面的步骤，S2已被同步到高速缓存，S1写入写缓冲器，并发送了Invalidate消息。当执行L3时，读取到正确的值：true，当执行到L4时，由于无效化队列，Processor 2虽然发送了Invalidate Acknowledge消息，但并没有删除自己高速缓存中的data数据，所以会读取到其高速缓存中的data：0</li>
+</ul>
+<p><strong>可见性</strong></p>
+<p>因为写缓冲器中的内容是无法被其他处理器读取的，这个也就造成了一个处理器更新一个共享变量后，对其他处理器而言，看不到这个更新的值，即可见性。</p>
+<p><strong>看似内存重排序和可见性是一样的问题，都是因为数据被写到了写缓冲器，没有及时写到高速缓存中，从而产生了这么个“时间差”</strong></p>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2019/07/23/2019-07-23-use-nginx-mimic-cdn/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">nginx搭建伪CDN服务器</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2019/07/18/2019-07-18-wx-js-sdk-signature/"><span class="level-item">微信js-sdk定位服务签名生成</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "2797f61f2c68da55029fd2d85cc4b916",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#高速缓存"><span class="level-left"><span class="level-item">1</span><span class="level-item">高速缓存</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#缓存的结构"><span class="level-left"><span class="level-item">1.1</span><span class="level-item">缓存的结构</span></span></a></li><li><a class="level is-mobile" href="#缓存一致性协议（MESI）"><span class="level-left"><span class="level-item">1.2</span><span class="level-item">缓存一致性协议（MESI）</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#MESI定义"><span class="level-left"><span class="level-item">1.2.1</span><span class="level-item">MESI定义</span></span></a></li><li><a class="level is-mobile" href="#MESI消息"><span class="level-left"><span class="level-item">1.2.2</span><span class="level-item">MESI消息</span></span></a></li><li><a class="level is-mobile" href="#MESI总结"><span class="level-left"><span class="level-item">1.2.3</span><span class="level-item">MESI总结</span></span></a></li></ul></li></ul></li><li><a class="level is-mobile" href="#写缓冲器和无效化队列"><span class="level-left"><span class="level-item">2</span><span class="level-item">写缓冲器和无效化队列</span></span></a><ul class="menu-list"><ul class="menu-list"><li><a class="level is-mobile" href="#写缓冲器"><span class="level-left"><span class="level-item">2.1.1</span><span class="level-item">写缓冲器</span></span></a></li><li><a class="level is-mobile" href="#无效化队列"><span class="level-left"><span class="level-item">2.1.2</span><span class="level-item">无效化队列</span></span></a></li><li><a class="level is-mobile" href="#新问题"><span class="level-left"><span class="level-item">2.1.3</span><span class="level-item">新问题</span></span></a></li></ul></ul></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

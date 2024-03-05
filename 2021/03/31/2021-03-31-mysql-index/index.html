@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>mysql索引 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="索引原理和字典、通讯录原理一样，索引的目的在于提高查询效率，通过不断的缩小数据的查找范围来筛选出最终想要的结果。比如要查找 “张三” 这个人，会先定位在姓 “张” 的人中，然后再从中查找 “三” 这个名。如果没有索引，那么可能需要把整个通讯录都翻一遍才能找到想要的。"><meta property="og:type" content="article"><meta property="og:title" content="mysql索引"><meta property="og:url" content="http://example.com/2021/03/31/2021-03-31-mysql-index/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="索引原理和字典、通讯录原理一样，索引的目的在于提高查询效率，通过不断的缩小数据的查找范围来筛选出最终想要的结果。比如要查找 “张三” 这个人，会先定位在姓 “张” 的人中，然后再从中查找 “三” 这个名。如果没有索引，那么可能需要把整个通讯录都翻一遍才能找到想要的。"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/8c6a15ad-cbe5-4489-8def-479b9f84416f.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/0c60cc55-8414-428b-8325-08f650b8ce83.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/b6615bde-2f14-42d4-949d-b5ebec377a15.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/6bd6678b-f019-4bab-9803-5979d01fe402.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/094dd932-bd0e-455c-bcf0-997bb7fddbda.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/d6bb782b-693c-4bbc-9f4b-d5f32f79eaa7.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/cf4f005c-22a6-4f81-b10d-e36d7131a102.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/5a745e89-5287-48c0-958b-b684ec490b5e.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/cfb104cc-8da7-4307-ab25-5b4a9d426584.png"><meta property="article:published_time" content="2021-03-31T08:56:23.000Z"><meta property="article:modified_time" content="2023-04-15T14:25:00.964Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="mysql"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://ddmcc-1255635056.file.myqcloud.com/8c6a15ad-cbe5-4489-8def-479b9f84416f.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2021/03/31/2021-03-31-mysql-index/"},"headline":"mysql索引","image":["https://ddmcc-1255635056.file.myqcloud.com/8c6a15ad-cbe5-4489-8def-479b9f84416f.png","https://ddmcc-1255635056.file.myqcloud.com/0c60cc55-8414-428b-8325-08f650b8ce83.png","https://ddmcc-1255635056.file.myqcloud.com/b6615bde-2f14-42d4-949d-b5ebec377a15.png","https://ddmcc-1255635056.file.myqcloud.com/6bd6678b-f019-4bab-9803-5979d01fe402.png","https://ddmcc-1255635056.file.myqcloud.com/094dd932-bd0e-455c-bcf0-997bb7fddbda.png","https://ddmcc-1255635056.file.myqcloud.com/d6bb782b-693c-4bbc-9f4b-d5f32f79eaa7.png","https://ddmcc-1255635056.file.myqcloud.com/cf4f005c-22a6-4f81-b10d-e36d7131a102.png","https://ddmcc-1255635056.file.myqcloud.com/5a745e89-5287-48c0-958b-b684ec490b5e.png","https://ddmcc-1255635056.file.myqcloud.com/cfb104cc-8da7-4307-ab25-5b4a9d426584.png"],"datePublished":"2021-03-31T08:56:23.000Z","dateModified":"2023-04-15T14:25:00.964Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"索引原理和字典、通讯录原理一样，索引的目的在于提高查询效率，通过不断的缩小数据的查找范围来筛选出最终想要的结果。比如要查找 “张三” 这个人，会先定位在姓 “张” 的人中，然后再从中查找 “三” 这个名。如果没有索引，那么可能需要把整个通讯录都翻一遍才能找到想要的。"}</script><link rel="canonical" href="http://example.com/2021/03/31/2021-03-31-mysql-index/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2021-03-31T08:56:23.000Z" title="2021/3/31 16:56:23">2021-03-31</time>发表</span><span class="level-item"><time dateTime="2023-04-15T14:25:00.964Z" title="2023/4/15 22:25:00">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/mysql/">mysql</a></span></div></div><h1 class="title is-3 is-size-4-mobile">mysql索引</h1><div class="content"><h2 id="索引原理"><a href="#索引原理" class="headerlink" title="索引原理"></a>索引原理</h2><p>和字典、通讯录原理一样，索引的目的在于提高查询效率，通过不断的缩小数据的查找范围来筛选出最终想要的结果。比如要查找 “张三” 这个人，会先定位在姓 “张” 的人中，然后再从中查找 “三” 这个名。如果没有索引，那么可能需要把整个通讯录都翻一遍才能找到想要的。</p>
+<span id="more"></span>
+
+<p>在 mysql 中存储引擎用类似的方法使用索引，其先通过值在索引中找到匹配的索引记录，然后根据索引记录来找到对应的数据行。又因为是 <code>B+</code> 树索引，按照顺序存储数据，所以可以用来做 <code>ORDER BY</code> 和 <code>GROUP BY</code> 操作。最后，因为索引存储了实际的列值，所以某些查询只使用索引就能够完成全部查询。据此特性总结索引有以下优点：</p>
+<ul>
+<li><p>索引大大减少服务器需要扫描的数据量</p>
+</li>
+<li><p>索引可以帮助服务器避免排序和临时表</p>
+</li>
+<li><p>索引可以将随机IO变为顺序IO</p>
+</li>
+</ul>
+<blockquote>
+<p>这边要注意的是B+树索引并不能找到一个给定键值的具体行，能找到的只是被查找数据行所在的页。然后数据库通过把页从磁盘读入到内存，再在内存中进行查找，最后得到要査找的数据。</p>
+</blockquote>
+<h2 id="磁盘IO与预读"><a href="#磁盘IO与预读" class="headerlink" title="磁盘IO与预读"></a><strong>磁盘IO与预读</strong></h2><p>在介绍索引之前，先了解一下磁盘IO，数据库数据文件是存在磁盘上的，磁盘读取数据靠的是机械运动，每次读取数据花费的时间可以分为寻道时间、旋转延迟、传输时间三个部分。</p>
+<h3 id="寻道时间"><a href="#寻道时间" class="headerlink" title="寻道时间"></a><strong>寻道时间</strong></h3><p>Tseek是指将读写磁头移动至正确的磁道上所需要的时间。寻道时间越短，I/O操作越快，目前磁盘的平均寻道时间一般在3-15ms，主流磁盘一般在5ms以下</p>
+<h3 id="旋转延迟"><a href="#旋转延迟" class="headerlink" title="旋转延迟"></a><strong>旋转延迟</strong></h3><p>Trotation是指盘片旋转将请求数据所在的扇区移动到读写磁盘下方所需要的时间。通常用磁盘旋转一周所需时间的1/2表示，比如一个磁盘7200转表示：每分钟能转7200次，也就是说1秒钟能转120次，旋转延迟就是1 / 120 / 2 = 4.17ms</p>
+<h3 id="传输时间"><a href="#传输时间" class="headerlink" title="传输时间"></a><strong>传输时间</strong></h3><p>指的是从磁盘读出或将数据写入磁盘的时间，一般在零点几毫秒，相对于前两个时间可以忽略不计。</p>
+<p>那么访问一次磁盘的时间，即一次磁盘IO的时间约等于5+4.17 = 9ms左右。考虑到磁盘IO是非常高昂的操作，计算机操作系统做了一些优化，当一次IO时，不光把当前磁盘地址的数据，而是把相邻的数据也都读取到内存缓冲区内，因为局部预读性原理告诉我们，当计算机访问一个地址的数据的时候，与其相邻的数据也会很快被访问到。每一次IO读取的数据我们称之为一页(page)。具体一页有多大数据跟操作系统有关，一般为4k或8k，也就是我们读取一页内的数据时候，实际上才发生了一次IO</p>
+<h2 id="索引数据结构"><a href="#索引数据结构" class="headerlink" title="索引数据结构"></a><strong>索引数据结构</strong></h2><p>在 mysql 中，索引是 <code>存储引擎</code> 层实现的，并没有统一的标准。不同的存储引擎的索引实现并不一样。即使多个存储引擎支持同一种类型的索引，其底层的实现也可能不同。如：<code>InnoDB</code> 中根据主键引用被索引的行，而 <code>MyISAM</code> 则通过数据的物理位置引用被索引的行</p>
+<p>在 <code>InnoDB</code> 中，表中数据都是根据主键顺序存放的，这种存储方式的表叫 <strong>索引组织表</strong>。而 <code>聚簇索引</code> 就是按照每张表的主键构造的一棵 <code>B+</code> 树，树中同时保存了索引和数据行，数据行被存放在索引的叶子页中。也将 <code>聚簇索引</code> 的叶子节点称为 <code>数据页</code>。因为无法同时把数据行存放在两个不同的地方，所以一个表只能有一个 <code>聚簇索引</code>。如果没有定义主键，<code>InnoDB</code> 会选择一个唯一非空索引字段代替，如果没有这样的索引，那么 <code>InnoDB</code>会隐式定义一个 <code>6</code> 字节的 <code>rowId</code> 来作为 <code>聚簇索引</code></p>
+<blockquote>
+<p>唯一非空索引：是唯一索引（unique key）并且该字段的值not null</p>
+</blockquote>
+<p>并且 **每一个索引 <code>InnoDB</code> 都会为其单独维护一颗 <code>B+树</code>**。</p>
+<p>假设我们有这么一张表：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `<span class="keyword">user</span>` (</span><br><span class="line">  `id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  `name` <span class="type">varchar</span>(<span class="number">50</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  `age` <span class="type">int</span>(<span class="number">11</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  <span class="keyword">PRIMARY</span> KEY (`id`),</span><br><span class="line">  KEY `IDX_AGE` (`age`) <span class="keyword">USING</span> BTREE</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>那么 <code>InnoDB</code> 就会为主键 <code>id</code> 维护一个 <code>聚簇索引</code> ，为索引 <code>age</code> 维护一个非主键索引，也叫 <code>二级索引</code>。</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/8c6a15ad-cbe5-4489-8def-479b9f84416f.png" alt="markdown"></p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/0c60cc55-8414-428b-8325-08f650b8ce83.png" alt="markdown"></p>
+<p>在上图中可以看出，<strong>二级索引的叶子页存的是主键的值，而聚簇索引叶子页存的是整行数据，聚簇索引的叶子节点也称为数据页</strong>。非叶子节不存储数据行，只存储指向下层叶子的指针和索引键值的虚记录，如19并不真实存在于数据表中</p>
+<h3 id="一页16kb"><a href="#一页16kb" class="headerlink" title="一页16kb"></a><strong>一页16kb</strong></h3><p>就如上面所说的，磁盘IO是非常高昂的操作。为了减少磁盘IO次数，存储引擎也做了很多的优化。比如会整页读取数据并把一些热数据放在缓冲池中。不同存储引擎缓存单位并不相同，<code>InnoDB</code>在 <strong>默认情况下是 16kb</strong> ，如果 <code>InnoDB</code>做一个单行查找需要读取磁盘，就需要把包含该行的整个页面读入缓冲池进行缓存。假设要随机访问100字节的行， <code>InnoDB</code> 将用掉很多缓冲池中额外的内存来缓存这些行，因为每一次都必须读取和缓存一个完整的 <code>16kb</code> 页面。而<code>InnoDB</code> 索引页大小也是 <code>16kb</code> ，意味着访问一个100字节的行可能一共要使用<code>32kb</code>的缓存空间（有可能更多，取决于索引树有多深） </p>
+<p><code>B+</code> 索引在数据库中有一个特点是 <code>高扇出性</code> ，因此在数据库中，<code>B+</code> 树的高度一般都在2 ～ 4层，也就是说查找某一键值的行记录时最多只需要2 ～ 4次IO。前面分析了一次IO大概9ms，意味着查询时间只需0.02 ～ 0.04秒。</p>
+<blockquote>
+<p>扇出：是指该模块直接调用的下级模块的个数</p>
+</blockquote>
+<p>以一个整数字段（bigint）索引为例，字段长度为<code>8b</code> ，另外每个索引还跟着 <code>6b</code> 指向子树的指针，则每页可以存放索引 16kb * 1024 / 14 b = 1170。这棵树高是 4 的时候，就可以存 1170 的 3 次方个值，这已经 16亿了。考虑到树根的数据块总是在内存中的，那么一个 10 亿行的表上一个整数字段的索引，查找一个值最多只需要3 次磁盘IO。这也就是 <strong>索引字段越小越好</strong> 的原因。因为磁盘块的大小也就是一个数据页的大小，是固定的（默认<code>16k</code>），那么在总数据量固定的情况下，如果数据项占的空间越小，则每页能存的数据项数量越多，那么树的高度越低。这也是为什么 <code>b+</code> 树要求把真实的数据放到叶子节点而不是内层节点，一旦放到内层节点，每个磁盘块的数据项会大幅度下降，导致树增高</p>
+<h3 id="索引页、数据页逻辑连续"><a href="#索引页、数据页逻辑连续" class="headerlink" title="索引页、数据页逻辑连续"></a><strong>索引页、数据页逻辑连续</strong></h3><p>每一层的页通过双向链表链接（Page Header中的PAGE_PREV和PAGE_NEXT记录上、下页的位置），页按照索引键的顺序排序；另外每个页中的记录也是通过单向链表进行维护的（Recorder Header的最后两个字节记录下一行偏移量）。按照索引键排序的好处就是对于索引键的排序查找和范围查找非常快。如要查找年龄最大的两个人id，由于<code>b+树</code>索引是双向链表的，可以快速找到最后一个数据页，并取最后两条数据</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> EXPLAIN <span class="keyword">SELECT</span> id <span class="keyword">FROM</span> <span class="keyword">user</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> id LIMIT <span class="number">2</span>\G</span><br><span class="line"><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span> <span class="number">1.</span> <span class="type">row</span> <span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span></span><br><span class="line">           id: <span class="number">1</span></span><br><span class="line">  select_type: SIMPLE</span><br><span class="line">        <span class="keyword">table</span>: <span class="keyword">user</span></span><br><span class="line">   partitions: <span class="keyword">NULL</span></span><br><span class="line">         type: index</span><br><span class="line">possible_keys: <span class="keyword">NULL</span></span><br><span class="line">          key: <span class="keyword">PRIMARY</span></span><br><span class="line">      key_len: <span class="number">8</span></span><br><span class="line">          <span class="keyword">ref</span>: <span class="keyword">NULL</span></span><br><span class="line">         <span class="keyword">rows</span>: <span class="number">2</span></span><br><span class="line">     filtered: <span class="number">100.00</span></span><br><span class="line">        Extra: <span class="keyword">Using</span> index</span><br><span class="line"><span class="number">1</span> <span class="type">row</span> <span class="keyword">in</span> <span class="keyword">set</span>, <span class="number">1</span> warning (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>可以看到 Extra 信息中并没有 Using filesort，说明并没有进行额外的排序操作。如果排序字段不是索引字段，那么就会在内存中进行额外的排序操作</p>
+<p>未使用索引进行排序：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> EXPLAIN <span class="keyword">SELECT</span> ID <span class="keyword">FROM</span> <span class="keyword">user</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> name LIMIT <span class="number">2</span>\G</span><br><span class="line"><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span> <span class="number">1.</span> <span class="type">row</span> <span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span></span><br><span class="line">           id: <span class="number">1</span></span><br><span class="line">  select_type: SIMPLE</span><br><span class="line">        <span class="keyword">table</span>: <span class="keyword">user</span></span><br><span class="line">   partitions: <span class="keyword">NULL</span></span><br><span class="line">         type: <span class="keyword">ALL</span></span><br><span class="line">possible_keys: <span class="keyword">NULL</span></span><br><span class="line">          key: <span class="keyword">NULL</span></span><br><span class="line">      key_len: <span class="keyword">NULL</span></span><br><span class="line">          <span class="keyword">ref</span>: <span class="keyword">NULL</span></span><br><span class="line">         <span class="keyword">rows</span>: <span class="number">9</span></span><br><span class="line">     filtered: <span class="number">100.00</span></span><br><span class="line">        Extra: <span class="keyword">Using</span> filesort</span><br><span class="line"><span class="number">1</span> <span class="type">row</span> <span class="keyword">in</span> <span class="keyword">set</span>, <span class="number">1</span> warning (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="通过二分-遍历查找"><a href="#通过二分-遍历查找" class="headerlink" title="通过二分+遍历查找"></a><strong>通过二分+遍历查找</strong></h3><p><code>B+</code> 树页内索引使用类似 <strong>跳表</strong> 查找。在定位到了页之后，通过页目录（Page Directory）来进行 <code>二分查找</code> ，定位到距离数据较近的槽点（Slot）</p>
+<p>// todo 描述页内查找过程及图</p>
+<h2 id="索引的查找"><a href="#索引的查找" class="headerlink" title="索引的查找"></a><strong>索引的查找</strong></h2><p>基于聚簇索引和普通二级索引的查询有什么区别呢？</p>
+<p>如下面语句，根据 <code>id</code> 查找：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> <span class="keyword">user</span> <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>即主键查询的方式，则只需要搜索 <strong>id</strong> 这棵 <code>B+</code> 树。在多数情况下，查询优化器倾向于采用聚簇索引，因为聚簇索引索引能够在 <code>B+</code> 树索引的叶子节点上直接找到数据。此外，由于定义了数据的逻辑顺序，聚簇索引能够很快地访问针对范围值的查询。查询优化器能够快速发现某一段范围的数据页需要扫描</p>
+<p>再如下面语句，根据 <code>age</code> 来查找：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> <span class="keyword">user</span> <span class="keyword">WHERE</span> age <span class="operator">=</span> <span class="number">15</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>即普通索引查询方式，则需要先搜索 <code>age</code>索引树，得到 <code>id</code> 的值为 33，再拿着33到 <code>id</code> 索引树搜索一次，这个过程称为回表</p>
+<p><strong>也就是说，基于非主键索引的查询需要多扫描一棵索引树。因此，我们在应用中应该尽量使用主键查询</strong>。当然也不是每次用非主键索引查询都会回表，如果要查询的字段都在这棵索引书上，就不需要回表操作</p>
+<h2 id="索引的维护"><a href="#索引的维护" class="headerlink" title="索引的维护"></a><strong>索引的维护</strong></h2><p><img src="https://ddmcc-1255635056.file.myqcloud.com/b6615bde-2f14-42d4-949d-b5ebec377a15.png" alt="markdown"></p>
+<h4 id="页分裂"><a href="#页分裂" class="headerlink" title="页分裂"></a><strong>页分裂</strong></h4><p><code>B+</code> 树为了维护索引有序性，在插入新值的时候需要做必要的维护。以上面这个图为例，<strong>第一种情况：</strong> 如果插入点的新值为6，则只需要4后面插入一条新的记录。<strong>第二种情况：</strong> 如果插入新的值为20，这时无法直接在25后面直接插入，需要逻辑上挪动后面的数据，空出位置。更糟的情况是，如果所在的页已经满了，这时就要新建一个新的页，并把部分数据挪过去，这个过程称为页分裂。在这种情况下，不管性能还是空间利用率都会受到影响</p>
+<p><strong>所以通常都会建议使用 <code>AUTO_INCREMENT</code> 自增列作为主键</strong> ，这样可以保证数据行是按顺序写入的。最好避免随机的聚簇索引，比如使用 <code>UUID</code>作为主键，这样使得聚簇索引的插入变得完全随机。</p>
+<p>如果使用自增列作为主键，每次插入都是追加操作，就如上面说的第一种情况。当达到页的最大填充因子时（InnoDB默认最大填充因子是页大小的 15/16，留出部分空间用于后续修改），下一条记录就会写入新的页中。不涉及到挪动其它记录，也不会触发叶子节点的分裂</p>
+<p>而有业务逻辑的字段做主键或者使用UUID，则不能保证有序插入，这样写入数据的成本相对较高。总结以下是一些缺点：</p>
+<ul>
+<li>写入目标页可能已经刷到磁盘上并从缓存中清除，或者是还没有被加载到缓存中，InnoDB在插入之前不得不先找到并从磁盘读取目标页到内存。这将导致大量的随机I/O</li>
+<li>因为写入是乱序的，InnoDB不得不频繁地做页分裂操作，以便为新的行分配空间，页分裂会导致移动大量的数据，一次插入最少需要修改三个页而不是一个页</li>
+<li>由于频繁的页分裂，页会变得稀疏并被不规则的填充，最终数据会有碎片</li>
+</ul>
+<p>而且通常业务主键都比较大，比如用身份证号做主键，那么每个二级索引的叶子节点都需要存储，这也大大的增加了索引的空间占用。而如果使用整型做主键，则只需4个字节，长整型（bigint）也只需8字节。所以，从性能和存储空间方面考量，自增主键往往是更合理的选择</p>
+<h4 id="页合并"><a href="#页合并" class="headerlink" title="页合并"></a><strong>页合并</strong></h4><p>删除记录时，不会实际删除该记录。相反，它将记录标记为已删除，并且它所使用的空间可以被其它记录声明使用</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/6bd6678b-f019-4bab-9803-5979d01fe402.png" alt="图5"></p>
+<center style="font-size:14px;color:#ddd;text-decoration:underline">图1</center> 
+
+<p>当页中删除的记录达到<code>MERGE_THRESHOLD</code>（默认页体积的50%），InnoDB会开始寻找最靠近的页（前或后）看看是否可以将两个页合并以优化空间使用</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/094dd932-bd0e-455c-bcf0-997bb7fddbda.png" alt="图6"></p>
+<center style="font-size:14px;color:#C0C0C0;text-decoration:underline">图2</center> 
+
+
+
+<p>在本例中，页面 <code>图2</code> 占用的空间不足一半。<code>图1</code> 又有足够的删除数量，现在使用率也不到50%。从InnoDB的角度来看，它们是可合并的</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/d6bb782b-693c-4bbc-9f4b-d5f32f79eaa7.png" alt="markdown"></p>
+<center style="font-size:14px;color:#C0C0C0;text-decoration:underline">图3</center> 
+
+
+
+<p>合并操作的结果（图3）是图1包含它以前的数据加上图2的数据，图2变成一个空页，可以接纳新数据</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/cf4f005c-22a6-4f81-b10d-e36d7131a102.png" alt="markdown"></p>
+<center style="font-size:14px;color:#C0C0C0;text-decoration:underline">合并后的图2</center> 
+
+
+
+<p>当我们进行UPDATE操作，并且使页中记录数量低于阈值时，InnoDB也会进行一样的操作</p>
+<p>规则是：页合并发生在删除或更新操作中，关联到当前页的相邻页。如果合并操作成功，在<code>INFOMATION_SCHEMA.INNODB_METRICS</code>中的<code>index_page_merge_successful</code>将会增加</p>
+<p><a target="_blank" rel="noopener" href="https://www.percona.com/blog/2017/04/10/innodb-page-merging-and-page-splitting/">了解更多关于页合并与分裂</a></p>
+<h2 id="建索引的原则和使用时注意点"><a href="#建索引的原则和使用时注意点" class="headerlink" title="建索引的原则和使用时注意点"></a><strong>建索引的原则和使用时注意点</strong></h2><p>以下表结构来说明：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `t` (</span><br><span class="line">  `a` <span class="type">varchar</span>(<span class="number">32</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  `b` <span class="type">varchar</span>(<span class="number">50</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  `c` <span class="type">varchar</span>(<span class="number">20</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  `d` <span class="type">varchar</span>(<span class="number">20</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  `e` <span class="type">varchar</span>(<span class="number">100</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  <span class="keyword">PRIMARY</span> KEY (`a`),</span><br><span class="line">  KEY `IDX_B_C_D` (`b`,`c`,`d`) <span class="keyword">USING</span> BTREE</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="原则"><a href="#原则" class="headerlink" title="原则"></a><strong>原则</strong></h3><h4 id="最左前缀匹配原则"><a href="#最左前缀匹配原则" class="headerlink" title="最左前缀匹配原则"></a><strong>最左前缀匹配原则</strong></h4><p>mysql会一直向右匹配直到遇到范围查询(&gt;、&lt;、between、like)就停止匹配，比如b = 2 and c &gt; 3 and d = 4 如果建立(b,c,d)顺序的索引，d是用不到索引的，如果建立(b,d,c)的索引则都可以用到，b,d的顺序可以任意调整，因为查询优化器会帮你优化成索引可以识别的形式</p>
+<p><strong>总结为以下三点：</strong></p>
+<ul>
+<li><strong>如果不是按照索引的最左列开始查找，则无法使用索引</strong></li>
+</ul>
+<p>下面查询语句，不是最左列开始查找：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">mysql&gt; </span><span class="language-bash">EXPLAIN SELECT * FROM t WHERE c = <span class="string">&#x27;bbb&#x27;</span>\G</span></span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">           id: 1</span><br><span class="line">  select_type: SIMPLE</span><br><span class="line">        table: t</span><br><span class="line">   partitions: NULL</span><br><span class="line">         type: ALL</span><br><span class="line">possible_keys: NULL</span><br><span class="line">          key: NULL</span><br><span class="line">      key_len: NULL</span><br><span class="line">          ref: NULL</span><br><span class="line">         rows: 3</span><br><span class="line">     filtered: 33.33</span><br><span class="line">        Extra: Using where</span><br><span class="line">1 row in set, 1 warning (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>可以看到并没有使用索引。如果从最左列开始查找，并且使用右模糊，也是可以使用索引进行匹配的，因为可以按左前缀字符查找</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">mysql&gt; </span><span class="language-bash">EXPLAIN SELECT * FROM t WHERE b LIKE <span class="string">&#x27;aa%&#x27;</span>\G</span></span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">           id: 1</span><br><span class="line">  select_type: SIMPLE</span><br><span class="line">        table: t</span><br><span class="line">   partitions: NULL</span><br><span class="line">         type: range</span><br><span class="line">possible_keys: IDX_B_C_D</span><br><span class="line">          key: IDX_B_C_D</span><br><span class="line">      key_len: 153</span><br><span class="line">          ref: NULL</span><br><span class="line">         rows: 1</span><br><span class="line">     filtered: 100.00</span><br><span class="line">        Extra: Using index condition</span><br><span class="line">1 row in set, 1 warning (0.01 sec)</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<ul>
+<li><strong>不能跳过索引中的列</strong></li>
+</ul>
+<p>也就是说上面的索引无法用于查找 b = ‘xxx’ and d = ‘xxx’ 的记录。如果不指定b的值，则 <code>mysql</code> 只能使用索引的第一列。在索引 <code>IDX_B_C_D </code> 中匹配到所有 b = ‘xxx’ 的记录，再拿着这些记录的主键去聚簇索引中查找</p>
+<ul>
+<li><strong>如果查询中有某个列是范围查询，则其右边所有列都无法使用索引</strong></li>
+</ul>
+<p>例如查询 b = ‘xxx’ and c &gt;/&lt;/between/like ‘xxx’ and d = ‘xxx’ 这个查询只能用前面两列，因为列c是一个范围查询。但是存储引擎会用d列进行查询优化（索引下推）。如果范围查询的列值有限，那么可以通过使用多个等于条件来代替范围条件</p>
+<h4 id="尽量选择区分度高的列作为索引"><a href="#尽量选择区分度高的列作为索引" class="headerlink" title="尽量选择区分度高的列作为索引"></a><strong>尽量选择区分度高的列作为索引</strong></h4><p>区分度的公式是 *<em>count(distinct col) / count(</em>)**，表示字段不重复的比例，比例越大查询效率越高，唯一键的区分度是1。而一些状态、性别字段可能在大数据面前区分度就是0</p>
+<p>存在非等号和等号混合判断条件时，在建索引时，等号条件的列前置。如：where c &gt; ? and d = ? 那么即使 c 的区分度更高，也必须把 d 放在索引的最前列，即建立组合索引 idx_d_c。<strong>当然这也只是“经验法则”，还需要考虑到索引的复用能力</strong></p>
+<p>根据<a target="_blank" rel="noopener" href="https://tech.meituan.com/2014/06/30/mysql-index.html">美团技术团队博客文章</a>，需要join的字段这个值一般都要求是0.1以上，即平均1条扫描10条记录</p>
+<h4 id="尽量的扩展索引，不要新建索引"><a href="#尽量的扩展索引，不要新建索引" class="headerlink" title="尽量的扩展索引，不要新建索引"></a><strong>尽量的扩展索引，不要新建索引</strong></h4><ul>
+<li>空间：<code>InnoDB</code> 会为每个索引都建立 <code>B+</code> 树索引，所以会占用更多的空间</li>
+<li>性能：每次修改数据时要对索引进行维护，多棵索引树无疑增加了维护成本。并且在查询上，多列索引有机会使用 <code>覆盖索引</code> 和 <code>索引下推</code> 来提升查询效率</li>
+</ul>
+<h3 id="使用时注意点"><a href="#使用时注意点" class="headerlink" title="使用时注意点"></a><strong>使用时注意点</strong></h3><ul>
+<li>索引列不能参与计算：比如 from_unixtime(create_time) = ’2014-05-29’  或 left(code,  6) = ‘010108’  或 score + 1 = 80 就不能使用到索引。所以语句应该写成create_time = unix_timestamp(’2014-05-29’)  和 code LIKE ‘010108%’</li>
+<li>索引列与参数类型不匹配：比如字符串字段索引 phone = 13024532432</li>
+<li>最左前缀匹配：比如左模糊查询</li>
+<li>…</li>
+</ul>
+<h2 id="索引的使用"><a href="#索引的使用" class="headerlink" title="索引的使用"></a><strong>索引的使用</strong></h2><h4 id="联合索引"><a href="#联合索引" class="headerlink" title="联合索引"></a><strong>联合索引</strong></h4><p><code>联合索引</code> 也是一棵 <code>B+</code> 树，不同的是联合索引的键值数量不是 1，而是大于等于 2。并且和单个键值的 <code>B+</code> 树一样，键值都是排序的，通过叶子节点可以逻辑上读出所有的数据。</p>
+<p>如有以下表：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t1 ( </span><br><span class="line">a <span class="type">INT</span>, </span><br><span class="line">b <span class="type">INT</span>, </span><br><span class="line">c <span class="type">INT</span>, </span><br><span class="line"><span class="keyword">PRIMARY</span> KEY ( a ), </span><br><span class="line">KEY IDX_B_C ( b, c ) ) </span><br><span class="line">ENGINE <span class="operator">=</span> INNODB;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>索引先按字段b排序，如果b字段值相等，再按c字段排序，即(1, 1)、(1, 2)、(2, 1)、(2, 4)、(3, 1)、(3, 2) 数据按(b, c) 的顺序进行了存放。因为对第二字段进行了排序，在很多场景下可以利用这个特性来避免多一次排序操作。如查询一个人的最近3笔订单，则可以建立(user_id,  create_time) 的联合索引，建表、查询语句为：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `buy_order` (</span><br><span class="line">  `id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  `user_id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  `create_time` datetime <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  <span class="keyword">PRIMARY</span> KEY (`id`),</span><br><span class="line">  KEY `IDX_USER_CREATE_TIME` (`user_id`,`create_time`) <span class="keyword">USING</span> BTREE,</span><br><span class="line">  KEY `IDX_USER` (`user_id`) <span class="keyword">USING</span> BTREE</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB AUTO_INCREMENT<span class="operator">=</span><span class="number">6</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> `<span class="keyword">user</span>`.`buy_order`(`id`, `user_id`, `create_time`) <span class="keyword">VALUES</span> (<span class="number">1</span>, <span class="number">1</span>, <span class="string">&#x27;2021-04-04 23:14:27&#x27;</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> `<span class="keyword">user</span>`.`buy_order`(`id`, `user_id`, `create_time`) <span class="keyword">VALUES</span> (<span class="number">2</span>, <span class="number">1</span>, <span class="string">&#x27;2021-04-07 23:14:35&#x27;</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> `<span class="keyword">user</span>`.`buy_order`(`id`, `user_id`, `create_time`) <span class="keyword">VALUES</span> (<span class="number">3</span>, <span class="number">1</span>, <span class="string">&#x27;2021-04-07 23:14:43&#x27;</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> `<span class="keyword">user</span>`.`buy_order`(`id`, `user_id`, `create_time`) <span class="keyword">VALUES</span> (<span class="number">4</span>, <span class="number">1</span>, <span class="string">&#x27;2021-04-30 23:14:52&#x27;</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> `<span class="keyword">user</span>`.`buy_order`(`id`, `user_id`, `create_time`) <span class="keyword">VALUES</span> (<span class="number">5</span>, <span class="number">2</span>, <span class="string">&#x27;2021-04-14 23:15:49&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>为了做比较还加了一个单独的IDX_USER索引，先查询用户为1的所有订单，这个语句应该是两个索引都可以使用：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> EXPLAIN <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> buy_order <span class="keyword">WHERE</span> user_id <span class="operator">=</span> <span class="number">1</span>\G</span><br><span class="line"><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span> <span class="number">1.</span> <span class="type">row</span> <span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span></span><br><span class="line">           id: <span class="number">1</span></span><br><span class="line">  select_type: SIMPLE</span><br><span class="line">        <span class="keyword">table</span>: buy_order</span><br><span class="line">   partitions: <span class="keyword">NULL</span></span><br><span class="line">         type: <span class="keyword">ref</span></span><br><span class="line">possible_keys: IDX_USER_CREATE_TIME,IDX_USER</span><br><span class="line">          key: IDX_USER_CREATE_TIME</span><br><span class="line">      key_len: <span class="number">9</span></span><br><span class="line">          <span class="keyword">ref</span>: const</span><br><span class="line">         <span class="keyword">rows</span>: <span class="number">4</span></span><br><span class="line">     filtered: <span class="number">100.00</span></span><br><span class="line">        Extra: <span class="keyword">Using</span> index</span><br><span class="line"><span class="number">1</span> <span class="type">row</span> <span class="keyword">in</span> <span class="keyword">set</span>, <span class="number">1</span> warning (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>可以看到上面的执行计划，优化器最终选择了单个索引的IDX_USER，<strong>因为该索引的节点包含单个键值，所以理论上一个页能存放更多的记录</strong> </p>
+<p>接着假设要查询用户为1的最近三个订单：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; EXPLAIN SELECT * FROM buy_order WHERE user_id = 1 ORDER BY create_time DESC LIMIT 3\G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">           <span class="built_in">id</span>: 1</span><br><span class="line">  select_type: SIMPLE</span><br><span class="line">        table: buy_order</span><br><span class="line">   partitions: NULL</span><br><span class="line">         <span class="built_in">type</span>: ref</span><br><span class="line">possible_keys: IDX_USER_CREATE_TIME</span><br><span class="line">          key: IDX_USER_CREATE_TIME</span><br><span class="line">      key_len: 9</span><br><span class="line">          ref: const</span><br><span class="line">         rows: 4</span><br><span class="line">     filtered: 100.00</span><br><span class="line">        Extra: Using <span class="built_in">where</span>; Using index</span><br><span class="line">1 row <span class="keyword">in</span> <span class="built_in">set</span>, 1 warning (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>同样的，对于这个查询既可以使用 IDX_USER 索引，也可以使用 IDX_USER_CREATE_TIME 索引。但是这次优化器使用了 IDX_USER_CREATE_TIME 的联合索引，<strong>因为在这个联合索引中 create_time 已经排序好了，根据该联合索引取出数据，无须再对create_time 做一次额外的排序操作</strong>，若强制使用 IDX_USER索引，则执行计划如下图：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">mysql&gt; </span><span class="language-bash">EXPLAIN SELECT * FROM buy_order FORCE INDEX(IDX_USER) WHERE user_id = 1 ORDER BY create_time DESC LIMIT 3\G</span></span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">           id: 1</span><br><span class="line">  select_type: SIMPLE</span><br><span class="line">        table: buy_order</span><br><span class="line">   partitions: NULL</span><br><span class="line">         type: ref</span><br><span class="line">possible_keys: IDX_USER</span><br><span class="line">          key: IDX_USER</span><br><span class="line">      key_len: 9</span><br><span class="line">          ref: const</span><br><span class="line">         rows: 4</span><br><span class="line">     filtered: 100.00</span><br><span class="line">        Extra: Using index condition; Using filesort</span><br><span class="line">1 row in set, 1 warning (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>在Extra选项中可以看到 <code>Using filesort</code>，即需要额外的一次排序操作才能完成查询。而这次显然需要对列 create_time 排序，因为索引 IDX_USER 中的 create_time 是未排序的</p>
+<p>正如前面所介绍的那样，联合索引(b, c)其实是根据列b、c进行排序，因此下列语句可以直接使用联合索引得到结果：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> <span class="keyword">TABLE</span> <span class="keyword">WHERE</span> a <span class="operator">=</span> ? <span class="keyword">ORDER</span> <span class="keyword">BY</span> b</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然而对于联合索引(a,b,c)来说，下列语句同样可以直接通过联合索引得到结果：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> <span class="keyword">TABLE</span> <span class="keyword">WHERE</span> a <span class="operator">=</span> ? <span class="keyword">ORDER</span> <span class="keyword">BY</span> b</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> <span class="keyword">TABLE</span> <span class="keyword">WHERE</span> a <span class="operator">=</span> ? <span class="keyword">AND</span> b <span class="operator">=</span> ? <span class="keyword">ORDER</span> <span class="keyword">BY</span> c</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h4 id="覆盖索引"><a href="#覆盖索引" class="headerlink" title="覆盖索引"></a><strong>覆盖索引</strong></h4><p>如果执行的语句是 :</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> ID <span class="keyword">FROM</span> t <span class="keyword">WHERE</span> k <span class="keyword">BETWEEN</span> <span class="number">3</span> <span class="keyword">AND</span> <span class="number">5</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这时只需要查 ID 的值，而 ID 的值已经在 k 索引树上了，因此可以直接提供查询结果，不需要回表。也就是说从二级索引就可以得到查询的字段，而不需要查询聚簇索引中的记录（mysql5.0或以下版本不支持）</p>
+<p>使用覆盖索引另一个好处是针对某些统计，如下面查询语句：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="built_in">COUNT</span>(<span class="operator">*</span>) <span class="keyword">FROM</span> t <span class="keyword">WHERE</span> b <span class="operator">=</span> ?;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>假设 b 字段也是表的主键，并且b字段上还有其它的索引，InnoDB存储引擎并不会通过聚簇索引来进行统计。因为二级索引远小于聚簇索引，选择二级索引可以减少IO操作</p>
+<p>此外，通常情况下，如有索引(a, b)的联合索引，是不可以选择作为列b的查询索引。但是如果是统计操作，并且是覆盖索引，则优化器会选择它</p>
+<p>比如以下查询语句：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="built_in">COUNT</span>(a) <span class="keyword">FROM</span> t <span class="keyword">WHERE</span> b <span class="operator">=</span> ?;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="索引下推（ICP）"><a href="#索引下推（ICP）" class="headerlink" title="索引下推（ICP）"></a><strong>索引下推</strong>（ICP）</h4><p>从 <code>mysql5.6</code> 开始支持的一种根据索引进行查询的优化方式</p>
+<p>如有索引(a, b)的联合索引和以下查询语句：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> t <span class="keyword">WHERE</span> a <span class="keyword">LIKE</span> <span class="string">&#x27;a%&#x27;</span> <span class="keyword">AND</span> b <span class="operator">=</span> ?;</span><br></pre></td></tr></table></figure>
+
+<p>在 <code>mysql5.6</code> 之前，根据最左前缀匹配规则，存储引擎只能查询出符合条件 <code>LIKE &#39;a%&#39;</code> 的记录，然后把结果集返回给 <code>Server</code> 层，再拿着一个个主键去聚簇索引查找，然后在<code>Server</code> 层过滤条件 <code>b = ?</code> </p>
+<p>在引入下推优化之后（mysql5.6），如果部分WHERE条件能使用索引中的字段，<code>Server</code> 层会把这部分（上面b条件）下推到引擎层（调用引擎接口的时候把这部分也传过去）。存储引擎在二级索引遍历过程中对 <code>b</code> 字段先做判断，直接过滤掉不满足条件的记录。<code>ICP</code> 减少了 <code>Server</code> 层访问存储引擎的次数和引擎层访问聚簇索引的次数（减少回表次数）。总之是 <code> ICP</code> 的优化在引擎层就能够过滤掉大量的数据，减少 <code>IO</code> 次数，提高查询语句性能</p>
+<blockquote>
+<p>控制参数：SET @@optimizer_switch=”index_condition_pushdown=on”</p>
+</blockquote>
+<h4 id="MRR优化（Multi-range-Read）"><a href="#MRR优化（Multi-range-Read）" class="headerlink" title="MRR优化（Multi-range Read）"></a><strong>MRR优化</strong>（Multi-range Read）</h4><p>从 <code>mysql5.6</code> 开始支持 <code>MRR</code> 优化，<code>MRR</code> 优化的目的是为了减少磁盘的随机访问，并将随机访问转化为较为顺序的数据访问。</p>
+<p>在不使用 <code>MRR</code> 时，优化器根据二级索引返回的记录来进行回表，因为这个记录是根据二级索引键排序的，一般会有较多的随机IO。比如在二级索引中查询到的数据集为：(key=1, pk=99)，(key=2, pk=88)，(key=14, pk=875)，(key=15, pk=76)，这时如果按这个顺序去聚簇索引查找，因为主键无序，可能会有更多的随机IO和缓冲区（buffer pool）中的页被替换出，然后又不断地被读入缓冲区，若是按照主键顺序进行访问，则可以将此重复行为降到最低</p>
+<p><strong>使用MRR时，SQL语句的执行过程是这样的：</strong></p>
+<ol>
+<li><p> 优化器将二级索引查询到的记录放到一块缓冲区中</p>
+</li>
+<li><p> 如果二级索引查询完成或者缓冲区已满，则使用快速排序对缓冲区中的内容按照主键进行排序</p>
+</li>
+<li><p> 根据主键的排序来访问聚簇索引</p>
+</li>
+<li><p> 当缓冲区中的列表取完数据后，则继续调用过程 2) 3)，对超过缓存区大小的部分继续排序查询，直至扫描结束</p>
+</li>
+</ol>
+<p>通过上述过程，优化器将二级索引随机的 IO 进行排序，转化为主键的有序排列，从而实现了随机 IO 到顺序 IO 的转化，提升性能</p>
+<blockquote>
+<p>控制参数：</p>
+<p>用optimizer_switch 的标记来控制是否使用MRR.设置mrr=on时，表示启用MRR优化。</p>
+<p>mrr_cost_based表示是否通过cost base的方式来启用MRR.</p>
+<p>当mrr=on,mrr_cost_based=on,则表示cost base的方式还选择启用MRR优化,当发现优化后的代价过高时就会不使用该项优化</p>
+<p>当mrr=on,mrr_cost_based=off,则表示总是开启MRR优化</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SET @@optimizer_switch=&#x27;mrr=on,mrr_cost_based=on&#x27;;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<blockquote>
+<p>缓冲区参数：</p>
+<p>参数 read mnd_ bufter_size 用来控制键值的缓冲区大小，当大于该值时，则执行器对已经缓存的数据根据主键进行排序，并通过 主键来取得行数据。该值默认为256K</p>
+</blockquote>
+<h4 id="怎么给字符串字段加索引"><a href="#怎么给字符串字段加索引" class="headerlink" title="怎么给字符串字段加索引"></a><strong>怎么给字符串字段加索引</strong></h4><p>有时需要给较长的字符串字段加索引，这会使得索引变得大且慢。通常，可以定义字符串一部分前缀作为索引，这样可以大大节约索引空间，从而提高索引效率。但这样也会降低索引的区分度，还可能使查询变得更慢</p>
+<blockquote>
+<p>为什么说减小索引大小就能提高查询效率呢？首先较长的字符串在索引排序和值比较时势必会更慢。还有索引页大小都是固定的，较小的话每一页能够存放更多的索引，这样也能减少IO次数。重要的是节省空间</p>
+</blockquote>
+<p>假设，现在维护一个支持邮箱登录的系统，用户表是这么定义的：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">mysql&gt; </span><span class="language-bash">create table SUser(</span></span><br><span class="line">Id bigint unsigned primary key,</span><br><span class="line">email varchar(64) </span><br><span class="line">) engine=innodb; </span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以直接给 <code>email</code> 字段添加索引：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alter table SUser add index index1(email);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这样创建的索引键值包含整个 <code>email</code> 字符串。也可以指定只取前面几个字符创建索引，如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">mysql&gt; </span><span class="language-bash">alter table SUser add index index2(email(6));</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>这样两种定义方式的索引的数据结构和存储是这样的：</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/5a745e89-5287-48c0-958b-b684ec490b5e.png" alt="markdown"></p>
+<center style="font-size:14px;color:#C0C0C0;text-decoration:underline">index1</center> 
+
+
+
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/cfb104cc-8da7-4307-ab25-5b4a9d426584.png" alt="markdown"></p>
+<center style="font-size:14px;color:#C0C0C0;text-decoration:underline">index2</center> 
+
+
+
+<p>从图中可以看到，由于 <code>email(6)</code> 这个索引结构中邮箱只取前6个字符，所以占用空间会更小，这就是前缀索引的优势。但同时带来的问题是，<strong>可能额外增加回表次数</strong></p>
+<p>根据下面这条查询语句，来分析上面两种索引的执行过程：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> id,name,email <span class="keyword">from</span> SUser <span class="keyword">where</span> email<span class="operator">=</span><span class="string">&#x27;aaaaaab@gmail.com&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如果使用的是 <strong>index1</strong>（即整个字符串），执行顺序是这样的：</p>
+<ol>
+<li>从二级索引中找到满足值是 <code>aaaaaab@gmail.com</code> 的记录，取得 id = 200</li>
+<li>到聚簇索引上找到 id 为 200 的行</li>
+</ol>
+<h4 id="普通索引和唯一索引怎么选择"><a href="#普通索引和唯一索引怎么选择" class="headerlink" title="普通索引和唯一索引怎么选择"></a><strong>普通索引和唯一索引怎么选择</strong></h4><h2 id="其它索引"><a href="#其它索引" class="headerlink" title="其它索引"></a><strong>其它索引</strong></h2><h4 id="哈希索引"><a href="#哈希索引" class="headerlink" title="哈希索引"></a><strong>哈希索引</strong></h4><h4 id="全文索引"><a href="#全文索引" class="headerlink" title="全文索引"></a><strong>全文索引</strong></h4><h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><strong>《高性能MySQL第3版》</strong></p>
+<p><strong>《MySQL技术内幕InnoDB存储引擎第2版》</strong></p>
+<p><a target="_blank" rel="noopener" href="https://tech.meituan.com/2014/06/30/mysql-index.html">MySQL索引原理及慢查询优化</a></p>
+<p><a target="_blank" rel="noopener" href="https://tech.meituan.com/2017/05/19/about-desk-io.html">磁盘I/O那些事</a></p>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/mysql/">mysql</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2021/04/14/2021-04-14-mysql-sql-executing-process/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">mysql执行过程</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2021/03/03/2021-03-03-java-keywords/"><span class="level-item">Java中各种关键字</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "38e75b2a248532344e92adf3046d9aa7",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#索引原理"><span class="level-left"><span class="level-item">1</span><span class="level-item">索引原理</span></span></a></li><li><a class="level is-mobile" href="#磁盘IO与预读"><span class="level-left"><span class="level-item">2</span><span class="level-item">磁盘IO与预读</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#寻道时间"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">寻道时间</span></span></a></li><li><a class="level is-mobile" href="#旋转延迟"><span class="level-left"><span class="level-item">2.2</span><span class="level-item">旋转延迟</span></span></a></li><li><a class="level is-mobile" href="#传输时间"><span class="level-left"><span class="level-item">2.3</span><span class="level-item">传输时间</span></span></a></li></ul></li><li><a class="level is-mobile" href="#索引数据结构"><span class="level-left"><span class="level-item">3</span><span class="level-item">索引数据结构</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#一页16kb"><span class="level-left"><span class="level-item">3.1</span><span class="level-item">一页16kb</span></span></a></li><li><a class="level is-mobile" href="#索引页、数据页逻辑连续"><span class="level-left"><span class="level-item">3.2</span><span class="level-item">索引页、数据页逻辑连续</span></span></a></li><li><a class="level is-mobile" href="#通过二分-遍历查找"><span class="level-left"><span class="level-item">3.3</span><span class="level-item">通过二分+遍历查找</span></span></a></li></ul></li><li><a class="level is-mobile" href="#索引的查找"><span class="level-left"><span class="level-item">4</span><span class="level-item">索引的查找</span></span></a></li><li><a class="level is-mobile" href="#索引的维护"><span class="level-left"><span class="level-item">5</span><span class="level-item">索引的维护</span></span></a><ul class="menu-list"><ul class="menu-list"><li><a class="level is-mobile" href="#页分裂"><span class="level-left"><span class="level-item">5.1.1</span><span class="level-item">页分裂</span></span></a></li><li><a class="level is-mobile" href="#页合并"><span class="level-left"><span class="level-item">5.1.2</span><span class="level-item">页合并</span></span></a></li></ul></ul></li><li><a class="level is-mobile" href="#建索引的原则和使用时注意点"><span class="level-left"><span class="level-item">6</span><span class="level-item">建索引的原则和使用时注意点</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#原则"><span class="level-left"><span class="level-item">6.1</span><span class="level-item">原则</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#最左前缀匹配原则"><span class="level-left"><span class="level-item">6.1.1</span><span class="level-item">最左前缀匹配原则</span></span></a></li><li><a class="level is-mobile" href="#尽量选择区分度高的列作为索引"><span class="level-left"><span class="level-item">6.1.2</span><span class="level-item">尽量选择区分度高的列作为索引</span></span></a></li><li><a class="level is-mobile" href="#尽量的扩展索引，不要新建索引"><span class="level-left"><span class="level-item">6.1.3</span><span class="level-item">尽量的扩展索引，不要新建索引</span></span></a></li></ul></li><li><a class="level is-mobile" href="#使用时注意点"><span class="level-left"><span class="level-item">6.2</span><span class="level-item">使用时注意点</span></span></a></li></ul></li><li><a class="level is-mobile" href="#索引的使用"><span class="level-left"><span class="level-item">7</span><span class="level-item">索引的使用</span></span></a><ul class="menu-list"><ul class="menu-list"><li><a class="level is-mobile" href="#联合索引"><span class="level-left"><span class="level-item">7.1.1</span><span class="level-item">联合索引</span></span></a></li><li><a class="level is-mobile" href="#覆盖索引"><span class="level-left"><span class="level-item">7.1.2</span><span class="level-item">覆盖索引</span></span></a></li><li><a class="level is-mobile" href="#索引下推（ICP）"><span class="level-left"><span class="level-item">7.1.3</span><span class="level-item">索引下推（ICP）</span></span></a></li><li><a class="level is-mobile" href="#MRR优化（Multi-range-Read）"><span class="level-left"><span class="level-item">7.1.4</span><span class="level-item">MRR优化（Multi-range Read）</span></span></a></li><li><a class="level is-mobile" href="#怎么给字符串字段加索引"><span class="level-left"><span class="level-item">7.1.5</span><span class="level-item">怎么给字符串字段加索引</span></span></a></li><li><a class="level is-mobile" href="#普通索引和唯一索引怎么选择"><span class="level-left"><span class="level-item">7.1.6</span><span class="level-item">普通索引和唯一索引怎么选择</span></span></a></li></ul></ul></li><li><a class="level is-mobile" href="#其它索引"><span class="level-left"><span class="level-item">8</span><span class="level-item">其它索引</span></span></a><ul class="menu-list"><ul class="menu-list"><li><a class="level is-mobile" href="#哈希索引"><span class="level-left"><span class="level-item">8.1.1</span><span class="level-item">哈希索引</span></span></a></li><li><a class="level is-mobile" href="#全文索引"><span class="level-left"><span class="level-item">8.1.2</span><span class="level-item">全文索引</span></span></a></li></ul></ul></li><li><a class="level is-mobile" href="#参考"><span class="level-left"><span class="level-item">9</span><span class="level-item">参考</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

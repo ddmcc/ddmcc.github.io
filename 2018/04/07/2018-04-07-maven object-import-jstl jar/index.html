@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>maven项目导入jstl包,tomcat启动找不到jar文件,页面无法使用jstl标签 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="问题在pom.xml配置文件中，已经添加jstl包，服务器启动报异常，jstl jar包不能初始化，成功添加jar包后页面jstl不解析，导致无法取数据"><meta property="og:type" content="article"><meta property="og:title" content="maven项目导入jstl包,tomcat启动找不到jar文件,页面无法使用jstl标签"><meta property="og:url" content="http://example.com/2018/04/07/2018-04-07-maven%20object-import-jstl%20jar/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="问题在pom.xml配置文件中，已经添加jstl包，服务器启动报异常，jstl jar包不能初始化，成功添加jar包后页面jstl不解析，导致无法取数据"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://ww1.sinaimg.cn/large/0060GLrDgy1fq3gh18e2qj308v0b5wer.jpg"><meta property="og:image" content="http://ww1.sinaimg.cn/large/0060GLrDgy1fq3gldrvkpj30vz0hjjrs.jpg"><meta property="og:image" content="http://ww1.sinaimg.cn/large/0060GLrDgy1fq3go6ldl9j30n50dt74d.jpg"><meta property="og:image" content="http://ww1.sinaimg.cn/large/0060GLrDgy1fq3grklz4mj30s9031dg0.jpg"><meta property="og:image" content="http://ww1.sinaimg.cn/large/0060GLrDgy1fq3h0apdr3j31cc0n017r.jpg"><meta property="article:published_time" content="2018-04-06T17:52:42.000Z"><meta property="article:modified_time" content="2023-04-15T14:31:16.741Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="maven"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="http://ww1.sinaimg.cn/large/0060GLrDgy1fq3gh18e2qj308v0b5wer.jpg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2018/04/07/2018-04-07-maven%20object-import-jstl%20jar/"},"headline":"maven项目导入jstl包,tomcat启动找不到jar文件,页面无法使用jstl标签","image":["http://ww1.sinaimg.cn/large/0060GLrDgy1fq3gh18e2qj308v0b5wer.jpg","http://ww1.sinaimg.cn/large/0060GLrDgy1fq3gldrvkpj30vz0hjjrs.jpg","http://ww1.sinaimg.cn/large/0060GLrDgy1fq3go6ldl9j30n50dt74d.jpg","http://ww1.sinaimg.cn/large/0060GLrDgy1fq3grklz4mj30s9031dg0.jpg","http://ww1.sinaimg.cn/large/0060GLrDgy1fq3h0apdr3j31cc0n017r.jpg"],"datePublished":"2018-04-06T17:52:42.000Z","dateModified":"2023-04-15T14:31:16.741Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"问题在pom.xml配置文件中，已经添加jstl包，服务器启动报异常，jstl jar包不能初始化，成功添加jar包后页面jstl不解析，导致无法取数据"}</script><link rel="canonical" href="http://example.com/2018/04/07/2018-04-07-maven%20object-import-jstl%20jar/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2018-04-06T17:52:42.000Z" title="2018/4/7 01:52:42">2018-04-07</time>发表</span><span class="level-item"><time dateTime="2023-04-15T14:31:16.741Z" title="2023/4/15 22:31:16">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/maven/">maven</a></span></div></div><h1 class="title is-3 is-size-4-mobile">maven项目导入jstl包,tomcat启动找不到jar文件,页面无法使用jstl标签</h1><div class="content"><h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><p>在pom.xml配置文件中，已经添加jstl包，服务器启动报异常，jstl jar包不能初始化，成功添加jar包后页面jstl不解析，导致无法取数据</p>
+<span id="more"></span>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">org.apache.jasper.JasperException: The absolute uri: [http:<span class="comment">//java.sun.com/jsp/jstl/core] cannot be resolved in either web.xml or the jar files deployed with this application</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h2><p>网上查发现是项目中并没有导入jar包，一脸懵逼？？？pom.xml不是导入了吗</p>
+<p>没导入就没导入吧，那我手动导入行不行？？</p>
+<p>把jar包手动拷贝到 <code>/WEB-INF</code> 目录下</p>
+<p><img src="http://ww1.sinaimg.cn/large/0060GLrDgy1fq3gh18e2qj308v0b5wer.jpg"></p>
+<p>有报错，虽然不知道什么原因，但是对于一个强迫症患者来说这怎么行？？</p>
+<p>于是乎直接把jar包扔到了 <code>tomcat</code> 下的 <code>lib</code> 目录下了，哈哈哈这下总可以了吧</p>
+<p>启动</p>
+<p><img src="http://ww1.sinaimg.cn/large/0060GLrDgy1fq3gldrvkpj30vz0hjjrs.jpg"></p>
+<p>完美！看见登录页面了！</p>
+<p>下面登录就可以登录了，走你</p>
+<p>ε=(´ο｀*)))唉？页面好像不太对，数据呢？</p>
+<p><img src="http://ww1.sinaimg.cn/large/0060GLrDgy1fq3go6ldl9j30n50dt74d.jpg"></p>
+<p>我的jstl表达式怎么出来了啦？Σ(⊙▽⊙”a表达式好像没有解析 <code>$&#123;user.nickname &#125;,$&#123;user.gender eq 0? &#39;男&#39;:&#39;女&#39;&#125; $&#123;user.province &#125;,$&#123;user.city &#125;</code></p>
+<p>这样还不行？继续查之~~~~</p>
+<p>终于在页面添加</p>
+<p><img src="http://ww1.sinaimg.cn/large/0060GLrDgy1fq3grklz4mj30s9031dg0.jpg"></p>
+<p><strong><code>&lt;%@ page isELIgnored=&quot;false&quot;%&gt;</code></strong> 问题解决！！</p>
+<p><img src="http://ww1.sinaimg.cn/large/0060GLrDgy1fq3h0apdr3j31cc0n017r.jpg"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li><strong>(1)，pom.xml配置jstl jar包</strong></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;!-- https:<span class="comment">//mvnrepository.com/artifact/javax.servlet/jstl --&gt;</span></span><br><span class="line">	&lt;dependency&gt;</span><br><span class="line">		&lt;groupId&gt;javax.servlet&lt;/groupId&gt;</span><br><span class="line">		&lt;artifactId&gt;jstl&lt;/artifactId&gt;</span><br><span class="line">		&lt;version&gt;<span class="number">1.2</span>&lt;/version&gt;</span><br><span class="line">	&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><strong>(2)，tomcat的lib目中添加jstl jar包</strong></p>
+</li>
+<li><p><strong>(3)，jsp页面添加 <code>&lt;%@ page isELIgnored=&quot;false&quot;%&gt;</code></strong></p>
+</li>
+</ul>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/maven/">maven</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2018/04/11/2018-04-11-maven%20object-use-junit/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">maven项目中使用JUnit进行单元测试</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2018/04/06/2018-04-06-how-to-use-domain/"><span class="level-item">如何用自己的域名来访问博客</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "3c9fb4db5917522ed32a2f29c1496f1f",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#问题"><span class="level-left"><span class="level-item">1</span><span class="level-item">问题</span></span></a></li><li><a class="level is-mobile" href="#解决"><span class="level-left"><span class="level-item">2</span><span class="level-item">解决</span></span></a></li><li><a class="level is-mobile" href="#总结"><span class="level-left"><span class="level-item">3</span><span class="level-item">总结</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>锁与事务隔离级别 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="锁与事务隔离级别…"><meta property="og:type" content="article"><meta property="og:title" content="锁与事务隔离级别"><meta property="og:url" content="http://example.com/2021/05/10/2021-05-10-locking-and-isolation-level/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="锁与事务隔离级别…"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/e8ec94cf-9413-4367-b80d-2d04be0d4e8d.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/fad0465e-d79a-400b-897d-d4a0e56d5db7.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/857ac367-fb87-4543-8788-4e531d1b41e7.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/8778836b-34a8-480b-b8c7-654fe207a8c2.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/6fb2b9a1-5f14-4dec-a797-e4cf388ed413.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/a3fd1ec6-8f37-42fa-b090-7446d488fd04.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/528559e9-dae8-4d14-b78d-a5b657c88391.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/6f82703c-36a1-4458-90fe-d7f4edbac71a.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/0e906b95-c916-4f30-beda-9cb3e49746bf.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/79ed6142-7664-4e0b-9023-cf546586aa39.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/cbbedbc5-0e3c-4711-aafd-7f3d68a4ed4e.png"><meta property="article:published_time" content="2021-05-10T08:56:23.000Z"><meta property="article:modified_time" content="2023-04-14T17:51:38.311Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="mysql"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://ddmcc-1255635056.file.myqcloud.com/e8ec94cf-9413-4367-b80d-2d04be0d4e8d.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2021/05/10/2021-05-10-locking-and-isolation-level/"},"headline":"锁与事务隔离级别","image":["https://ddmcc-1255635056.file.myqcloud.com/e8ec94cf-9413-4367-b80d-2d04be0d4e8d.png","https://ddmcc-1255635056.file.myqcloud.com/fad0465e-d79a-400b-897d-d4a0e56d5db7.png","https://ddmcc-1255635056.file.myqcloud.com/857ac367-fb87-4543-8788-4e531d1b41e7.png","https://ddmcc-1255635056.file.myqcloud.com/8778836b-34a8-480b-b8c7-654fe207a8c2.png","https://ddmcc-1255635056.file.myqcloud.com/6fb2b9a1-5f14-4dec-a797-e4cf388ed413.png","https://ddmcc-1255635056.file.myqcloud.com/a3fd1ec6-8f37-42fa-b090-7446d488fd04.png","https://ddmcc-1255635056.file.myqcloud.com/528559e9-dae8-4d14-b78d-a5b657c88391.png","https://ddmcc-1255635056.file.myqcloud.com/6f82703c-36a1-4458-90fe-d7f4edbac71a.png","https://ddmcc-1255635056.file.myqcloud.com/0e906b95-c916-4f30-beda-9cb3e49746bf.png","https://ddmcc-1255635056.file.myqcloud.com/79ed6142-7664-4e0b-9023-cf546586aa39.png","https://ddmcc-1255635056.file.myqcloud.com/cbbedbc5-0e3c-4711-aafd-7f3d68a4ed4e.png"],"datePublished":"2021-05-10T08:56:23.000Z","dateModified":"2023-04-14T17:51:38.311Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"锁与事务隔离级别…"}</script><link rel="canonical" href="http://example.com/2021/05/10/2021-05-10-locking-and-isolation-level/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2021-05-10T08:56:23.000Z" title="2021/5/10 16:56:23">2021-05-10</time>发表</span><span class="level-item"><time dateTime="2023-04-14T17:51:38.311Z" title="2023/4/15 01:51:38">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/mysql/">mysql</a></span></div></div><h1 class="title is-3 is-size-4-mobile">锁与事务隔离级别</h1><div class="content"><p>锁与事务隔离级别…</p>
+<span id="more"></span>
+
+<h2 id="悲观锁和乐观锁"><a href="#悲观锁和乐观锁" class="headerlink" title="悲观锁和乐观锁"></a><strong>悲观锁和乐观锁</strong></h2><ul>
+<li>悲观锁</li>
+</ul>
+<p>在整个数据处理过程中，将数据处于锁定状态。悲观锁的实现，往往依靠数据库提供的锁机制（也只有数据库层提供的锁机制才能真正保证数据访问的排他性，否则，即使在本系统中实现了加锁机制，也无法保证外部系统不会修改数据）</p>
+<p>在悲观锁的情况下，为了保证事务的隔离性，就需要 <strong>一致性锁定读</strong>。读取数据时给加锁，其它事务无法修改这些数据。修改删除数据时也要加锁，其它事务无法读取这些数据</p>
+<ul>
+<li>乐观锁(<strong>一致性非锁定读</strong>)</li>
+</ul>
+<p>相对悲观锁而言，乐观锁机制采取了更加宽松的加锁机制。悲观锁大多数情况下依靠数据库的锁机制实现，以保证操作最大程度的独占性</p>
+<p>而乐观锁机制在一定程度上解决了这个问题。<strong>乐观锁，大多是基于数据版本（ Version ）记录机制实现</strong>。在基于数据库表的版本解决方案中，一般是通过为数据库表增加一个 “version” 字段来实现。读取出数据时，将此版本号一同读出，之后更新时，对此版本号加一。此时，将提交数据的版本数据与数据库表对应记录的当前版本信息进行比对，如果提交的数据版本号大于数据库表当前版本号，则予以更新，否则认为是过期数据</p>
+<h2 id="Read-Committed"><a href="#Read-Committed" class="headerlink" title="Read Committed"></a><strong>Read Committed</strong></h2><p>在RC级别中，数据的读取都是不加锁的（<strong>采用一致性非锁定读</strong>），但是数据的写入、修改和删除是需要加锁的（<strong>仅使用Record Lock</strong>）</p>
+<p>为了防止并发过程中的修改冲突，事务 A 给 <code>a = 4</code> 的数据行加锁，并一直不commit（释放锁），那么事务 B 也就一直拿不到该行锁，wait直到超时</p>
+<p>上面这种情况是在 a 是有索引情况下，如果是没有索引的 e 字段呢？</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">update</span> t <span class="keyword">set</span> a<span class="operator">=</span><span class="number">3</span> <span class="keyword">where</span> e <span class="operator">=</span> <span class="number">1</span>; </span><br></pre></td></tr></table></figure>
+
+
+
+<p>那么MySQL会给整张表的所有数据行的加行锁。MySQL并不知道哪些数据行是 e = 1 的，如果一个条件无法通过索引快速过滤，存储引擎层面就会将所有记录加锁后返回，再由MySQL Server层进行过滤</p>
+<p>但在实际使用过程当中，MySQL做了一些改进，在MySQL Server过滤条件，发现不满足后，会调用 <code>unlock_row</code> 方法，把不满足条件的记录释放锁 (违背了二段锁协议的约束)。这样做，保证了最后只会持有满足条件记录上的锁，但是每条记录的加锁操作还是不能省略的。（参见《高性能MySQL》中文第三版p181）</p>
+<p>这种情况同样适用于MySQL的默认隔离级别RR。所以对一个数据量很大的表做批量修改的时候，如果无法使用相应的索引，MySQL Server过滤数据的时候特别慢，就会出现虽然没有修改某些行的数据，但是它们还是被锁住了的现象</p>
+<h2 id="Repeatable-Read"><a href="#Repeatable-Read" class="headerlink" title="Repeatable Read"></a><strong>Repeatable Read</strong></h2><p>RC（不可重读）模式下的展现</p>
+<table>
+<thead>
+<tr>
+<th align="left">事务A</th>
+<th align="left">事务B</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">begin;</td>
+<td align="left">begin;</td>
+</tr>
+<tr>
+<td align="left">select id,class_name,teacher_id from class_teacher where teacher_id=1;<br />id | class_name | teacher_id<br />1  | 初三二班     ｜1<br />2  | 初三一班     ｜1</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left">update class_teacher set class_name=’初三三班’ where id=1;</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left">commit;</td>
+</tr>
+<tr>
+<td align="left">select id,class_name,teacher_id from class_teacher where teacher_id=1;<br />id | class_name | teacher_id<br />1  | 初三三班      | 1<br />2  | 初三一班      | 1 <br /></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">commit;</td>
+<td align="left"></td>
+</tr>
+</tbody></table>
+<hr>
+<p>事务 B 修改 <code>id = 1</code> 的数据提交之后，事务 A 同样的查询，后一次和前一次的结果不一样，这就是不可重读（重新读取产生的结果不一样）</p>
+<p>这就很可能带来一些问题，那么我们来看看在 RR 级别中的表现：</p>
+<hr>
+<table>
+<thead>
+<tr>
+<th align="left">事务A</th>
+<th align="left">事务B</th>
+<th align="left">事务C</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">begin;</td>
+<td align="left">begin;</td>
+<td align="left">begin;</td>
+</tr>
+<tr>
+<td align="left">select id,class_name,teacher_id from class_teacher where teacher_id=1;<br />id | class_name | teacher_id<br />1  | 初三二班      | 1<br />2  | 初三一班      | 1</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left">update class_teacher set class_name=’初三三班’ where id=1;<br />commit;</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left">insert into class_teacher values (null,’初三三班’,1);<br />commit;</td>
+</tr>
+<tr>
+<td align="left">select id,class_name,teacher_id from class_teacher where teacher_id=1;<br />id | class_name | teacher_id<br />1  | 初三二班      | 1<br />2  | 初三一班      | 1 <br /><br />没有读到事务B修改的数据，和第一次sql读取的一样，是可重复读的<br />没有读到事务C新添加的数据，没有出现幻读问题</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">commit;</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+</tbody></table>
+<hr>
+<p>我们注意到，当 <code>teacher_id=1</code> 时，事务 A 先做了一次读取，事务 B 中间修改了<code> id=1</code> 的数据，并commit之后，事务A第二次读到的数据和第一次完全相同。所以说它是可重读的</p>
+<p><strong>在 RR 隔离级别下，对于读 InnoDB 存储引擎同样使用 <code>一致性非锁定读</code> ，但加锁上却和RC不同，其使用 Next-Key Lock</strong> </p>
+<h2 id="MVCC在InnoDB中的实现"><a href="#MVCC在InnoDB中的实现" class="headerlink" title="MVCC在InnoDB中的实现"></a><strong>MVCC在InnoDB中的实现</strong></h2><p>在InnoDB中，会在每行数据后添加两个额外的隐藏的值来实现 MVCC，这两个值一个记录这行数据创建事务id（<strong>DB_TRX_ID</strong>），另外一个记录这行回滚指针（<strong>DB_ROLL_PTR</strong>）</p>
+<blockquote>
+<p>DB_TRX_ID：表示最近一次对本记录行作修改（insert 或 update）的事务ID。至于delete操作，InnoDB认为是一个update操作，不过会更新一个另外的删除位，将行表示为deleted。并非真正删除</p>
+<p>DB_ROLL_PTR：回滚指针，指向 undo log 记录。每次对某条记录进行改动时，该列会存一个指针，可以通过这个指针找到该记录修改前的信息 。当某条记录被多次修改时，该行记录会存在多个版本，通过DB_ROLL_PTR 链接形成一个类似版本链的概念。</p>
+</blockquote>
+<p>每开启一个新事务，事务的版本号就会递增。 在可重读Repeatable reads事务隔离级别下：</p>
+<ul>
+<li>SELECT时，读取行版本号 &lt;= 当前事务版本号，并且删除版本号为空或&gt;当前事务版本号</li>
+<li>INSERT时，保存当前事务版本号为行的版本号</li>
+<li>DELETE时，保存当前事务版本号为行的版本号，并修改删除标识符</li>
+<li>UPDATE时，插入一条新纪录，保存当前事务版本号为行创建版本号，同时保存当前事务版本号到原来删除的行版本号，并修改删除标识符</li>
+</ul>
+<p>通过MVCC，虽然每行记录都需要额外的存储空间，更多的行检查工作以及一些额外的维护工作，但可以减少锁的使用，大多数读操作都不用加锁，读数据操作很简单，性能很好，并且也能保证只会读取到符合标准的行，也只锁住必要行</p>
+<p><strong>MVCC 实现依赖的是 undo log 与 read view</strong></p>
+<p> <a target="_blank" rel="noopener" href="http://ddmcc.cn/2021/04/18/mysql-log-files/"><strong>undo log</strong></a></p>
+<p>根据行为的不同，undo log分为两种： <code>insert undo log</code> 和 <code>update undo log</code></p>
+<h4 id="insert-undo-log："><a href="#insert-undo-log：" class="headerlink" title="insert undo log："></a><strong>insert undo log：</strong></h4><p>  insert 操作中产生的undo log，因为insert操作记录只对当前事务本身课件，对于其他事务此记录不可见，所以 insert undo log 可以在事务提交后直接删除而不需要进行purge操作。</p>
+<blockquote>
+<p>purge的主要任务是将数据库中已经 mark del 的数据删除，另外也会批量回收undo pages</p>
+</blockquote>
+<p>数据库 Insert 时的数据初始状态：</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/e8ec94cf-9413-4367-b80d-2d04be0d4e8d.png" alt="markdown"></p>
+<h4 id="update-undo-log："><a href="#update-undo-log：" class="headerlink" title="update undo log："></a><strong>update undo log：</strong></h4><p>update 或 delete 操作中产生的 undo log。 因为会对已经存在的记录产生影响，为了提供 MVCC机制，因此update undo log 不能在事务提交时就进行删除，而是将事务提交时放到入 history list 上，等待 purge 线程进行最后的删除操作。</p>
+<p>数据第一次被修改时：</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/fad0465e-d79a-400b-897d-d4a0e56d5db7.png" alt="markdown"></p>
+<hr>
+<p>当另一个事务第二次修改当前数据：</p>
+<hr>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/857ac367-fb87-4543-8788-4e531d1b41e7.png" alt="markdown"></p>
+<h4 id="ReadView"><a href="#ReadView" class="headerlink" title="ReadView"></a><strong>ReadView</strong></h4><p>在 Innodb 中每个SQL语句执行前都会得到一个read view。 <strong>主要保存了当前数据库系统中正处于活跃（没有commit）的事务的ID号</strong>，其实简单的说这个副本中保存的是系统中当前不应该被本事务看到的其他事务id列表</p>
+<p><strong>Read view 的几个重要属性</strong></p>
+<ul>
+<li><p><strong>trx_ids:</strong> 当前系统活跃(未提交)事务版本号集合。<strong>不包括当前事务自己</strong> 和已提交的事务（正在内存中）</p>
+</li>
+<li><p><strong>low_limit_id:</strong> 创建当前read view 时“当前系统最大<strong>事务版本号</strong>+1”。即下一个将被分配的事务ID</p>
+</li>
+<li><p><strong>up_limit_id:</strong> 创建当前read view 时“系统正处于<strong>活跃事务</strong>最小版本号”，如果trx_ids为空，则up_limit_id 为 low_limit_id</p>
+</li>
+<li><p><strong>creator_trx_id:</strong> 创建当前read view的事务版本号；</p>
+</li>
+</ul>
+<p><strong>ReadView 匹配条件</strong></p>
+<p><strong>（1）数据事务ID &lt; up_limit_id 则显示</strong></p>
+<p>如果数据事务ID小于read view中的最小活跃事务ID，则可以肯定该数据是在当前事务启之前就已经存在了的，所以可以显示</p>
+<p><strong>（2）数据事务ID &gt;= low_limit_id 则不显示</strong></p>
+<p>如果数据事务ID大于 read view 中的当前系统的最大事务ID，则说明该数据是在当前read view 创建之后才产生的，所以数据不予显示</p>
+<p><strong>（3） up_limit_id &lt;=</strong> 数据事务ID &lt; <strong>low_limit_id</strong></p>
+<p>如果数据的事务ID大于等于最小的活跃事务ID，同时又小于等于系统最大的事务ID，这种情况就说明这个数据有可能是在当前事务开始的时候还没有提交的。</p>
+<p>所以这时候我们需要把数据的事务ID与当前read view 中的活跃事务集合trx_ids 匹配:</p>
+<p><strong>情况1:</strong> 如果事务ID不存在于trx_ids 集合（则说明read view产生的时候事务已经commit了），这种情况数据则可以显示。</p>
+<p><strong>情况2：</strong> 如果事务ID存在trx_ids则说明read view产生的时候数据还没有提交，但是如果数据的事务ID等于creator_trx_id ，那么说明这个数据就是当前事务自己生成的，自己生成的数据自己当然能看见，所以这种情况下此数据也是可以显示的</p>
+<p><strong>情况3：</strong> 如果事务ID既存在trx_ids而且又不等于creator_trx_id那就说明read view产生的时候数据还没有提交，又不是自己生成的，所以这种情况下此数据不能显示</p>
+<p><strong>（4）不满足read view条件时候，从undo log里面获取数据</strong></p>
+<p>当数据的事务ID不满足read view条件时候，从undo log里面获取数据的历史版本，然后数据历史版本事务号回头再来和read view 条件匹配 ，直到找到一条满足条件的历史数据，或者找不到则返回空结果；</p>
+<p><strong><a target="_blank" rel="noopener" href="https://leviathan.vip/2019/03/20/InnoDB%E7%9A%84%E4%BA%8B%E5%8A%A1%E5%88%86%E6%9E%90-MVCC/#MVCC-1">附判断源码：</a></strong></p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/8778836b-34a8-480b-b8c7-654fe207a8c2.png" alt="markdown"></p>
+<h2 id="在RC和RR隔离级别下MVCC的差异"><a href="#在RC和RR隔离级别下MVCC的差异" class="headerlink" title="在RC和RR隔离级别下MVCC的差异"></a><strong>在RC和RR隔离级别下MVCC的差异</strong></h2><p>在事务隔离级别 RC 和 RR (InnoDB存储引擎的默认事务隔离级别)下， InnoDB存储引擎使用MVCC（非锁定一致性读），但它们生成 read view 的时机却不同</p>
+<ul>
+<li><p>在 RC 隔离级别下的每次读取数据前都生成一个ReadView (m_ids列表)</p>
+</li>
+<li><p>在  RR 隔离级别下只在事务开始后 <strong>第一次</strong> 读取数据时生成一个ReadView（m_ids列表）</p>
+</li>
+</ul>
+<h2 id="MVCC解决不可重复读问题"><a href="#MVCC解决不可重复读问题" class="headerlink" title="MVCC解决不可重复读问题"></a><strong>MVCC解决不可重复读问题</strong></h2><p>虽然 RC 和 RR 都通过 MVCC 来读取快照数据，但由于 <strong>生成 ReadView 时机不同</strong>，从而实现可重复读</p>
+<p>举个例子：</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/6fb2b9a1-5f14-4dec-a797-e4cf388ed413.png" alt="markdown"></p>
+<hr>
+<h4 id="在-RC-下-ReadView-生成情况"><a href="#在-RC-下-ReadView-生成情况" class="headerlink" title="在 RC 下 ReadView 生成情况"></a><strong>在 RC 下 ReadView 生成情况</strong></h4><ol>
+<li><strong>假设时间来到 <code>T4</code> ，那么此时数据行 id = 1 的版本链为：</strong></li>
+</ol>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/a3fd1ec6-8f37-42fa-b090-7446d488fd04.png" alt="markdown"></p>
+<hr>
+<p>由于 RC 级别下每次查询都会生成 ReadView ，并且事务101、102并未提交，此时 ReadView 中活跃的事务 <strong>trx_ids ：[101,102]</strong> 。所以查询语句会用当前版本链去 <code>trx_ids</code> 中对比，查找小于最大事务id且不在列表中的，由此可以知道返回的数据为 <code>name = &#39;菜花&#39;</code></p>
+<hr>
+<ol start="2">
+<li><p><strong>时间线来到 <code>T6</code> ，数据的版本链为：</strong></p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/528559e9-dae8-4d14-b78d-a5b657c88391.png" alt="markdown"></p>
+</li>
+</ol>
+<hr>
+<p>重新生成 ReadView，这时事务101已经提交，102并未提交，所以此时 ReadView 中活跃的事务 **trx_ids ：[102]**，因此查询到的数据为 <code>name = 李四</code></p>
+<hr>
+<ol start="3">
+<li><p><strong>时间线来到 <code>T9</code> ，数据的版本链为：</strong></p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/6f82703c-36a1-4458-90fe-d7f4edbac71a.png" alt="markdown"></p>
+</li>
+</ol>
+<hr>
+<p>当前数据的版本链如上，因为当前的事务 101 和事务 102 都已经提交，所以此时的活跃事务的 trx_ids 的列表为空 ，因此查询语句会直接查询当前数据库最新数据，即查询到的是 <code>name = 赵六</code></p>
+<blockquote>
+<p><strong>总结：</strong> <strong>使用RC隔离级别的事务在每次查询开始时都会生成一个独立的 ReadView。</strong></p>
+</blockquote>
+<h4 id="在-RR-下-ReadView-生成情况"><a href="#在-RR-下-ReadView-生成情况" class="headerlink" title="在 RR 下 ReadView 生成情况"></a><strong>在 RR 下 ReadView 生成情况</strong></h4><p>在可重复读级别下，只会在事务开始后第一次读取数据时生成一个ReadView（m_ids列表）</p>
+<ol>
+<li><p><strong>在 <code>T4</code> 情况下的版本链为：</strong></p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/0e906b95-c916-4f30-beda-9cb3e49746bf.png" alt="markdown"></p>
+</li>
+</ol>
+<hr>
+<p>在当前执行 select 语句时生成一个 ReadView，此时 **trx_ids ：[101,102]**，所以根据当前 ReadView 查询到的数据为 <code>name = 菜花</code></p>
+<ol start="2">
+<li><strong>时间点 T6 情况下：</strong></li>
+</ol>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/79ed6142-7664-4e0b-9023-cf546586aa39.png" alt="markdown"></p>
+<hr>
+<p>由于 T4 的时间点已经生成了 ReadView，所以在当前的事务中只会生成一次ReadView，所以此时依然沿用  **trx_ids ：[101,102]**，所以此时查询数据依然是 <code>name = 菜花</code></p>
+<ol start="3">
+<li><strong>时间点 T9 情况下：</strong></li>
+</ol>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/cbbedbc5-0e3c-4711-aafd-7f3d68a4ed4e.png" alt="markdown"></p>
+<hr>
+<p>此时情况跟 T6 完全一样，由于已经生成了 ReadView，此时依然沿用  **trx_ids ：[101,102]**，所以查询数据依然是 <code>name = 菜花</code></p>
+<p><strong>总结：</strong></p>
+<blockquote>
+<p>在 READ COMMITTED 中每次查询都会生成一个实时的 ReadView，做到保证每次提交后的数据是处于当前的可见状态。而REPEATABLE READ 中，在当前事务第一次查询时生成当前的 ReadView，并且当前的 ReadView 会一直沿用到当前事务提交，以此来保证可重复读。简单的说在 READ COMMITTED 事务隔离级别下，对于快照数据，非一致性读总是读取被锁定行的最新一份快照数据。而在 REPEATABLE READ事务隔离级别下，对于快照数据，非一致性读总是读取事务开始时的行数据版本</p>
+</blockquote>
+<h2 id="MVCC-Next-Key-Lock-解决幻读问题"><a href="#MVCC-Next-Key-Lock-解决幻读问题" class="headerlink" title="MVCC + Next-Key Lock 解决幻读问题"></a><strong>MVCC + Next-Key Lock 解决幻读问题</strong></h2><p>可能在很多地方看到 RR 级别是可重复读的，但无法解决幻读问题，而只有在Serializable级别才能解决幻读。但在上面重现可重复读的额例子中，在事务 C 中添加了一条 <code>teacher_id = 1</code> 的数据并且 commit，RR 级别中应该会有幻读现象，事务 A 在查询 <code>teacher_id = 1</code> 的数据时会读到事务 C 新加的数据。但是测试后发现，是不存在这种情况的，在事务 C 提交后，事务A还是不会读到这条数据。<strong>可见 MVCC 在MySQL的RR级别中，是解决了幻读的读问题</strong></p>
+<h4 id="快照读与当前读"><a href="#快照读与当前读" class="headerlink" title="快照读与当前读"></a>快照读与当前读</h4><ul>
+<li><strong><a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/5.7/en/innodb-consistent-read.html">快照读</a><strong>：在RR级别中，通过 MVCC 机制，让数据变得可重复读，但我们读到的数据可能是历史数据，是不及时的数据，不是数据库当前的数据！对于这种读取历史数据的方式，我们叫它快照读 (snapshot read)，</strong>通过 MVCC + undo log 来实现</strong></li>
+<li>**<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/5.7/en/innodb-locking-reads.html">当前读</a>**：当前读也就是 <code>一致性锁定读</code> ，读的是当前最新版本的数据。读的时候需要给数据加锁，其它事务无法修改这些数据。其它事务可以读取这些数据，但读取到的是快照</li>
+</ul>
+<p>根据定义快照读和当前读在 mysql 中分别值：</p>
+<ul>
+<li>快照读：普通 select<ul>
+<li>select * from table ….;</li>
+</ul>
+</li>
+<li>当前读：特殊的读操作，插入/更新/删除操作，属于当前读，还有手动加锁读<ul>
+<li>select * from table where ? lock in share mode;</li>
+<li>select * from table where ? for update;</li>
+<li>insert;</li>
+<li>update ;</li>
+<li>delete;</li>
+</ul>
+</li>
+</ul>
+<p>只靠 MVCC 实现 RR 隔离级别，可以保证可重复读，还能防止部分幻读，但并不是完全防止。</p>
+<p>比如事务 A 开始后，执行普通 select 语句，创建了快照；之后事务 B 执行 <code>insert</code> 语句；然后事务 A 再执行普通 <code>select</code> 语句，得到的还是之前B没有 <code>insert</code> 过的数据，因为这时候 A 读的数据是符合快照可见性条件的数据。这就防止了部分幻读，此时事务 A 是快照读</p>
+<blockquote>
+<p>这点上面介绍过也复现过</p>
+</blockquote>
+<p>但是，如果事务 A 执行的不是普通 select 语句，而是 select … for update / update 等语句。这时候，事务 A 是 <strong>当前读</strong>，每次语句执行的时候都是获取的最新数据。也就是说，在只有 MVCC 时，A 先执行 select … where nid between 1 and 10 … for update；然后事务B再执行  insert … nid = 5 …；然后 A 再执行 select … where nid between 1 and 10 … for update，就会发现，多了一条B insert进去的记录。这就产生幻读了，所以单独靠MVCC并不能完全防止幻读</p>
+<p>在默认隔离级别 <code>REPEATABLE READ</code> 下，InnoDB 中行锁默认使用算法 Next-Key Lock，只有当查询的索引是唯一索引或主键时，InnoDB会对 Next-Key Lock 进行优化，将其降级为 Record Lock，即仅锁住索引本身，而不是范围</p>
+<p>当查询的索引为辅助索引时，InnoDB则会使用Next-Key Lock进行加锁。InnoDB对于辅助索引有特殊的处理，不仅会锁住辅助索引值所在的范围，还会将其下一键值加上Gap Lock</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> e4 (a <span class="type">INT</span>, b <span class="type">INT</span>, <span class="keyword">PRIMARY</span> KEY(a), KEY(b));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> e4 <span class="keyword">SELECT</span> <span class="number">1</span>,<span class="number">1</span>;</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> e4 <span class="keyword">SELECT</span> <span class="number">3</span>,<span class="number">1</span>;</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> e4 <span class="keyword">SELECT</span> <span class="number">5</span>,<span class="number">3</span>;</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> e4 <span class="keyword">SELECT</span> <span class="number">7</span>,<span class="number">6</span>;</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> e4 <span class="keyword">SELECT</span> <span class="number">10</span>,<span class="number">8</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后执行下面的语句：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM e4 WHERE b=3 FOR UPDATE;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>因为通过辅助索引b来进行查询，所以 InnoDB 会使用 Next-Key Lock 进行加锁，并且还会对主键索引a进行加锁。对于主键索引a，仅仅对值为5的索引加上 Record Lock。而对于索引b，需要加上 Next-Key Lock 索引，锁定的范围是(1,3]。除此之外，还会对其下一个键值加上Gap Lock，即还有一个范围为(3,6)的锁</p>
+<p>再新开一个会话，执行下面的SQL语句，会发现都会被阻塞：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM e4 WHERE a = 5 FOR UPDATE; # 主键a被锁</span><br><span class="line">INSERT INTO e4 SELECT 4,2; # 插入行b的值为2，在锁定的(1,3]范围内</span><br><span class="line">INSERT INTO e4 SELECT 6,5; # 插入行b的值为5，在锁定的(3,6)范围内</span><br></pre></td></tr></table></figure>
+
+
+
+<p>若此时没有 Gap Lock 锁定(3,6) ，虽然会话A锁住了 b = 3 这条记录，但是会话B可以插入一条值为4的记录，这会导致会话A中再次执行查询时会返回不同的记录，即导致幻读问题</p>
+<p>InnoDB 存储引擎采用 Next-Key Lock 来解决幻读问题。因为 Next-Key Lock 是锁住一个范围，所以就不会产生幻读问题。但是需要注意的是，<strong>InnoDB 只在 Repeatable Read 隔离级别下使用该机制</strong></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a><strong>参考</strong></h2><p><strong>《MySQL技术内幕InnoDB存储引擎第2版》</strong></p>
+<p><a target="_blank" rel="noopener" href="https://tech.meituan.com/2014/08/20/innodb-lock.html">Innodb中的事务隔离级别和锁的关系</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_35190492/article/details/109044141">MySQL事务与MVCC如何实现的隔离级别</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/52977862">Innodb MVCC实现原理</a></p>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/mysql/">mysql</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2021/05/22/2021-05-22-mybatis-dynamic-sql/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">mybatis动态sql的问题</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2021/04/26/2021-04-26-mysql-innodb-locking/"><span class="level-item">InnoDB存储引擎中的锁</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "591d8671954d13dc4cb78de88c107620",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#悲观锁和乐观锁"><span class="level-left"><span class="level-item">1</span><span class="level-item">悲观锁和乐观锁</span></span></a></li><li><a class="level is-mobile" href="#Read-Committed"><span class="level-left"><span class="level-item">2</span><span class="level-item">Read Committed</span></span></a></li><li><a class="level is-mobile" href="#Repeatable-Read"><span class="level-left"><span class="level-item">3</span><span class="level-item">Repeatable Read</span></span></a></li><li><a class="level is-mobile" href="#MVCC在InnoDB中的实现"><span class="level-left"><span class="level-item">4</span><span class="level-item">MVCC在InnoDB中的实现</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#insert-undo-log："><span class="level-left"><span class="level-item">4.1</span><span class="level-item">insert undo log：</span></span></a></li><li><a class="level is-mobile" href="#update-undo-log："><span class="level-left"><span class="level-item">4.2</span><span class="level-item">update undo log：</span></span></a></li><li><a class="level is-mobile" href="#ReadView"><span class="level-left"><span class="level-item">4.3</span><span class="level-item">ReadView</span></span></a></li></ul></li><li><a class="level is-mobile" href="#在RC和RR隔离级别下MVCC的差异"><span class="level-left"><span class="level-item">5</span><span class="level-item">在RC和RR隔离级别下MVCC的差异</span></span></a></li><li><a class="level is-mobile" href="#MVCC解决不可重复读问题"><span class="level-left"><span class="level-item">6</span><span class="level-item">MVCC解决不可重复读问题</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#在-RC-下-ReadView-生成情况"><span class="level-left"><span class="level-item">6.1</span><span class="level-item">在 RC 下 ReadView 生成情况</span></span></a></li><li><a class="level is-mobile" href="#在-RR-下-ReadView-生成情况"><span class="level-left"><span class="level-item">6.2</span><span class="level-item">在 RR 下 ReadView 生成情况</span></span></a></li></ul></li><li><a class="level is-mobile" href="#MVCC-Next-Key-Lock-解决幻读问题"><span class="level-left"><span class="level-item">7</span><span class="level-item">MVCC + Next-Key Lock 解决幻读问题</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#快照读与当前读"><span class="level-left"><span class="level-item">7.1</span><span class="level-item">快照读与当前读</span></span></a></li></ul></li><li><a class="level is-mobile" href="#参考"><span class="level-left"><span class="level-item">8</span><span class="level-item">参考</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

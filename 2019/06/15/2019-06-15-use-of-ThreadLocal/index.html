@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>ThreadLocal的使用与源码 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="使用当有一个单例类中有实例变量，而业务逻辑又要对变量进行处理，当有多个线程同时操作时，如果没有给处理代码加上锁，就有可能出现线程安全问题。如：我们最常见的获取JDBC连接的连接，还有我们交给Spring容器管理的类等"><meta property="og:type" content="article"><meta property="og:title" content="ThreadLocal的使用与源码"><meta property="og:url" content="http://example.com/2019/06/15/2019-06-15-use-of-ThreadLocal/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="使用当有一个单例类中有实例变量，而业务逻辑又要对变量进行处理，当有多个线程同时操作时，如果没有给处理代码加上锁，就有可能出现线程安全问题。如：我们最常见的获取JDBC连接的连接，还有我们交给Spring容器管理的类等"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/f733c676-f954-4abe-8e09-d18c6fa3296b.png"><meta property="og:image" content="http://ws3.sinaimg.cn/large/005BYqpggy1g4286ow803j315g0buaar.jpg"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/03ff0bbc-478e-4ebf-bd1c-5c3c5ee1108c.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/51d8250c-aab5-4d4d-aace-37717a3582ec.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/c4e0830d-f3e7-4202-88cb-8ee3bf23cb27.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/2ff9e26f-9885-4aea-9bd9-83933943eea6.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/08851268-19fb-4bec-aa12-e8e191cdfb48.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/f1c528a3-2d31-4dcb-a5d5-3cd9c5bc7b86.png"><meta property="article:published_time" content="2019-06-15T12:24:01.000Z"><meta property="article:modified_time" content="2023-04-15T14:39:19.009Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="ThreadLocal"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://ddmcc-1255635056.file.myqcloud.com/f733c676-f954-4abe-8e09-d18c6fa3296b.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2019/06/15/2019-06-15-use-of-ThreadLocal/"},"headline":"ThreadLocal的使用与源码","image":["https://ddmcc-1255635056.file.myqcloud.com/f733c676-f954-4abe-8e09-d18c6fa3296b.png","http://ws3.sinaimg.cn/large/005BYqpggy1g4286ow803j315g0buaar.jpg","https://ddmcc-1255635056.file.myqcloud.com/03ff0bbc-478e-4ebf-bd1c-5c3c5ee1108c.png","https://ddmcc-1255635056.file.myqcloud.com/51d8250c-aab5-4d4d-aace-37717a3582ec.png","https://ddmcc-1255635056.file.myqcloud.com/c4e0830d-f3e7-4202-88cb-8ee3bf23cb27.png","https://ddmcc-1255635056.file.myqcloud.com/2ff9e26f-9885-4aea-9bd9-83933943eea6.png","https://ddmcc-1255635056.file.myqcloud.com/08851268-19fb-4bec-aa12-e8e191cdfb48.png","https://ddmcc-1255635056.file.myqcloud.com/f1c528a3-2d31-4dcb-a5d5-3cd9c5bc7b86.png"],"datePublished":"2019-06-15T12:24:01.000Z","dateModified":"2023-04-15T14:39:19.009Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"使用当有一个单例类中有实例变量，而业务逻辑又要对变量进行处理，当有多个线程同时操作时，如果没有给处理代码加上锁，就有可能出现线程安全问题。如：我们最常见的获取JDBC连接的连接，还有我们交给Spring容器管理的类等"}</script><link rel="canonical" href="http://example.com/2019/06/15/2019-06-15-use-of-ThreadLocal/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2019-06-15T12:24:01.000Z" title="2019/6/15 20:24:01">2019-06-15</time>发表</span><span class="level-item"><time dateTime="2023-04-15T14:39:19.009Z" title="2023/4/15 22:39:19">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></span></div></div><h1 class="title is-3 is-size-4-mobile">ThreadLocal的使用与源码</h1><div class="content"><h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>当有一个单例类中有实例变量，而业务逻辑又要对变量进行处理，当有多个线程同时操作时，如果没有给处理代码加上锁，就有可能出现线程安全问题。如：我们最常见的获取JDBC连接的<br>连接，还有我们交给Spring容器管理的类等</p>
+<span id="more"></span>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line">    <span class="comment">// 假设此时有两个线程 main代表线程a thread代表线程b，当线程a执行到设置完name的值，这时线程b拿到了cpu的时间片，执行setName</span></span><br><span class="line">    <span class="comment">// 这是线程b的name也变成了线程b的name，因为Test对象是单例，两个线程操作的是同一个对象。</span></span><br><span class="line"></span><br><span class="line">    <span class="type">Test</span> <span class="variable">test</span> <span class="operator">=</span> Test.getInstance();</span><br><span class="line">    System.out.println(Thread.currentThread().getName());</span><br><span class="line">    test.setName(Thread.currentThread().getName());</span><br><span class="line">    <span class="type">Thread</span> <span class="variable">thread</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Thread</span>(() -&gt; &#123;</span><br><span class="line">        <span class="type">Test</span> <span class="variable">test1</span> <span class="operator">=</span> Test.getInstance();</span><br><span class="line">        test1.setName(Thread.currentThread().getName());</span><br><span class="line">        System.out.println(test1.getName());</span><br><span class="line">    &#125;);</span><br><span class="line">    thread.start();</span><br><span class="line">    thread.join();</span><br><span class="line">    System.out.println(test.getName());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 一个单例类</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Test</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="title function_">Test</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="type">Test</span> <span class="variable">test</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Test <span class="title function_">getInstance</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="literal">null</span> == test) &#123;</span><br><span class="line">		test = <span class="keyword">new</span> <span class="title class_">Test</span>();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> test;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">getName</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setName</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.name = name;</span><br><span class="line">    &#125;		</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出结果为：</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/f733c676-f954-4abe-8e09-d18c6fa3296b.png" alt="markdown"></p>
+<p>在上面的Test单例的，就如我们交给Spring管理的Bean， <strong>当有两个线程同时操作时，其中一个先操作修改了，刚好另一个线程拿到cpu时间片，就会引发线程安全问题。</strong></p>
+<p>所以我们可能需要在修改数据的地方加上同步锁，但这样性能又不好。这时就可以使用ThreadLocal了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Test</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> ThreadLocal&lt;String&gt; name = <span class="keyword">new</span> <span class="title class_">ThreadLocal</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="title function_">Test</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="type">Test</span> <span class="variable">test</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Test <span class="title function_">getInstance</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="literal">null</span> == test) &#123;</span><br><span class="line">            test = <span class="keyword">new</span> <span class="title class_">Test</span>();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> test;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">getName</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> name.get();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setName</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.name.set(name);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>再运行：</p>
+<p><img src="http://ws3.sinaimg.cn/large/005BYqpggy1g4286ow803j315g0buaar.jpg"></p>
+<p>发现两个线程已经互不影响了，即使线程a设置了自己线程名，b线程输出的还是b线程名。</p>
+<h2 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h2><p>主要是三个方法：</p>
+<pre><code>public T get();
+public void set(T value);
+public void remove();
+</code></pre>
+<h3 id="get"><a href="#get" class="headerlink" title="get"></a>get</h3><pre><code>public T get() &#123;
+    // 获取当前线程
+    Thread t = Thread.currentThread();
+    // 获取当前线程的ThreadLocalMap
+    ThreadLocalMap map = getMap(t);
+    if (map != null) &#123;
+    // 通过ThreadLocal key获取Entry节点，并返回值
+        ThreadLocalMap.Entry e = map.getEntry(this);
+        if (e != null) &#123;
+            @SuppressWarnings(&quot;unchecked&quot;)
+            T result = (T)e.value;
+            return result;
+        &#125;
+    &#125;
+    // 初始化值
+    return setInitialValue();
+&#125;
+</code></pre>
+<h3 id="set方法"><a href="#set方法" class="headerlink" title="set方法"></a>set方法</h3><pre><code>public void set(T value) &#123;
+    // 获取当前线程
+    Thread t = Thread.currentThread();
+    // 获取当前线程的ThreadLocalMap
+    ThreadLocalMap map = getMap(t);
+    if (map != null)
+        // 插入Entry key为ThreadLocal，value为value
+        map.set(this, value);
+    else
+        // 新建一个ThreadLocalMap 并把第一个Entry插入
+        createMap(t, value);
+&#125;
+</code></pre>
+<h3 id="remove"><a href="#remove" class="headerlink" title="remove"></a>remove</h3><pre><code>public void remove() &#123;
+     // 获取当前线程ThreadLocalMap
+     ThreadLocalMap m = getMap(Thread.currentThread());
+     if (m != null)
+         m.remove(this);
+ &#125;
+</code></pre>
+<h3 id="详解"><a href="#详解" class="headerlink" title="详解"></a>详解</h3><p><img src="https://ddmcc-1255635056.file.myqcloud.com/03ff0bbc-478e-4ebf-bd1c-5c3c5ee1108c.png" alt="markdown"></p>
+<p>结构如上图所示</p>
+<p>ThreadLocalMap是ThreadLocal的一个静态内部类，内部又有一个Entry的静态内部类，和有一个Entry数组用于存储&lt;key, value&gt;,key就是ThreadLocal，value就是要存储的值。</p>
+<pre><code>static class Entry extends WeakReference&lt;ThreadLocal&lt;?&gt;&gt; &#123;
+       
+        Entry(ThreadLocal&lt;?&gt; k, Object v) &#123;
+            super(k);
+            value = v;
+        &#125;
+    &#125;
+
+
+     // 长度必须是2的幂次方
+    /**
+     * The table, resized as necessary.
+     * table.length MUST always be a power of two.
+     */
+    private Entry[] table;
+</code></pre>
+<p>Entry继承自WeakReference并调用WeakReference构造函数，所以Entry的key是一个弱引用，即ThreadLocal是弱引用。<br>所以当外部没有引用到ThreadLocal时，那么系统GC时，经过可达性分析，GC Roots与ThreadLocal之间引用不可达，<br>ThreadLocal就将被回收。这样就出现了Entry中null key的情况，则无法访问到这些null key的值。如果这时线程结束，或者<br>段开值的强引用链(<strong>Thread ref -&gt; Current Thread -&gt; ThreadLocalMap -&gt; Entry -&gt; value</strong>)，将Entry.value = null，则Entry能顺利被回收。<br>否则就会出现内存泄漏的情况。</p>
+<p>但是，在我们现实开发中通常会用线程池来维护线程，即线程工作完后会放回到线程池中，所以就有可能出现内存泄漏的情况。<br>在源码中，作者也对这个问题进行了进理。见下</p>
+<h4 id="set操作"><a href="#set操作" class="headerlink" title="set操作"></a>set操作</h4><pre><code>private void set(ThreadLocal&lt;?&gt; key, Object value) &#123;
+
+    // We don&#39;t use a fast path as with get() because it is at
+    // least as common to use set() to create new entries as
+    // it is to replace existing ones, in which case, a fast
+    // path would fail more often than not.
+
+    Entry[] tab = table;
+    int len = tab.length;
+    int i = key.threadLocalHashCode &amp; (len-1);
+
+    // 采用开放地址法，hash冲突的时候使用线性探测
+    for (Entry e = tab[i];
+         e != null;
+         e = tab[i = nextIndex(i, len)]) &#123;
+        ThreadLocal&lt;?&gt; k = e.get();
+
+        // key相等直接替换值
+        if (k == key) &#123;
+            e.value = value;
+            return;
+        &#125;
+        // key为空 则调用replaceStaleEntry进行替换成新的值
+        if (k == null) &#123;
+            replaceStaleEntry(key, value, i);
+            return;
+        &#125;
+    &#125;
+
+    tab[i] = new Entry(key, value);
+    int sz = ++size;
+
+// 再次循环扫描清除null key的值，或者大小大于阈值扩容
+    if (!cleanSomeSlots(i, sz) &amp;&amp; sz &gt;= threshold)
+        rehash();
+&#125;
+</code></pre>
+<p>ThreadLocalMap并不是像HashMap那样当hash冲突时，用分离链表法来解决。它是用开放定址法，继续获取下一位置判断，直到该位置没有Entry节点。</p>
+<p>在检测插入的时候，如果key相同，即相同ThreadLocal，则替换原来的值。如果key为空即脏Entry(Stale Entry)则调用 <strong>replaceStaleEntry</strong> 去处理。<br>tab[i] == null 则此位置为空，插入新的Entry，插入后会调用cleanSomeSlots去清除Stale Entry并判断扩容。</p>
+<h5 id="cleanSomeSlots"><a href="#cleanSomeSlots" class="headerlink" title="cleanSomeSlots"></a>cleanSomeSlots</h5><pre><code>private boolean cleanSomeSlots(int i, int n) &#123;
+    boolean removed = false;
+    Entry[] tab = table;
+    int len = tab.length;
+    do &#123;
+        i = nextIndex(i, len);
+        Entry e = tab[i];
+        if (e != null &amp;&amp; e.get() == null) &#123;
+            n = len;
+            removed = true;
+
+    // 将i的值设为null 并将tab[i] = null 然后就继续向后检查，直至tab[i] == null 并返回i
+            i = expungeStaleEntry(i);
+        &#125;
+    &#125; while ( (n &gt;&gt;&gt;= 1) != 0);
+    return removed;
+&#125;
+</code></pre>
+<p>参数：i 即刚刚插入新节点的位置，所以tab[i]不可能为null，直接从下一索引开始判断。</p>
+<p>参数：n 是用来控制循环次数的，入参的时候它是map的实际大小（存放多少个ThreadLocal），如果没有遇到脏entry就整个扫描过程持续log2(n)次，log2(n)的得来是因为n &gt;&gt;&gt;= 1，每次n右移一位相当于n除以2。</p>
+<p>如果遇到脏entry，就返回tab[i] == null 的i，让下一次查找的起点为i，并且 <strong>n=len</strong> 即整个hash表的长度，扩大范围在进行扫描log2(n)趟。n的实际作用是扩大搜索范围。</p>
+<blockquote>
+<p>注：在replaceStaleEntry方法中n的参数直接就是hash表的长度。</p>
+</blockquote>
+<h5 id="expungeStaleEntry"><a href="#expungeStaleEntry" class="headerlink" title="expungeStaleEntry"></a>expungeStaleEntry</h5><pre><code>    private int expungeStaleEntry(int staleSlot) &#123;
+        Entry[] tab = table;
+        int len = tab.length;
+
+        // 将当前位置Entry清除
+        // expunge entry at staleSlot
+        tab[staleSlot].value = null;
+        tab[staleSlot] = null;
+        size--;
+
+        // 继续向后查找，如果key = null 也清除掉，直至tab[i] == null 
+        // Rehash until we encounter null
+        Entry e;
+        int i;
+        for (i = nextIndex(staleSlot, len);
+             (e = tab[i]) != null;
+             i = nextIndex(i, len)) &#123;
+            ThreadLocal&lt;?&gt; k = e.get();
+            if (k == null) &#123;
+                e.value = null;
+                tab[i] = null;
+                size--;
+            &#125; else &#123;
+                int h = k.threadLocalHashCode &amp; (len - 1);
+                if (h != i) &#123;
+                    tab[i] = null;
+
+                    // Unlike Knuth 6.4 Algorithm R, we must scan until
+                    // null because multiple entries could have been stale.
+                    while (tab[h] != null)
+                        h = nextIndex(h, len);
+                    tab[h] = e;
+                &#125;
+            &#125;
+        &#125;
+        return i;
+    &#125;
+</code></pre>
+<h5 id="cleanSomeSlot总结"><a href="#cleanSomeSlot总结" class="headerlink" title="cleanSomeSlot总结"></a>cleanSomeSlot总结</h5><p><img src="https://ddmcc-1255635056.file.myqcloud.com/51d8250c-aab5-4d4d-aace-37717a3582ec.png" alt="markdown"></p>
+<ul>
+<li><p>当前n等于hash表的size即n=10，i=1，在第一趟搜索过程中通过nextIndex，i指向了索引为2的位置，<br>此时table[2]为null，说明第一趟未发现脏entry,则第一趟结束进行第二趟的搜索。</p>
+</li>
+<li><p>第二趟首先通过nextIndex方法，索引由2的位置变成了i=3，当前table[3] != null，但是该key为null，说明找到了一个脏Entry，<br>先将n置为哈希表的长度len,然后继续调用expungeStaleEntry方法，该方法会将当前索引为3的脏entry给清除掉（令value为null，并且table[3]也为null），然后它会继续往后环形搜索，往后会发现索引为4，5的位置的entry同样为脏entry，索引为6的位置的entry不是脏entry保持不变，直至i = 7的时候此处table[7]位null，该方法就以i  = 7返回</p>
+</li>
+<li><p>由于在第二趟搜索中发现脏entry，n增大为数组的长度len，因此扩大搜索范围（增大循环次数）继续向后环形搜索；<br>直到在整个搜索范围里都未发现脏entry，cleanSomeSlot方法执行结束退出</p>
+</li>
+</ul>
+<h5 id="replaceStaleEntry"><a href="#replaceStaleEntry" class="headerlink" title="replaceStaleEntry"></a>replaceStaleEntry</h5><pre><code>    private void replaceStaleEntry(ThreadLocal&lt;?&gt; key, Object value,
+                                   int staleSlot) &#123;
+        Entry[] tab = table;
+        int len = tab.length;
+        Entry e;
+
+        // Back up to check for prior stale entry in current run.
+        // We clean out whole runs at a time to avoid continual
+        // incremental rehashing due to garbage collector freeing
+        // up refs in bunches (i.e., whenever the collector runs).
+
+    // staleSlot为null key索引
+    // 向前搜索 起点为staleSlot，如果发现有脏entry，则更新slotToExpunge为null key的索引
+        int slotToExpunge = staleSlot;
+        for (int i = prevIndex(staleSlot, len);
+             (e = tab[i]) != null;
+             i = prevIndex(i, len))
+            if (e.get() == null)
+                slotToExpunge = i;
+
+        // Find either the key or trailing null slot of run, whichever
+        // occurs first
+
+    // 向后搜索 起点为当前staleSlot
+        for (int i = nextIndex(staleSlot, len);
+             (e = tab[i]) != null;
+             i = nextIndex(i, len)) &#123;
+            ThreadLocal&lt;?&gt; k = e.get();
+
+            // If we find key, then we need to swap it
+            // with the stale entry to maintain hash table order.
+            // The newly stale slot, or any other stale slot
+            // encountered above it, can then be sent to expungeStaleEntry
+            // to remove or rehash all of the other entries in run.
+
+    // 如果key相同，则替换值并把位置交换到staleSlot的位置
+            if (k == key) &#123;
+                e.value = value;
+
+                tab[i] = tab[staleSlot];
+                tab[staleSlot] = e;
+
+                 // 相等说明向前没找到null key的entry，从起点i开始搜索，清除，这时i的被交换过去的脏entry
+                // Start expunge at preceding stale entry if it exists
+                if (slotToExpunge == staleSlot)
+                    slotToExpunge = i;
+                cleanSomeSlots(expungeStaleEntry(slotToExpunge), len);
+                return;
+            &#125;
+
+            // If we didn&#39;t find stale entry on backward scan, the
+            // first stale entry seen while scanning for key is the
+            // first still present in the run.
+            if (k == null &amp;&amp; slotToExpunge == staleSlot)
+                slotToExpunge = i;
+        &#125;
+
+        // If key not found, put new entry in stale slot
+        tab[staleSlot].value = null;
+        tab[staleSlot] = new Entry(key, value);
+
+        // If there are any other stale entries in run, expunge them
+        if (slotToExpunge != staleSlot)
+            cleanSomeSlots(expungeStaleEntry(slotToExpunge), len);
+    &#125;
+</code></pre>
+<blockquote>
+<p>针对前后有无null key的entry分为四种情况</p>
+</blockquote>
+<h6 id="向前向后都有"><a href="#向前向后都有" class="headerlink" title="向前向后都有"></a>向前向后都有</h6><p><img src="https://ddmcc-1255635056.file.myqcloud.com/c4e0830d-f3e7-4202-88cb-8ee3bf23cb27.png" alt="markdown"></p>
+<p>slotToExpunge初始状态和staleSlot相同，当前向环形搜索遇到脏entry时，在第1行代码中slotToExpunge会更新为当前脏entry的索引i，<br>直到遇到哈希桶（table[i]）为null的时候，前向搜索过程结束。在接下来的for循环中进行后向环形查找，若查找到key相等的entry，<br>先覆盖当前位置的entry，然后再与staleSlot位置上的脏entry进行交换。交换之后脏entry就更换到了i处，<br>最后使用cleanSomeSlots方法从i（即slotToExpunge 向前搜索到脏entry的索引）为起点开始进行清理脏entry的过程</p>
+<h6 id="前有后没有"><a href="#前有后没有" class="headerlink" title="前有后没有"></a>前有后没有</h6><p><img src="https://ddmcc-1255635056.file.myqcloud.com/2ff9e26f-9885-4aea-9bd9-83933943eea6.png" alt="markdown"><br>则把staleSlot上的entry清除，并把新的entry存入到tab[staleSlot]。然后调用cleanSomeSlots从slotToExpunge作为起点开始清除，<br>即向前搜索null key的索引。</p>
+<h6 id="前没有后有"><a href="#前没有后有" class="headerlink" title="前没有后有"></a>前没有后有</h6><p><img src="https://ddmcc-1255635056.file.myqcloud.com/08851268-19fb-4bec-aa12-e8e191cdfb48.png" alt="markdown"><br>先覆盖当前位置的entry，然后再与staleSlot位置上的脏entry进行交换。交换之后脏entry就更换到了i处，<br>最后使用cleanSomeSlots方法从i为起点开始进行清理脏entry的过程</p>
+<h6 id="前后都没有"><a href="#前后都没有" class="headerlink" title="前后都没有"></a>前后都没有</h6><p><img src="https://ddmcc-1255635056.file.myqcloud.com/f1c528a3-2d31-4dcb-a5d5-3cd9c5bc7b86.png" alt="markdown"><br>则把staleSlot上的entry清除，并把新的entry存入到tab[staleSlot]。然后也就不需要清除了</p>
+<h4 id="get操作"><a href="#get操作" class="headerlink" title="get操作"></a>get操作</h4><pre><code>private T setInitialValue() &#123;
+    T value = initialValue();
+    Thread t = Thread.currentThread();
+    ThreadLocalMap map = getMap(t);
+    if (map != null)
+        map.set(this, value);
+    else
+        createMap(t, value);
+    return value;
+&#125;
+
+// 子类可以重写该方法，返回一个默认值
+protected T initialValue() &#123;
+    return null;
+&#125;
+</code></pre>
+<p>所以get方法就是 <code>获取当前的线程</code> -&gt; <code>获取当前线程ThreadLocalMap</code> -&gt; <code>获取储存这个ThreadLocal的Entry节点</code></p>
+<p>-&gt; <code>返回value值</code></p>
+<p>如果value值为空或者ThreadLocalMap为空，则调用initialValue获取初始值，initialValue可以重写来返回一个默认的值，再把<br>ThreadLocal和null值存到ThreadLocalMap中。</p>
+<h4 id="remove操作"><a href="#remove操作" class="headerlink" title="remove操作"></a>remove操作</h4><pre><code>/**
+  * Remove the entry for key.
+  */
+  private void remove(ThreadLocal&lt;?&gt; key) &#123;
+      Entry[] tab = table;
+      int len = tab.length;
+      int i = key.threadLocalHashCode &amp; (len-1);
+      for (Entry e = tab[i];
+           e != null;
+           e = tab[i = nextIndex(i, len)]) &#123;
+          if (e.get() == key) &#123;
+              e.clear();
+              expungeStaleEntry(i);
+              return;
+          &#125;
+      &#125;
+  &#125;
+</code></pre>
+<p>删除则是搜索相同key的entry并调用expungeStaleEntry清除。</p>
+<p><strong>所以源码中通过expungeStaleEntry，cleanSomeSlots,replaceStaleEntry这几个方法来清理null key的enrty</strong></p>
+<h2 id="弱引用导致内存泄漏问题"><a href="#弱引用导致内存泄漏问题" class="headerlink" title="弱引用导致内存泄漏问题"></a>弱引用导致内存泄漏问题</h2><p>待续。。。</p>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/ThreadLocal/">ThreadLocal</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2019/06/24/2019-06-24-how-to-understand-thread-safety/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">如何理解线程安全</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2019/06/07/2019-05-14-automatic-continuous-ntegration-with-centos/"><span class="level-item">github+jenkins自动化持续部署</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "87d3c623f7f9b348d3fbe31fc3a117b7",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#使用"><span class="level-left"><span class="level-item">1</span><span class="level-item">使用</span></span></a></li><li><a class="level is-mobile" href="#源码"><span class="level-left"><span class="level-item">2</span><span class="level-item">源码</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#get"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">get</span></span></a></li><li><a class="level is-mobile" href="#set方法"><span class="level-left"><span class="level-item">2.2</span><span class="level-item">set方法</span></span></a></li><li><a class="level is-mobile" href="#remove"><span class="level-left"><span class="level-item">2.3</span><span class="level-item">remove</span></span></a></li><li><a class="level is-mobile" href="#详解"><span class="level-left"><span class="level-item">2.4</span><span class="level-item">详解</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#set操作"><span class="level-left"><span class="level-item">2.4.1</span><span class="level-item">set操作</span></span></a></li><li><a class="level is-mobile" href="#get操作"><span class="level-left"><span class="level-item">2.4.2</span><span class="level-item">get操作</span></span></a></li><li><a class="level is-mobile" href="#remove操作"><span class="level-left"><span class="level-item">2.4.3</span><span class="level-item">remove操作</span></span></a></li></ul></li></ul></li><li><a class="level is-mobile" href="#弱引用导致内存泄漏问题"><span class="level-left"><span class="level-item">3</span><span class="level-item">弱引用导致内存泄漏问题</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>死锁产生的条件及解决 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="死锁产生的条件 互斥线程对所分配的资源进行排他性控制，即在一段时间内某资源仅为一个线程所占有。此时若有其他线程请求该资源，则请求线程只能阻塞等待。"><meta property="og:type" content="article"><meta property="og:title" content="死锁产生的条件及解决"><meta property="og:url" content="http://example.com/2019/06/26/2019-06-26-deadlock-conditions/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="死锁产生的条件 互斥线程对所分配的资源进行排他性控制，即在一段时间内某资源仅为一个线程所占有。此时若有其他线程请求该资源，则请求线程只能阻塞等待。"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://img-blog.csdn.net/2018072312123883?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hbmlhY3h4/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70"><meta property="og:image" content="http://img-blog.csdn.net/20180723121304451?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hbmlhY3h4/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70"><meta property="article:published_time" content="2019-06-26T14:20:17.000Z"><meta property="article:modified_time" content="2023-04-15T14:38:34.865Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="并发编程"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="http://img-blog.csdn.net/2018072312123883?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hbmlhY3h4/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2019/06/26/2019-06-26-deadlock-conditions/"},"headline":"死锁产生的条件及解决","image":[],"datePublished":"2019-06-26T14:20:17.000Z","dateModified":"2023-04-15T14:38:34.865Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"死锁产生的条件 互斥线程对所分配的资源进行排他性控制，即在一段时间内某资源仅为一个线程所占有。此时若有其他线程请求该资源，则请求线程只能阻塞等待。"}</script><link rel="canonical" href="http://example.com/2019/06/26/2019-06-26-deadlock-conditions/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2019-06-26T14:20:17.000Z" title="2019/6/26 22:20:17">2019-06-26</time>发表</span><span class="level-item"><time dateTime="2023-04-15T14:38:34.865Z" title="2023/4/15 22:38:34">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></span></div></div><h1 class="title is-3 is-size-4-mobile">死锁产生的条件及解决</h1><div class="content"><h2 id="死锁产生的条件"><a href="#死锁产生的条件" class="headerlink" title="死锁产生的条件"></a>死锁产生的条件</h2><ul>
+<li>互斥<br>线程对所分配的资源进行排他性控制，即在一段时间内某资源仅为一个线程所占有。<br>此时若有其他线程请求该资源，则请求线程只能阻塞等待。</li>
+</ul>
+<span id="more"></span>
+
+<ul>
+<li>不可剥夺<br>线程所获得的资源在未使用完毕之前，不能被其他线程强行夺走，即只能由获得该资源的线程自己来释放。</li>
+</ul>
+<ul>
+<li><p>请求与保持<br>线程在至少拥有一个资源的情况下，线程继续请求其它资源，而该资源被其他线程所持有，<br>此时线程被堵塞，但保持对现有资源的持有。</p>
+</li>
+<li><p>循环等待<br>存在线程资源的循环等待链，链中每一个线程已获得的资源同时被下一个线程所请求。<br>即A等待B，B等待C，C等待A。</p>
+</li>
+</ul>
+<p><strong>只有同时满足以上四个条件才有可能发生死锁，只要有一个不满足就不会发生。</strong></p>
+<h2 id="预防死锁"><a href="#预防死锁" class="headerlink" title="预防死锁"></a>预防死锁</h2><h4 id="破坏互斥"><a href="#破坏互斥" class="headerlink" title="破坏互斥"></a>破坏互斥</h4><p>不好意思，破坏不了。。</p>
+<p><strong>互斥条件不能被破坏，否则会造成结果的不可再现性</strong> 即 <a target="_blank" rel="noopener" href="https://ddmcc.cn/2019/06/24/how-to-understand-thread-safety/#%E5%8E%9F%E5%AD%90%E6%80%A7%E9%97%AE%E9%A2%98">原子性问题</a></p>
+<h4 id="破坏不可剥夺"><a href="#破坏不可剥夺" class="headerlink" title="破坏不可剥夺"></a>破坏不可剥夺</h4><ul>
+<li><p>如果占有某些资源的一个线程进行进一步资源请求被拒绝，则该线程必须释放它最初占有的资源。</p>
+</li>
+<li><p>如果一个线程请求当前被另一个线程占有的一个资源，则可以抢占另一个线程，要求它释放资源。 <strong>剥夺资源法</strong></p>
+</li>
+</ul>
+<h4 id="破坏请求与保持"><a href="#破坏请求与保持" class="headerlink" title="破坏请求与保持"></a>破坏请求与保持</h4><ul>
+<li><p>1，创建线程时，要求它申请所需的全部资源，系统要么满足其所有要求，要么什么也不给它。即 <strong>一次性分配策略</strong></p>
+</li>
+<li><p>2，要求每个线程提出新的资源申请前，释放它所占有的资源。</p>
+</li>
+</ul>
+<h4 id="破坏循环等待"><a href="#破坏循环等待" class="headerlink" title="破坏循环等待"></a>破坏循环等待</h4><p><strong>资源有序分配法</strong>，即所申请的资源必须按照顺序申请。</p>
+<h2 id="避免死锁"><a href="#避免死锁" class="headerlink" title="避免死锁"></a>避免死锁</h2><blockquote>
+<p>预防死锁和避免死锁的区别：<br>预防死锁是设法至少破坏产生死锁的四个必要条件之一,严格的防止死锁的出现,而避免死锁则不那么严格的限制产生死锁的必要条件的存在,因为即使死锁的必要条件存在,也不一定发生死锁。避免死锁是在系统运行过程中注意避免死锁的最终发生。</p>
+</blockquote>
+<h4 id="资源有序分配法"><a href="#资源有序分配法" class="headerlink" title="资源有序分配法"></a>资源有序分配法</h4><ul>
+<li><p>对它所必须的资源，必须一次申请完。</p>
+</li>
+<li><p>所申请的资源必须按照顺序申请。</p>
+</li>
+</ul>
+<p>即线程A申请A资源，B资源，C资源，B线程也得A资源，B资源，C资源。避免可能有生成环路的条件。</p>
+<h4 id="银行家算法"><a href="#银行家算法" class="headerlink" title="银行家算法"></a>银行家算法</h4><p><strong>银行家算法</strong></p>
+<h4 id="加锁顺序"><a href="#加锁顺序" class="headerlink" title="加锁顺序"></a>加锁顺序</h4><p>当多个线程需要相同的一些锁，但是按照不同的顺序加锁，死锁就很容易发生。<br>如果能确保所有的线程都是按照相同的顺序获得锁（类似资源有序分配法），那么死锁就不会发生。</p>
+<h4 id="加锁时限"><a href="#加锁时限" class="headerlink" title="加锁时限"></a>加锁时限</h4><p>线程尝试获取锁的时候加上一定的时限，超过时限则放弃对该锁的请求，并释放自己占有的锁。然后等待一段随机的时间再重试</p>
+<h4 id="死锁检测"><a href="#死锁检测" class="headerlink" title="死锁检测"></a>死锁检测</h4><p>死锁定理：</p>
+<blockquote>
+<p>如果资源分配图中没有环路，则系统中没有死锁，如果图中存在环路则系统中可能存在死锁。<br>如果每个资源类中只包含一个资源实例，则环路是死锁存在的充分必要条件。</p>
+</blockquote>
+<p>找一个非孤立、只有分配边的线程结点，去掉分配边，将其变为孤立结点；<br>再把相应的资源分配给一个等待该资源的线程，即将某线程的申请边变为分配边；<br>重复以上步骤，若所有线程都可成为孤立结点，称该图是可完全简化的，否则称该图是不可完全简化的。<br>死锁状态的充分条件是：资源分配图是不可完全简化的。</p>
+<p>死锁：<br><img src="http://img-blog.csdn.net/2018072312123883?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hbmlhY3h4/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70"></p>
+<p>无死锁：<br><img src="http://img-blog.csdn.net/20180723121304451?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hbmlhY3h4/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70"></p>
+<h2 id="解除死锁"><a href="#解除死锁" class="headerlink" title="解除死锁"></a>解除死锁</h2><ul>
+<li><p><strong>资源剥夺法。</strong>挂起某些死锁线程，并抢占它的资源，将这些资源分配给其他的死锁线程。<br>但应防止被挂起的线程长时间得不到资源，而处于资源匮乏的状态。</p>
+</li>
+<li><p><strong>撤销线程法。</strong>强制撤销部分、甚至全部死锁线程并剥夺这些线程的资源。<br>撤销的原则可以按线程优先级和撤销线程代价的高低进行。</p>
+</li>
+<li><p><strong>线程回退法。</strong>让一（或多）个线程回退足以回避死锁的地步，线程回退时自愿释放资源而不是被剥夺。<br>要求系统保持线程的历史信息，设置还原点。</p>
+</li>
+</ul>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2019/07/05/2019-07-05-thread-policy/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">线程池拒绝策略</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2019/06/24/2019-06-24-how-to-understand-thread-safety/"><span class="level-item">如何理解线程安全</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "7424ab415122087c6235811b0a6b90fa",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#死锁产生的条件"><span class="level-left"><span class="level-item">1</span><span class="level-item">死锁产生的条件</span></span></a></li><li><a class="level is-mobile" href="#预防死锁"><span class="level-left"><span class="level-item">2</span><span class="level-item">预防死锁</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#破坏互斥"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">破坏互斥</span></span></a></li><li><a class="level is-mobile" href="#破坏不可剥夺"><span class="level-left"><span class="level-item">2.2</span><span class="level-item">破坏不可剥夺</span></span></a></li><li><a class="level is-mobile" href="#破坏请求与保持"><span class="level-left"><span class="level-item">2.3</span><span class="level-item">破坏请求与保持</span></span></a></li><li><a class="level is-mobile" href="#破坏循环等待"><span class="level-left"><span class="level-item">2.4</span><span class="level-item">破坏循环等待</span></span></a></li></ul></li><li><a class="level is-mobile" href="#避免死锁"><span class="level-left"><span class="level-item">3</span><span class="level-item">避免死锁</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#资源有序分配法"><span class="level-left"><span class="level-item">3.1</span><span class="level-item">资源有序分配法</span></span></a></li><li><a class="level is-mobile" href="#银行家算法"><span class="level-left"><span class="level-item">3.2</span><span class="level-item">银行家算法</span></span></a></li><li><a class="level is-mobile" href="#加锁顺序"><span class="level-left"><span class="level-item">3.3</span><span class="level-item">加锁顺序</span></span></a></li><li><a class="level is-mobile" href="#加锁时限"><span class="level-left"><span class="level-item">3.4</span><span class="level-item">加锁时限</span></span></a></li><li><a class="level is-mobile" href="#死锁检测"><span class="level-left"><span class="level-item">3.5</span><span class="level-item">死锁检测</span></span></a></li></ul></li><li><a class="level is-mobile" href="#解除死锁"><span class="level-left"><span class="level-item">4</span><span class="level-item">解除死锁</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

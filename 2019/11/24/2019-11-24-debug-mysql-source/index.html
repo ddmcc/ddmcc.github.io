@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>debug调试Mysql源码 - ddmcc</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="ddmcc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ddmcc"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="再上一篇的事务隔离级别中说了mysql是通过两个隐藏列来实现的，后来又看了一些相关文章，发现好像和《高性能Mysql》说的有点不一样。mysql的mvcc是通过Read View和Undo log来实现的，read view来判断数据行是否可读，undo log用来找到最近的可见版本。为了搞清楚内部是如何实现的（虽然不一定看的懂），所以想debug看下read view是如何生成的。"><meta property="og:type" content="article"><meta property="og:title" content="debug调试Mysql源码"><meta property="og:url" content="http://example.com/2019/11/24/2019-11-24-debug-mysql-source/"><meta property="og:site_name" content="ddmcc"><meta property="og:description" content="再上一篇的事务隔离级别中说了mysql是通过两个隐藏列来实现的，后来又看了一些相关文章，发现好像和《高性能Mysql》说的有点不一样。mysql的mvcc是通过Read View和Undo log来实现的，read view来判断数据行是否可读，undo log用来找到最近的可见版本。为了搞清楚内部是如何实现的（虽然不一定看的懂），所以想debug看下read view是如何生成的。"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/8677b01b-31bf-4dd4-bbe8-cfa8c6569415.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/9fa0967b-7944-4248-a8e2-68087d450364.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/af9c8305-c85f-4b2a-a243-2b697957e9b1.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/1d9a9557-2fad-4fe2-af2f-ccc460522773.png"><meta property="og:image" content="https://ddmcc-1255635056.file.myqcloud.com/a259f14d-7bcc-4482-971a-5924a71c5812.png"><meta property="article:published_time" content="2019-11-24T12:10:57.000Z"><meta property="article:modified_time" content="2023-04-15T14:34:05.839Z"><meta property="article:author" content="jiangrz"><meta property="article:tag" content="mysql"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://ddmcc-1255635056.file.myqcloud.com/8677b01b-31bf-4dd4-bbe8-cfa8c6569415.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2019/11/24/2019-11-24-debug-mysql-source/"},"headline":"debug调试Mysql源码","image":["https://ddmcc-1255635056.file.myqcloud.com/8677b01b-31bf-4dd4-bbe8-cfa8c6569415.png","https://ddmcc-1255635056.file.myqcloud.com/9fa0967b-7944-4248-a8e2-68087d450364.png","https://ddmcc-1255635056.file.myqcloud.com/af9c8305-c85f-4b2a-a243-2b697957e9b1.png","https://ddmcc-1255635056.file.myqcloud.com/1d9a9557-2fad-4fe2-af2f-ccc460522773.png","https://ddmcc-1255635056.file.myqcloud.com/a259f14d-7bcc-4482-971a-5924a71c5812.png"],"datePublished":"2019-11-24T12:10:57.000Z","dateModified":"2023-04-15T14:34:05.839Z","author":{"@type":"Person","name":"jiangrz"},"publisher":{"@type":"Organization","name":"ddmcc","logo":{"@type":"ImageObject","url":{"text":"jiangrz"}}},"description":"再上一篇的事务隔离级别中说了mysql是通过两个隐藏列来实现的，后来又看了一些相关文章，发现好像和《高性能Mysql》说的有点不一样。mysql的mvcc是通过Read View和Undo log来实现的，read view来判断数据行是否可读，undo log用来找到最近的可见版本。为了搞清楚内部是如何实现的（虽然不一定看的懂），所以想debug看下read view是如何生成的。"}</script><link rel="canonical" href="http://example.com/2019/11/24/2019-11-24-debug-mysql-source/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/">jiangrz</a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/ddmcc/ddmcc.github.io">GitHub</a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ddmcc/ddmcc.github.io"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2019-11-24T12:10:57.000Z" title="2019/11/24 20:10:57">2019-11-24</time>发表</span><span class="level-item"><time dateTime="2023-04-15T14:34:05.839Z" title="2023/4/15 22:34:05">2023-04-15</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/mysql/">mysql</a></span></div></div><h1 class="title is-3 is-size-4-mobile">debug调试Mysql源码</h1><div class="content"><p>再上一篇的事务隔离级别中说了mysql是通过两个隐藏列来实现的，后来又看了一些相关文章，发现好像和《高性能Mysql》说的有点不一样。mysql的mvcc是通过Read View和<br>Undo log来实现的，read view来判断数据行是否可读，undo log用来找到最近的可见版本。为了搞清楚内部是如何实现的（虽然不一定看的懂），所以想debug看下read view是如何生成的。</p>
+<span id="more"></span>
+
+
+<h2 id="需要下载的软件"><a href="#需要下载的软件" class="headerlink" title="需要下载的软件"></a>需要下载的软件</h2><ul>
+<li><p>Cmake：3.4.0</p>
+</li>
+<li><p>Bison：2.4.1</p>
+</li>
+<li><p>Perl: 5.26.3</p>
+</li>
+<li><p>Boost 1.59.1：下载后解压到任意目录</p>
+</li>
+<li><p>VS2013</p>
+</li>
+<li><p>mysql5.7.12源码</p>
+</li>
+</ul>
+<h2 id="用cmake构建项目"><a href="#用cmake构建项目" class="headerlink" title="用cmake构建项目"></a>用cmake构建项目</h2><p>打开cmake-gui，选择源码，指定构建目录等</p>
+<hr>
+<h2 id=""><a href="#" class="headerlink" title=""></a><img src="https://ddmcc-1255635056.file.myqcloud.com/8677b01b-31bf-4dd4-bbe8-cfa8c6569415.png" alt="markdown"></h2><p>好了之后点击 <strong>Configure</strong> ，会弹窗让选择VS版本，选择对应版本</p>
+<hr>
+<h2 id="-1"><a href="#-1" class="headerlink" title=""></a><img src="https://ddmcc-1255635056.file.myqcloud.com/9fa0967b-7944-4248-a8e2-68087d450364.png" alt="markdown"></h2><p>完成后会在输出框中看见 <strong>Configure Done</strong>，然后再点击 <strong>Generate</strong>，后会看见Generating Done</p>
+<hr>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/af9c8305-c85f-4b2a-a243-2b697957e9b1.png" alt="markdown"></p>
+<h2 id="打开VS-CODE生成方案"><a href="#打开VS-CODE生成方案" class="headerlink" title="打开VS CODE生成方案"></a>打开VS CODE生成方案</h2><p>打开build目录，双击根目录的 <strong>ALL_BUILD.vcxproj</strong> ，就会在VS2013中打开，之后将/sql/mysqld.cc中的test_lc_time_sz()函数，将其中的DBUG_ASSERT(0)改为DBUG_ASSERT(1)后<br>按 <strong>F7</strong> 进行生成方案。</p>
+<h2 id="开始调试"><a href="#开始调试" class="headerlink" title="开始调试"></a>开始调试</h2><p>在启动之前先准备 <code>my.ini</code> 配置文件，放在C:/Windows或构建目录下，后进入构建目录下的/sql/Debug</p>
+<ul>
+<li><p>打开cmd，输入<code>mysqld --initialize</code>初始化数据库后</p>
+</li>
+<li><p>输入 <code>mysqld --skip-grant-tables</code> </p>
+</li>
+<li><p>新打开一个对话框，输入<code>mysql;</code>，<code>use mysql;</code></p>
+</li>
+<li><p>UPDATE user SET authentication_string=PASSWORD(“123456”) WHERE User=”root”;</p>
+</li>
+<li><p>flush privileges;</p>
+</li>
+</ul>
+<p>注：启动mysql调试也可以在VS2013中进行，但是会提示下载字符。。。</p>
+<p>然后就可以到/client/Debug 打开cmd，输入 <code>mysql -u root -p</code> 输入密码123456连接</p>
+<hr>
+<p>启动并连接成功后，打开VS2013点击<code>调试</code>，<code>附加到进程</code>，找到mysql进程附加进去。</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/1d9a9557-2fad-4fe2-af2f-ccc460522773.png" alt="markdown"></p>
+<hr>
+<p>然后就可以debug了！</p>
+<p><img src="https://ddmcc-1255635056.file.myqcloud.com/a259f14d-7bcc-4482-971a-5924a71c5812.png" alt="markdown"></p>
+</div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/mysql/">mysql</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2019/12/30/2019-12-30-understanding-jvm-2/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">深入理解jvm</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2019/11/18/2019-11-18-isolation-level-of-transaction/"><span class="level-item">事务的隔离级别</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "3561299cc8cb73364fe5035d67a1a726",
+            repo: "ddmcc.github.io",
+            owner: "ddmcc",
+            clientID: "dae41ffb8c8e11287ad0",
+            clientSecret: "2e2acba40e8060cbac419bae13b068ab92a539ab",
+            admin: ["ddmcc"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#需要下载的软件"><span class="level-left"><span class="level-item">1</span><span class="level-item">需要下载的软件</span></span></a></li><li><a class="level is-mobile" href="#用cmake构建项目"><span class="level-left"><span class="level-item">2</span><span class="level-item">用cmake构建项目</span></span></a></li><li><a class="level is-mobile" href="#"><span class="level-left"><span class="level-item">3</span><span class="level-item"> </span></span></a></li><li><a class="level is-mobile" href="#-1"><span class="level-left"><span class="level-item">4</span><span class="level-item"> </span></span></a></li><li><a class="level is-mobile" href="#打开VS-CODE生成方案"><span class="level-left"><span class="level-item">5</span><span class="level-item">打开VS CODE生成方案</span></span></a></li><li><a class="level is-mobile" href="#开始调试"><span class="level-left"><span class="level-item">6</span><span class="level-item">开始调试</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-06T07:34:00.000Z">2023-07-06</time></p><p class="title"><a href="/2023/07/06/2023-07-06-feign-integrates-ribbon/">feign基于ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-ribbon-components-and-integration-of-gateway/">openFeign整合ribbon实现负载均衡</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-05-29T07:34:00.000Z">2023-05-29</time></p><p class="title"><a href="/2023/05/29/2023-05-29-websocket-clusters/">websocket服务集群搭建与消息收发实现</a></p><p class="categories"><a href="/categories/websocket/">websocket</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-13T07:34:00.000Z">2023-04-13</time></p><p class="title"><a href="/2023/04/13/2023-04-13-how-feign-works/">OpenFeign的实现原理</a></p><p class="categories"><a href="/categories/Spring-Cloud/">Spring Cloud</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-04-01T07:34:00.000Z">2023-04-01</time></p><p class="title"><a href="/2023/04/01/2023-04-01-composite-pattern/">设计模式之组合模式</a></p><p class="categories"><a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></p></div></article></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/">jiangrz</a><p class="is-size-7"><span>&copy; 2024 jiangrz</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent " target="_blank" rel="noopener" title="备案号：闽ICP备2023008580号-1" href="https://beian.miit.gov.cn">备案号：闽ICP备2023008580号-1</a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>
